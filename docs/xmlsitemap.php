@@ -12,7 +12,8 @@
  * This hook allows modules to add additional links to the site map. Links
  * may be associated with nodes, terms, or users, as shown in the example.
  * @param $type:
- * If set, a string specifying the type of additional links to return.
+ * If set, a string specifying the type of additional links to return. You
+ * can use your own type or a type from one of the included modules:
  * - node:
  *   Links associated with nodes
  * - term:
@@ -31,8 +32,9 @@
  * If $type is xml, return an XML site map. Otherwise, return an array of
  * links or an empty array. Each link should be an array with the
  * following keys:
- * - nid, tid, or uid:
- *   ID to associate with this link (if $type is set)
+ * - nid, tid, uid, or custom ID type:
+ *   ID to associate with this link (If you have defined your own link type,
+ *   use the ID key to group related links together.)
  * - #loc:
  *   The URL of the page
  * - #lastmod:
@@ -41,8 +43,6 @@
  *   Number of seconds between changes
  * - #priority:
  *   A number between 0 and 1 indicating the link's priority
- * If you have defined your own link type, use the ID key to group related
- * links together.
  */
 function hook_xmlsitemap_links($type = NULL, $excludes = array()) {
   $links = array();
