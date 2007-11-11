@@ -165,23 +165,25 @@ function xmlsitemap_user_user($op, &$edit, &$account, $category = NULL) {
       $edit['pid'] = db_result(db_query("SELECT pid FROM {url_alias} WHERE src = '%s'", "user/$account->uid"));
       break;
     case 'insert':
-      $pid = $edit['pid'] == FALSE ? 'NULL' : $edit['pid'];
+      $pid = empty($edit['pid']) ? 'NULL' : $edit['pid'];
+      $priority = isset($edit['xmlsitemap_user_priority']) ? $edit['xmlsitemap_user_priority'] : 'NULL';
       db_query("
         INSERT INTO {xmlsitemap_user} (uid, pid, last_changed, priority_override) VALUES (%d, %d, %d, %s)
-      ", $account->uid, $pid, time(), $edit['xmlsitemap_user_priority']);
-      $edit['xmlsitemap_user_priority'] = NULL;
+      ", $account->uid, $pid, time(), $priority);
       $edit['pid'] = NULL;
+      $edit['xmlsitemap_user_priority'] = NULL;
       xmlsitemap_update_sitemap();
       break;
     case 'update':
-      $pid = $edit['pid'] == FALSE ? 'NULL' : $edit['pid'];
+      $pid = empty($edit['pid']) ? 'NULL' : $edit['pid'];
+      $priority = isset($edit['xmlsitemap_user_priority']) ? $edit['xmlsitemap_user_priority'] : 'NULL';
       db_query("
         UPDATE {xmlsitemap_user}
         SET pid = %s, last_changed = %d, previously_changed = last_changed, priority_override = %s
         WHERE uid = %d
-      ", $pid, time(), $edit['xmlsitemap_user_priority'], $account->uid);
-      $edit['xmlsitemap_user_priority'] = NULL;
+      ", $pid, time(), $priority, $account->uid);
       $edit['pid'] = NULL;
+      $edit['xmlsitemap_user_priority'] = NULL;
       xmlsitemap_update_sitemap();
       break;
     case 'delete':
