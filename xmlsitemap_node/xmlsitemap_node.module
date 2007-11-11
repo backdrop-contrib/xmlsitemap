@@ -253,6 +253,10 @@ function xmlsitemap_node_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       $node->priority_override = isset($priority) ? $priority : 'NULL';
       break;
     case 'insert':
+      if (!isset($node->priority_override)) {
+        $priority = db_result(db_query("SELECT priority_override FROM {xmlsitemap_node} WHERE nid = %d", $node->nid));
+        $node->priority_override = isset($priority) ? $priority : 'NULL';
+      }
       db_query("
         INSERT INTO {xmlsitemap_node} (nid, pid, last_changed, priority_override)
         SELECT %d, ua.pid, %d, %s
@@ -266,7 +270,11 @@ function xmlsitemap_node_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       break;
     case 'update':
       $pid = db_result(db_query("SELECT pid FROM {url_alias} WHERE src = CONCAT('node/', %d)", $node->nid));
-      $pid = $pid === FALSE ? 'NULL' : $pid;
+      $pid = empty($pid) ? 'NULL' : $pid;
+      if (!isset($node->priority_override)) {
+        $priority = db_result(db_query("SELECT priority_override FROM {xmlsitemap_node} WHERE nid = %d", $node->nid));
+        $node->priority_override = isset($priority) ? $priority : 'NULL';
+      }
       db_query("
         UPDATE {xmlsitemap_node}
         SET pid = %s, previously_changed = last_changed, priority_override = %s
