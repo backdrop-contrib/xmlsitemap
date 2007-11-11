@@ -303,7 +303,7 @@ function xmlsitemap_priority_options($option = NULL) {
     $options[$value] = $value;
   }
   $options['0'] = '0.0';
-  if ($options == 'exclude' || $options == 'both') {
+  if ($option == 'exclude' || $option == 'both') {
     $options['-1'] = t('Not in site map');
   }
   return $options;
