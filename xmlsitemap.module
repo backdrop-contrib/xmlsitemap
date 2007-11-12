@@ -690,7 +690,7 @@ function xmlsitemap_url($path = NULL, $alias = NULL, $query = NULL, $fragment = 
   static $clean_url;
   $script = isset($script) ? $script : strpos($_SERVER['SERVER_SOFTWARE'], 'Apache') === FALSE ? 'index.php' : '';
   $clean_url = isset($clean_url) ? $clean_url : variable_get('clean_url', FALSE);
-  $base = ($absolute ? $base_url . '/' : base_path());
+  $base = ($absolute ? $base_url .'/' : base_path());
   if (!empty($path) && $path != '<front>') {
     $path = _xmlsitemap_get_path_alias($path, $alias);
     $path = drupal_urlencode($path);
