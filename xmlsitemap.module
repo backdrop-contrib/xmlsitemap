@@ -181,9 +181,21 @@ function xmlsitemap_settings_additional() {
   $form['delete']['#tree'] = TRUE;
   $form['path']['#tree'] = TRUE;
   $form['link']['#tree'] = TRUE;
+  $form['link']['new'] = array(
+    '#type' => 'textfield',
+    '#size' => 40,
+    '#description' => t('Enter a Drupal path to add to the site map.'),
+    '#attributes' => array('tabindex' => 1),
+  );
   $form['old_priority']['#tree'] = TRUE;
   $form['priority']['#tree'] = TRUE;
-  $result = db_query("SELECT path, priority FROM {xmlsitemap_additional}");
+  $form['priority']['new'] = array(
+    '#type' => 'select',
+    '#default_value' => 'NULL',
+    '#options' => xmlsitemap_priority_options('default'),
+    '#attributes' => array('tabindex' => 2),
+  );
+  $result = pager_query("SELECT path, priority FROM {xmlsitemap_additional} ORDER BY last_changed DESC", 50);
   while ($link = db_fetch_object($result)) {
     $priority = isset($link->priority) ? $link->priority : 'NULL';
     $form['delete'][$link->path] = array('#type' => 'checkbox', '#default_value' => FALSE);
@@ -192,17 +204,7 @@ function xmlsitemap_settings_additional() {
     $form['old_priority'][$link->path] = array('#type' => 'value', '#value' => $priority);
     $form['priority'][$link->path] = array('#type' => 'select', '#default_value' => $priority, '#options' => xmlsitemap_priority_options('default'));
   }
-  $form['link']['new'] = array(
-    '#type' => 'textfield',
-    '#size' => 40,
-    '#description' => t('Enter a Drupal path to add to the site map.'),
-  );
-  $form['priority']['new'] = array(
-    '#type' => 'select',
-    '#default_value' => 'NULL',
-    '#options' => xmlsitemap_priority_options('default'),
-    '#description' => t('Default: !priority', array('!priority' => variable_get('xmlsitemap_additional_links_priority', 0.1))),
-  );
+  $form['pager'] = array('#value' => theme('pager', NULL, 50));
   return system_settings_form($form);
 }
 
@@ -216,15 +218,16 @@ function theme_xmlsitemap_settings_additional($form) {
   $header = array(t('Delete'), t('Path'), t('Priority'));
   foreach (element_children($form['link']) as $path) {
     $row = array();
-    $row[] = drupal_render($form['delete'][$path]);
+    $row[] = isset($form['delete'][$path]) ? drupal_render($form['delete'][$path]) : array_merge(array('header' => TRUE, 'valign' => 'bottom'), theme('table_select_header_cell'));
     $row[] = drupal_render($form['link'][$path]);
     $row[] = drupal_render($form['priority'][$path]);
-    $rows[$path] = $row;
+    $rows[$path] = array('data' => $row, 'valign' => 'top');
   }
   if (!empty($rows)) {
     $output .= theme('table', $header, $rows);
   }
   $output .= drupal_render($form);
+  drupal_add_js('document.getElementById("edit-link-new").focus()', 'inline', 'footer');
   return $output;
 }
 
