@@ -193,3 +193,19 @@ function xmlsitemap_user_user($op, &$edit, &$account, $category = NULL) {
   }
 }
 
+/**
+ * Implementation of hook_cron().
+ */
+function xmlsitemap_user_cron() {
+  if (db_result(db_query_range("SELECT COUNT(*) FROM {users} u LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid WHERE u.uid <> 0 AND xu.uid IS NULL", 0, 1))) {
+    db_query("
+      INSERT INTO {xmlsitemap_user} (uid, last_changed, pid)
+      SELECT u.uid, u.created, ua.pid FROM {users} u
+      LEFT JOIN {url_alias} ua ON ua.src = CONCAT('user/', u.uid)
+      LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid
+      WHERE u.uid <> 0 AND xu.uid IS NULL
+    ", time());
+    xmlsitemap_update_sitemap();
+  }
+}
+

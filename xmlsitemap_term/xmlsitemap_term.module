@@ -220,3 +220,19 @@ function xmlsitemap_term_taxonomy($op, $type, $array = NULL) {
   }
 }
 
+/**
+ * Implementation of hook_cron().
+ */
+function xmlsitemap_term_cron() {
+  if (db_result(db_query_range("SELECT COUNT(*) FROM {term_data} td LEFT JOIN {xmlsitemap_term} xt ON xt.tid = td.tid WHERE xt.tid IS NULL", 0, 1))) {
+    db_query("
+      INSERT INTO {xmlsitemap_term} (tid, last_changed, pid)
+      SELECT td.tid, %d, ua.pid FROM {term_data} td
+      LEFT JOIN {url_alias} ua ON ua.src = CONCAT('taxonomy/term/', td.tid) OR ua.src = CONCAT('forum/', td.tid)
+      LEFT JOIN {xmlsitemap_term} xt ON xt.tid = td.tid
+      WHERE xt.tid IS NULL
+    ", time());
+    xmlsitemap_update_sitemap();
+  }
+}
+

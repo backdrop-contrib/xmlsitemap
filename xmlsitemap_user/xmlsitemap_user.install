@@ -59,7 +59,7 @@ function xmlsitemap_user_enable() {
     INSERT INTO {xmlsitemap_user_role} (rid)
     SELECT r.rid FROM {role} r
     LEFT JOIN {xmlsitemap_user_role} xur ON xur.rid = r.rid
-    WHERE xur.rid IS NULL
+    WHERE r.rid > 2 AND xur.rid IS NULL
   ");
   xmlsitemap_update_sitemap();
 }
