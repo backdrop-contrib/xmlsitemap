@@ -729,19 +729,13 @@ function _xmlsitemap_get_path_alias($path, $alias = NULL) {
   if (!empty($alias)) {
     $result = $alias;
   }
-  static $xmlsitemap_url_rewrite;
-  $xmlsitemap_url_rewrite = isset($xmlsitemap_url_rewrite) ? $xmlsitemap_url_rewrite : variable_get('xmlsitemap_url_rewrite', TRUE);
-  if (function_exists('custom_url_rewrite') && $xmlsitemap_url_rewrite) {
+  if (function_exists('custom_url_rewrite')) {
     $result = custom_url_rewrite('alias', $result, $path);
   }
+  if (module_exists('i18n')) {
+    i18n_get_lang_prefix($result, TRUE);
+  }
   return $result;
-}
-
-if (module_exists('i18n') && !function_exists('custom_url_rewrite')) {
-  variable_set('xmlsitemap_url_rewrite', FALSE);
-}
-else {
-  variable_set('xmlsitemap_url_rewrite', TRUE);
 }
 
 /**
