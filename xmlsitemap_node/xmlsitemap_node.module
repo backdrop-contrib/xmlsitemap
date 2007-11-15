@@ -309,7 +309,7 @@ function xmlsitemap_node_comment($op, $comment) {
 }
 
 /**
- * Add extra submit handlers to forms.
+ * Add submit actions to forms.
  * @return Nothing
  */
 function _xmlsitemap_node_submit($form_id, $form_values) {
