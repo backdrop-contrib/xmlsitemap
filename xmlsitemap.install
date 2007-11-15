@@ -49,49 +49,6 @@ function xmlsitemap_enable() {
   if (file_check_directory(($path = file_directory_path() .'/xmlsitemap'), TRUE)) {
     file_save_data($xsl, "$path/gss.xsl", FILE_EXISTS_REPLACE);
   }
-  _xmlsitemap_gsitemap_replace();
-}
-
-/**
- * Replace Google Sitemap if it is installed.
- */
-function _xmlsitemap_gsitemap_replace() {
-  if (db_result(db_query("
-    SELECT 1 FROM {system}
-    WHERE type = 'module' AND name = 'gsitemap' AND (status = 1 OR schema_version >= 0)
-  "))) {
-    db_query("INSERT INTO {xmlsitemap_additional} SELECT * FROM {gsitemap_additional}");
-    $modules = array('xmlsitemap_node', 'xmlsitemap_engines');
-    if (variable_get('gsitemap_showterms', FALSE)) {
-      $modules[] = 'xmlsitemap_term';
-      variable_del('gsitemap_showterms');
-    }
-    if (variable_get('gsitemap_showusers', FALSE)) {
-      $modules[] = 'xmlsitemap_user';
-      variable_del('gsitemap_showusers');
-    }
-    drupal_install_modules($modules);
-    $settings = db_query("SELECT * FROM {variable} WHERE name LIKE 'gsitemap\_%'");
-    while ($variable = db_fetch_object($settings)) {
-      switch ($variable->name) {
-        case 'gsitemap_frontpage':
-          $name = 'xmlsitemap_front_page_priority';
-          break;
-        case 'gsitemap_priority':
-          $name = 'xmlsitemap_additional_links_priority';
-          break;
-        case 'gsitemap_logacc':
-          $name = 'xmlsitemap_log_access';
-          break;
-        default:
-          $name = 'xmlsitemap'. strstr($variable->name, '_');
-          break;
-      }
-      variable_set($name, (float) unserialize($variable->value));
-    }
-    module_disable(array('gsitemap'));
-    drupal_uninstall_module('gsitemap');
-  }
 }
 
 /**

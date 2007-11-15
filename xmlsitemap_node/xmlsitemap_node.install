@@ -32,35 +32,6 @@ function xmlsitemap_node_install() {
       );");
       break;
   }
-  _xmlsitemap_node_gsitemap_replace();
-}
-
-/**
- * Transfer data for Google Sitemap if it is installed.
- */
-function _xmlsitemap_node_gsitemap_replace() {
-  if (db_result(db_query("
-    SELECT 1 FROM {system}
-    WHERE type = 'module' AND name = 'gsitemap' AND (status = 1 OR schema_version >= 0)
-  "))) {
-    db_query("INSERT INTO {xmlsitemap_node} SELECT * FROM {gsitemap}");
-    $settings = db_query("SELECT * FROM {variable} WHERE name LIKE 'gsitemap\_%wt'");
-    while ($variable = db_fetch_object($settings)) {
-      $ts = strlen('gsitemap_');
-      $tl = strlen('wt');
-      $type = substr($variable->name, $ts, -$tl);
-      if (node_get_types('type', $type) === FALSE) {
-        variable_set("xmlsitemap_node_${type}_priority", (float) unserialize($variable->value));
-      }
-      else {
-        variable_set("xmlsitemap_node_type_priority_$type", (float) unserialize($variable->value));
-      }
-      variable_del($variable->name);
-    }
-    $variable = db_fetch_object(db_query("SELECT * FROM {variable} WHERE name = 'gsitemap_countcom'"));
-    variable_set('xmlsitemap_node_count_comments', unserialize($variable->value));
-    variable_del($variable->name);
-  }
 }
 
 /**
