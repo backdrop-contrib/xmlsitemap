@@ -433,7 +433,7 @@ function _xmlsitemap_output_index($link_count) {
   $output = '';
   global $base_path;
   $xsl_path = file_directory_path() .'/xmlsitemap/gss.xsl';
-  $xsl_path = file_exists($xsl_path) ? file_create_url($xsl_path) : $base_path . drupal_get_path('module', 'gsitemap') .'/gss/gss.xsl';
+  $xsl_path = file_exists($xsl_path) ? _xmlsitemap_file_create_url($xsl_path) : $base_path . drupal_get_path('module', 'gsitemap') .'/gss/gss.xsl';
   $output .= '<?xml version="1.0" encoding="UTF-8"?>'."\n";
   $output .= '<?xml-stylesheet type="text/xsl" href="'. $xsl_path .'" ?>'."\n";
   $output .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd">'."\n";
@@ -477,7 +477,7 @@ function _xmlsitemap_output_chunk($chunk) {
     set_time_limit(240);
   }
   $xsl_path = file_directory_path() .'/xmlsitemap/gss.xsl';
-  $xsl_path = file_exists($xsl_path) ? file_create_url($xsl_path) : $base_path . drupal_get_path('module', 'gsitemap') .'/gss/gss.xsl';
+  $xsl_path = file_exists($xsl_path) ? _xmlsitemap_file_create_url($xsl_path) : $base_path . drupal_get_path('module', 'gsitemap') .'/gss/gss.xsl';
   $output .= '<?xml version="1.0" encoding="UTF-8"?>'."\n";
   $output .= '<?xml-stylesheet type="text/xsl" href="'. $xsl_path .'" ?>'."\n";
   $output .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'."\n";
@@ -486,6 +486,22 @@ function _xmlsitemap_output_chunk($chunk) {
   $output .= implode("\n", _xmlsitemap_format(array_slice(_xmlsitemap_links(), $previous, $chunk_size)));
   $output .= "\n</urlset>";
   return $output;
+}
+
+/**
+ * Modified version of file_create_url(). Allows us to remove language
+ * prefixes.
+ * @param $path: the path to the file
+ * @return A URL to the file
+ */
+function _xmlsitemap_file_create_url($path) {
+  $path = trim(substr($path, strlen(file_directory_path())), '\\/');
+  switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
+    case FILE_DOWNLOADS_PUBLIC:
+      return $GLOBALS['base_url'] .'/'. file_directory_path() .'/'. str_replace('\\', '/', $path);
+    case FILE_DOWNLOADS_PRIVATE:
+      return xmlsitemap_url('system/files/'. $path, NULL, NULL, TRUE);
+  }
 }
 
 /**
