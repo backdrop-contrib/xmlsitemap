@@ -347,7 +347,7 @@ function xmlsitemap_node_cron() {
       LEFT OUTER JOIN {comments} c ON c.nid = n.nid
       LEFT JOIN {url_alias} ua ON ua.src = CONCAT('node/', n.nid)
       LEFT JOIN {xmlsitemap_node} xn ON xn.nid = n.nid
-      WHERE xn.nid IS NULL AND (c.timestamp < s.last_comment_timestamp OR c.timestamp IS NULL)
+      WHERE xn.nid IS NULL AND (c.timestamp < s.last_comment_timestamp OR s.comment_count <= 1)
       GROUP BY n.nid
     ");
     xmlsitemap_update_sitemap();
