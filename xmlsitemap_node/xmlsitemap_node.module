@@ -274,9 +274,9 @@ function xmlsitemap_node_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       }
       db_query("
         UPDATE {xmlsitemap_node}
-        SET pid = %s, previously_changed = last_changed, priority_override = %s
+        SET pid = %s, previously_changed = last_changed, last_changed = %d, priority_override = %s
         WHERE nid = %d
-      ", $pid, $node->priority_override, $node->nid);
+      ", $pid, $node->changed, $node->priority_override, $node->nid);
       if ($node->status || $node->xmlsitemap_node_status) {
         xmlsitemap_update_sitemap();
       }
