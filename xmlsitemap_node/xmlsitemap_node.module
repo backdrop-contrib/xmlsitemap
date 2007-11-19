@@ -65,9 +65,9 @@ function _xmlsitemap_node_links($excludes = array()) {
     LEFT JOIN {xmlsitemap_node} xn ON xn.nid = n.nid
     LEFT JOIN {url_alias} ua ON ua.pid = xn.pid
     WHERE n.status > 0
-    AND (n.type NOT IN ('%s') OR xn.priority_override >= 0)
+    AND (n.type NOT IN ('". implode("', '", $excludes) ."') OR xn.priority_override >= 0)
     AND n.nid <> %d";
-  $result = db_query(db_rewrite_sql($sql), implode("', '", $excludes), _xmlsitemap_node_frontpage());
+  $result = db_query(db_rewrite_sql($sql), _xmlsitemap_node_frontpage());
   while ($node = db_fetch_object($result)) {
     $links[] = array(
       'nid' => $node->nid,
@@ -208,6 +208,8 @@ function xmlsitemap_node_form_alter($form_id, &$form) {
         );
         $form['xmlsitemap_old_priority'] = array('#type' => 'value', '#value' => variable_get("xmlsitemap_node_type_priority_{$form['#node_type']->type}", 0.1));
         $form['#submit']['_xmlsitemap_node_submit'] = array();
+        $form['submit']['#weight'] = 1;
+        $form['reset']['#weight'] = 1;
       }
       break;
     case 'xmlsitemap_settings_sitemap':
@@ -217,7 +219,6 @@ function xmlsitemap_node_form_alter($form_id, &$form) {
         '#description' => t('The default priority for specific content types can be set on the !link pages.', array(
           '!link' => l(t('content type settings'), 'admin/content/types'),
         )),
-        '#weight' => 0,
       );
       $form['xmlsitemap_node']['xmlsitemap_node_promote_priority'] = array(
         '#type' => 'select',
@@ -239,6 +240,7 @@ function xmlsitemap_node_form_alter($form_id, &$form) {
         '#default_value' => variable_get('xmlsitemap_node_count_comments', TRUE),
         '#description' => t('If enabled, the frequency of comments on a post will affect its change frequency and last modification date.'),
       );
+      $form['buttons']['#weight'] = 1;
       break;
   }
 }
