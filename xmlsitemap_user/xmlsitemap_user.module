@@ -197,7 +197,7 @@ function xmlsitemap_user_user($op, &$edit, &$account, $category = NULL) {
       $pid = empty($edit['pid']) ? 'NULL' : $edit['pid'];
       $priority = isset($edit['xmlsitemap_user_priority']) ? $edit['xmlsitemap_user_priority'] : 'NULL';
       db_query("
-        INSERT INTO {xmlsitemap_user} (uid, pid, last_changed, priority_override) VALUES (%d, %d, %d, %s)
+        INSERT INTO {xmlsitemap_user} (uid, pid, last_changed, priority_override) VALUES (%d, %s, %d, %s)
       ", $account->uid, $pid, time(), $priority);
       $edit['pid'] = NULL;
       $edit['xmlsitemap_user_priority'] = NULL;

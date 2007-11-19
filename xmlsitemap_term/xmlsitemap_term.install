@@ -34,7 +34,7 @@ function xmlsitemap_term_install() {
  * Implementation of hook_enable().
  */
 function xmlsitemap_term_enable() {
-  $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathautho'"));
+  $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathauto'"));
   if ($weight !== FALSE) {
     db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'xmlsitemap_term'", ++$weight);
   }

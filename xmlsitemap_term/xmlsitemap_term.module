@@ -197,13 +197,13 @@ function xmlsitemap_term_taxonomy($op, $type, $array = NULL) {
       else {
         $pid = db_result(db_query("SELECT pid FROM {url_alias} WHERE src = '%s'", "taxonomy/term/$array[tid]"));
       }
-      $pid = $pid === FALSE ? 'NULL' : $pid;
+      $pid = empty($pid) ? 'NULL' : $pid;
     }
     switch ($op) {
       case 'insert':
         $priority = isset($array['xmlsitemap_term_priority']) ? $array['xmlsitemap_term_priority'] : 'NULL';
         db_query("
-          INSERT INTO {xmlsitemap_term} (tid, pid, last_changed, priority_override) VALUES (%d, %d, %d, %s)
+          INSERT INTO {xmlsitemap_term} (tid, pid, last_changed, priority_override) VALUES (%d, %s, %d, %s)
         ", $array['tid'], $pid, time(), $priority);
         break;
       case 'update':
