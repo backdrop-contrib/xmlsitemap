@@ -13,7 +13,6 @@ function xmlsitemap_user_xmlsitemap_links($type = NULL, $excludes = array()) {
   if (!isset($type) && user_access('access user profiles')) {
     $links = _xmlsitemap_user_links();
     $links = array_merge($links, module_invoke_all('xmlsitemap_links', 'user'));
-    $links = array_merge($links, module_invoke_all('gsitemap', 'user'));
     if (!empty($links)) {
       foreach ($links as $key => $link) {
         $uid[$key] = $link['uid'];

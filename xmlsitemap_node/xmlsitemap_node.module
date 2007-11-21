@@ -13,7 +13,6 @@ function xmlsitemap_node_xmlsitemap_links($type = NULL, $excludes = array()) {
   if (!isset($type)) {
     $links = _xmlsitemap_node_links(_xmlsitemap_node_excludes());
     $links = array_merge($links, module_invoke_all('xmlsitemap_links', 'node', _xmlsitemap_node_excludes()));
-    $links = array_merge($links, module_invoke_all('gsitemap', 'node', _xmlsitemap_node_excludes()));
     if (!empty($links)) {
       foreach ($links as $key => $link) {
         $nid[$key] = $link['nid'];

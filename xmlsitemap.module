@@ -596,7 +596,6 @@ function xmlsitemap_xmlsitemap_links($type = NULL, $excludes = array()) {
     global $base_url;
     $links[] = array('#loc' => "$base_url/", '#changefreq' => 'always', '#priority' => variable_get('xmlsitemap_front_page_priority', 1));
     $links = array_merge($links, _xmlsitemap_additional_links());
-    $links = array_merge($links, module_invoke_all('gsitemap'));
     $links = array_merge($links, _xmlsitemap_xml_links());
     if (!empty($links)) {
       foreach ($links as $key => $link) {
@@ -644,7 +643,6 @@ function _xmlsitemap_additional_links() {
 function _xmlsitemap_xml_links() {
   $links = array();
   $xml = module_invoke_all('xmlsitemap_links', 'xml');
-  $xml = array_merge($xml, module_invoke_all('gsitemap', 'xml'));
   foreach ($xml as $entries) {
     $start = strpos($entries, '<url>');
     if ($start !== FALSE) {
