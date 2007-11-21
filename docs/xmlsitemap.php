@@ -137,7 +137,7 @@ function hook_xmlsitemap_links($type = NULL, $excludes = array()) {
  * - form:
  *   Array of form elements for search engine settings
  * - ping:
- *   Nothing
+ *   None
  * - access:
  *   Message string for access log
  */

@@ -125,7 +125,7 @@ function xmlsitemap_user_form_alter($form_id, &$form) {
 
 /**
  * Add submit actions to forms.
- * @return Nothing
+ * @return None
  */
 function _xmlsitemap_user_submit($form_id, $form_values) {
   switch ($form_id) {
