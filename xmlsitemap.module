@@ -200,7 +200,7 @@ function xmlsitemap_settings_additional() {
     $priority = isset($link->priority) ? $link->priority : 'NULL';
     $form['delete'][$link->path] = array('#type' => 'checkbox', '#default_value' => FALSE);
     $form['path'][$link->path] = array('#type' => 'value', '#value' => $link->path);
-    $form['link'][$link->path] = array('#value' => l($link->path, $link->path));
+    $form['link'][$link->path] = array('#value' => '<a href="'. xmlsitemap_url($link->path, drupal_lookup_path('alias', $link->path) ? drupal_lookup_path('alias', $link->path) : NULL) .'">'. $link->path .'</a>');
     $form['old_priority'][$link->path] = array('#type' => 'value', '#value' => $priority);
     $form['priority'][$link->path] = array('#type' => 'select', '#default_value' => $priority, '#options' => xmlsitemap_priority_options('default'));
   }
