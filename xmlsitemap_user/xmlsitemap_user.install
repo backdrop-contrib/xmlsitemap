@@ -48,13 +48,25 @@ function xmlsitemap_user_enable() {
   if ($weight !== FALSE) {
     db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'xmlsitemap_user'", ++$weight);
   }
-  db_query("
+  $query = "
     INSERT INTO {xmlsitemap_user} (uid, last_changed, pid)
     SELECT u.uid, u.created, ua.pid FROM {users} u
-    LEFT JOIN {url_alias} ua ON ua.src = CONCAT('user/', u.uid)
-    LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid
+    LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid";
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $query .= "
+        LEFT JOIN {url_alias} ua ON ua.src = CONCAT('user/', u.uid)";
+      break;
+    case 'pgsql':
+      $query .= "
+        LEFT JOIN {url_alias} ua ON ua.src = 'user/' || u.uid";
+      break;
+  }
+  $query .= "
     WHERE u.uid <> 0 AND xu.uid IS NULL
-  ", time());
+  ";
+  db_query($query, time());
   db_query("
     INSERT INTO {xmlsitemap_user_role} (rid)
     SELECT r.rid FROM {role} r

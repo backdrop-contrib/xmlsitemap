@@ -39,7 +39,8 @@ function _xmlsitemap_user_links() {
     LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid
     LEFT JOIN {url_alias} ua ON ua.pid = xu.pid
     WHERE (xu.priority_override IS NULL OR xu.priority_override >= 0) AND u.uid <> %d AND u.uid > 0
-    GROUP BY u.uid HAVING MIN(xur.priority) <> -1 OR COUNT(*) = 1 AND %f <> -1
+    GROUP BY u.uid, xu.last_changed, xu.previously_changed, xu.priority_override, alias
+    HAVING MIN(xur.priority) <> -1 OR COUNT(*) = 1 AND %f <> -1
   ", _xmlsitemap_user_frontpage(), variable_get('xmlsitemap_user_default_priority', 0.1));
   while ($user = db_fetch_object($result)) {
     $age = time() - $user->last_changed;
@@ -235,13 +236,25 @@ function xmlsitemap_user_user($op, &$edit, &$account, $category = NULL) {
  */
 function xmlsitemap_user_cron() {
   if (db_result(db_query_range("SELECT COUNT(*) FROM {users} u LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid WHERE u.uid <> 0 AND xu.uid IS NULL", 0, 1))) {
-    db_query("
+    $query = "
       INSERT INTO {xmlsitemap_user} (uid, last_changed, pid)
       SELECT u.uid, u.created, ua.pid FROM {users} u
-      LEFT JOIN {url_alias} ua ON ua.src = CONCAT('user/', u.uid)
-      LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid
+      LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid";
+    switch ($GLOBALS['db_type']) {
+      case 'mysql':
+      case 'mysqli':
+        $query .= "
+          LEFT JOIN {url_alias} ua ON ua.src = CONCAT('user/', u.uid)";
+        break;
+      case 'pgsql':
+        $query .= "
+          LEFT JOIN {url_alias} ua ON ua.src = 'user/' || u.uid";
+        break;
+    }
+    $query .= "
       WHERE u.uid <> 0 AND xu.uid IS NULL
-    ", time());
+    ";
+    db_query($query, time());
     xmlsitemap_update_sitemap();
   }
 }

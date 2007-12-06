@@ -56,7 +56,7 @@ function _xmlsitemap_term_links($excludes = array()) {
     LEFT JOIN {vocabulary} v ON v.vid = td.vid
     LEFT JOIN {xmlsitemap_term} xt ON xt.tid = td.tid
     LEFT JOIN {url_alias} ua ON ua.pid = xt.pid
-    WHERE (td.vid NOT IN ('". implode("', '", $excludes) ."') OR xt.priority_override >= 0)
+    WHERE (td.vid NOT IN (". (empty($excludes) ? 'NULL' : implode(', ', $excludes)) .") OR xt.priority_override >= 0)
     AND td.tid <> %d
   ", 'td', 'tid'), _xmlsitemap_term_frontpage());
   while ($term = db_fetch_object($result)) {
@@ -229,13 +229,25 @@ function xmlsitemap_term_taxonomy($op, $type, $array = NULL) {
  */
 function xmlsitemap_term_cron() {
   if (db_result(db_query_range("SELECT COUNT(*) FROM {term_data} td LEFT JOIN {xmlsitemap_term} xt ON xt.tid = td.tid WHERE xt.tid IS NULL", 0, 1))) {
-    db_query("
+    $query = "
       INSERT INTO {xmlsitemap_term} (tid, last_changed, pid)
       SELECT td.tid, %d, ua.pid FROM {term_data} td
-      LEFT JOIN {url_alias} ua ON ua.src = CONCAT('taxonomy/term/', td.tid) OR ua.src = CONCAT('forum/', td.tid)
-      LEFT JOIN {xmlsitemap_term} xt ON xt.tid = td.tid
+      LEFT JOIN {xmlsitemap_term} xt ON xt.tid = td.tid";
+    switch ($GLOBALS['db_type']) {
+      case 'mysql':
+      case 'mysqli':
+        $query .= "
+          LEFT JOIN {url_alias} ua ON ua.src = CONCAT('taxonomy/term/', td.tid) OR ua.src = CONCAT('forum/', td.tid)";
+        break;
+      case 'pgsql':
+        $query .= "
+          LEFT JOIN {url_alias} ua ON ua.src = 'taxonomy/term/' || td.tid OR ua.src = 'forum/' || td.tid";
+        break;
+    }
+    $query .= "
       WHERE xt.tid IS NULL
-    ", time());
+    ";
+    db_query($query, time());
     xmlsitemap_update_sitemap();
   }
 }

@@ -60,9 +60,9 @@ function hook_xmlsitemap_links($type = NULL, $excludes = array()) {
         LEFT JOIN {xmlsitemap_user_role} xur ON xur.rid = ur.rid
         LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid
         LEFT JOIN {url_alias} ua ON ua.pid = xu.pid
-        WHERE (xu.priority_override IS NULL OR xu.priority_override >= 0)
-        AND u.uid <> %d
-        GROUP BY u.uid HAVING MIN(xur.priority) <> -1
+        WHERE (xu.priority_override IS NULL OR xu.priority_override >= 0) AND u.uid <> %d
+        GROUP BY u.uid, xu.last_changed, xu.previously_changed, xu.priority_override, ua.dst
+        HAVING MIN(xur.priority) <> -1
       ", _xmlsitemap_user_frontpage());
       // Create link array for each profile.
       while ($user = db_fetch_object($result)) {
@@ -84,6 +84,7 @@ function hook_xmlsitemap_links($type = NULL, $excludes = array()) {
         $loc[$key] = $link['#loc'];
       }
       array_multisort($uid, $loc, $links);
+      break;
     case 'xml':
       // Retrieve an XML site map.
       $links = example_sitemap();
@@ -183,6 +184,7 @@ function hook_xmlsitemap_engines($op, $type = NULL) {
       if (strpos($_SERVER['HTTP_USER_AGENT'], 'Googlebot') !== FALSE) {
         return t('!sitemap downloaded by Google.', array('!sitemap' => $type));
       }
+      break;
   }
 }
 

@@ -255,29 +255,51 @@ function xmlsitemap_node_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       break;
     case 'insert':
       $node->priority_override = isset($node->priority_override) ? $node->priority_override : 'NULL';
-      db_query("
+      $query = "
         INSERT INTO {xmlsitemap_node} (nid, pid, last_changed, priority_override)
         SELECT %d, ua.pid, %d, %s
-        FROM {node} n
-        LEFT JOIN {url_alias} ua ON ua.src = CONCAT('node/', %d)
+        FROM {node} n";
+      switch ($GLOBALS['db_type']) {
+        case 'mysql':
+        case 'mysqli':
+          $query .= "
+            LEFT JOIN {url_alias} ua ON ua.src = CONCAT('node/', %d)";
+          break;
+        case 'pgsql':
+          $query .= "
+            LEFT JOIN {url_alias} ua ON ua.src = 'node/' || %d";
+          break;
+      }
+      $query .= "
         LIMIT 0, 1
-      ", $node->nid, $node->changed, $node->priority_override, $node->nid);
+      ";
+      db_query($query, $node->nid, $node->changed, $node->priority_override, $node->nid);
       if ($node->status) {
         xmlsitemap_update_sitemap();
       }
       break;
     case 'update':
-      $pid = db_result(db_query("SELECT pid FROM {url_alias} WHERE src = CONCAT('node/', %d)", $node->nid));
-      $pid = empty($pid) ? 'NULL' : $pid;
       if (!isset($node->priority_override)) {
         $priority = db_result(db_query("SELECT priority_override FROM {xmlsitemap_node} WHERE nid = %d", $node->nid));
         $node->priority_override = isset($priority) && $priority !== FALSE ? $priority : 'NULL';
       }
-      db_query("
-        UPDATE {xmlsitemap_node}
-        SET pid = %s, previously_changed = last_changed, last_changed = %d, priority_override = %s
-        WHERE nid = %d
-      ", $pid, $node->changed, $node->priority_override, $node->nid);
+      switch ($GLOBALS['db_type']) {
+        case 'mysql':
+        case 'mysqli':
+          db_query("
+            UPDATE {xmlsitemap_node} xn LEFT JOIN {url_alias} ua ON ua.src = CONCAT('node/', xn.nid)
+            SET xn.pid = ua.pid, xn.previously_changed = xn.last_changed, xn.last_changed = %d, xn.priority_override = %s
+            WHERE xn.nid = %d
+          ", $node->changed, $node->priority_override, $node->nid);
+          break;
+        case 'pgsql':
+          db_query("
+            UPDATE {xmlsitemap_node}
+            SET pid = {url_alias}.pid, previously_changed = last_changed, last_changed = %d, priority_override = %s
+            FROM {url_alias} WHERE nid = %d AND ({url_alias}.src = 'node/' || nid OR {url_alias}.src IS NULL)
+          ", $node->changed, $node->priority_override, $node->nid);
+          break;
+      }
       if ($node->status || $node->xmlsitemap_node_status) {
         xmlsitemap_update_sitemap();
       }
@@ -341,16 +363,28 @@ function xmlsitemap_node_node_type($op, $info) {
  */
 function xmlsitemap_node_cron() {
   if (db_result(db_query_range("SELECT COUNT(*) FROM {node} n LEFT JOIN {xmlsitemap_node} xn ON xn.nid = n.nid WHERE xn.nid IS NULL", 0, 1))) {
-    db_query("
+    $query = "
       INSERT INTO {xmlsitemap_node} (nid, pid, last_changed, last_comment, previous_comment)
       SELECT n.nid, ua.pid, n.changed, s.last_comment_timestamp, MAX(c.timestamp) FROM {node} n
       LEFT JOIN {node_comment_statistics} s ON s.nid = n.nid
-      LEFT OUTER JOIN {comments} c ON c.nid = n.nid
-      LEFT JOIN {url_alias} ua ON ua.src = CONCAT('node/', n.nid)
-      LEFT JOIN {xmlsitemap_node} xn ON xn.nid = n.nid
-      WHERE xn.nid IS NULL AND (c.timestamp < s.last_comment_timestamp OR s.comment_count <= 1)
-      GROUP BY n.nid
-    ");
+      LEFT OUTER JOIN {comments} c ON c.nid = n.nid AND c.timestamp < s.last_comment_timestamp
+      LEFT JOIN {xmlsitemap_node} xn ON xn.nid = n.nid";
+    switch ($GLOBALS['db_type']) {
+      case 'mysql':
+      case 'mysqli':
+        $query .= "
+          LEFT JOIN {url_alias} ua ON ua.src = CONCAT('node/', n.nid)";
+        break;
+      case 'pgsql':
+        $query .= "
+          LEFT JOIN {url_alias} ua ON ua.src = 'node/' || n.nid";
+        break;
+    }
+    $query .= "
+      WHERE xn.nid IS NULL
+      GROUP BY n.nid, ua.pid, n.changed, s.last_comment_timestamp
+    ";
+    db_query($query);
     xmlsitemap_update_sitemap();
   }
 }
