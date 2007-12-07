@@ -271,7 +271,7 @@ function xmlsitemap_node_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           break;
       }
       $query .= "
-        LIMIT 0, 1
+        LIMIT 1
       ";
       db_query($query, $node->nid, $node->changed, $node->priority_override, $node->nid);
       if ($node->status) {
