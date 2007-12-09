@@ -12,8 +12,8 @@
     <html>
       <head>
         <title>Site map file</title>
-        <link href="gss.css" type="text/css" rel="stylesheet"/>
-        <script src="gss.js"></script>
+        <link href="/sites/all/modules/xmlsitemap/gss/gss.css" type="text/css" rel="stylesheet"/>
+        <script src="/sites/all/modules/xmlsitemap/gss/gss.js"></script>
       </head>
 
       <!-- Store in $fileType if we are in a sitemap or in a siteindex -->
