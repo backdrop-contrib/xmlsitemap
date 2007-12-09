@@ -500,7 +500,7 @@ function _xmlsitemap_file_create_url($path) {
     case FILE_DOWNLOADS_PUBLIC:
       return $GLOBALS['base_url'] .'/'. file_directory_path() .'/'. str_replace('\\', '/', $path);
     case FILE_DOWNLOADS_PRIVATE:
-      return xmlsitemap_url('system/files/'. $path, NULL, NULL, TRUE);
+      return xmlsitemap_url('system/files/'. $path, NULL, NULL, NULL, TRUE);
   }
 }
 
