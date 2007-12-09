@@ -136,7 +136,7 @@ function xmlsitemap_term_form_alter($form_id, &$form) {
       $priority = isset($priority) ? $priority : 'NULL';
       if (user_access('override term priority')) {
         $options = xmlsitemap_priority_options('both');
-        $default = variable_get('xmlsitemap_term_vocabulary_priority_'. $form['vid']['#value'], 0.1);
+        $default = variable_get('xmlsitemap_term_vocabulary_priority_'. $form['vid']['#value'], '0.1');
         $form['xmlsitemap_term_priority'] = array(
           '#type' => 'select',
           '#title' => t('Site map priority'),

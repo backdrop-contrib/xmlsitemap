@@ -178,6 +178,7 @@ function xmlsitemap_user_user($op, &$edit, &$account, $category = NULL) {
           WHERE rid IN (". implode(', ', array_keys($account->roles)) .")
         "));
         $default = $default->min < 0 ? -1 : min($default->sum, 0.9);
+        $default = (string) $default;
         $form['xmlsitemap_user']['xmlsitemap_user_priority'] = array(
           '#type' => 'select',
           '#title' => t('Site map priority'),
