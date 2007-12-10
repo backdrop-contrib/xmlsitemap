@@ -28,8 +28,5 @@ The Sitemap protocol: http://sitemaps.org.
 Search engines:
 http://www.google.com/webmasters/sitemap
 http://developer.yahoo.com/search/siteexplorer/V1/ping.html
-
-Site maps may be manually submitted to MSN by visiting
-http://search.msn.com/docs/submit.aspx and submitting the URL of the site
-map.
+http://webmaster.live.com/
 
