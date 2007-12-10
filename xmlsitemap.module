@@ -417,7 +417,7 @@ function _xmlsitemap_update_cache($page = NULL) {
   variable_set('xmlsitemap_chunk_count', $chunk);
   variable_set('xmlsitemap_update', FALSE);
   if (!$status) {
-    drupal_set_message(t('Unable to load site map. Make sure your temporary directory exists and is writable by Drupal.'), 'error');
+    drupal_set_message(t('Unable to load site map. Make sure that there is an xmlsitemap directory in your files directory and that it is writable by Drupal.'), 'error');
   }
   $user = $current_user;
   return $status;
