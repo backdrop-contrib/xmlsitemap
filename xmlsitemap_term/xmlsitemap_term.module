@@ -56,7 +56,7 @@ function _xmlsitemap_term_links($excludes = array()) {
     LEFT JOIN {vocabulary} v ON v.vid = td.vid
     LEFT JOIN {xmlsitemap_term} xt ON xt.tid = td.tid
     LEFT JOIN {url_alias} ua ON ua.pid = xt.pid
-    WHERE (td.vid NOT IN (". (empty($excludes) ? 'NULL' : implode(', ', $excludes)) .") OR xt.priority_override >= 0)
+    WHERE (td.vid NOT IN (". (empty($excludes) ? 'NULL' : implode(', ', $excludes)) .") AND xt.priority_override IS NULL OR xt.priority_override >= 0)
     AND td.tid <> %d
   ", 'td', 'tid'), _xmlsitemap_term_frontpage());
   while ($term = db_fetch_object($result)) {

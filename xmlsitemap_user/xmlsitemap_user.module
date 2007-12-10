@@ -40,7 +40,7 @@ function _xmlsitemap_user_links() {
     LEFT JOIN {url_alias} ua ON ua.pid = xu.pid
     WHERE (xu.priority_override IS NULL OR xu.priority_override >= 0) AND u.uid <> %d AND u.uid > 0
     GROUP BY u.uid, xu.last_changed, xu.previously_changed, xu.priority_override, alias
-    HAVING MIN(xur.priority) <> -1 OR COUNT(*) = 1 AND %f <> -1
+    HAVING COUNT(xu.priority_override) > 0 OR (COUNT(xur.rid) = 0 AND %f <> -1 OR MIN(xur.priority) <> -1)
   ", _xmlsitemap_user_frontpage(), variable_get('xmlsitemap_user_default_priority', 0.1));
   while ($user = db_fetch_object($result)) {
     $age = time() - $user->last_changed;
