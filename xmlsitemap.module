@@ -12,7 +12,7 @@ function xmlsitemap_help($section) {
   switch ($section) {
     case 'admin/settings/xmlsitemap':
     case 'admin/settings/xmlsitemap/settings':
-      return t('Configure the site map. Your site map is at !url.', array('!url' => '<a href='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE) .'>'. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE) .'</a>'));
+      return t('Configure the site map. Your site map is at !url.', array('!url' => '<a href="'. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE) .'">'. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE) .'</a>'));
     case 'admin/settings/xmlsitemap/engines':
       return t('Configure behavior for search engines.');
     case 'admin/settings/xmlsitemap/additional':
