@@ -330,7 +330,7 @@ function _xmlsitemap_output($chunk = NULL) {
   drupal_set_header('Content-type: text/xml; charset=utf-8');
   global $user;
   $dest = file_directory_path() .'/xmlsitemap';
-  file_check_directory($dest, TRUE);
+  file_check_directory($dest, FILE_CREATE_DIRECTORY);
   if (isset($chunk)) {
     $dest .= "/sitemap$chunk.xml.gz";
     $type = t('Site map @chunk', array('@chunk' => $chunk));
@@ -388,7 +388,7 @@ function _xmlsitemap_update_cache($page = NULL) {
   $current_user = $user;
   $user = user_load(array('uid' => 0));
   $path = file_directory_path() .'/xmlsitemap';
-  file_check_directory($path, TRUE);
+  file_check_directory($path, FILE_CREATE_DIRECTORY);
   $node_count = db_result(db_query("SELECT COUNT(*) FROM {node}"));
   $dest = $path .'/sitemap.xml.gz';
   $link_count = _xmlsitemap_link_count();

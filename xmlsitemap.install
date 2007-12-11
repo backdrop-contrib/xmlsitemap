@@ -46,7 +46,7 @@ function xmlsitemap_enable() {
   $js_length = strpos($xsl, '"></script>') - $js_start;
   $xsl = substr_replace($xsl, $base_path . drupal_get_path('module', 'xmlsitemap') .'/gss/gss.js', $js_start, $js_length);
 
-  if (file_check_directory(($path = file_directory_path() .'/xmlsitemap'), TRUE)) {
+  if (file_check_directory(($path = file_directory_path() .'/xmlsitemap'), FILE_CREATE_DIRECTORY)) {
     file_save_data($xsl, "$path/gss.xsl", FILE_EXISTS_REPLACE);
   }
 }
