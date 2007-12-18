@@ -243,9 +243,8 @@ function xmlsitemap_settings_additional_submit($form_id, $form_values) {
     }
     if (!empty($form_values['delete'])) {
       foreach ($form_values['delete'] as $id => $delete) {
-        $path = $id == '_new' ? 'new' : urldecode(str_replace(array('_', '%%'), array('%', '_'), $id));
-        if ($delete || $path == trim($form_values['link']['new'])) {
-          db_query("DELETE FROM {xmlsitemap_additional} WHERE path = '%s'", $path);
+        if ($delete || $form_values['path'][$id] == trim($form_values['link']['new'])) {
+          db_query("DELETE FROM {xmlsitemap_additional} WHERE path = '%s'", $form_values['path'][$id]);
           unset($form_values['priority'][$id]);
           $update = TRUE;
         }
@@ -263,14 +262,13 @@ function xmlsitemap_settings_additional_submit($form_id, $form_values) {
     }
     if (!empty($form_values['priority'])) {
       foreach ($form_values['priority'] as $id => $priority) {
-        $path = $id == '_new' ? 'new' : urldecode(str_replace(array('_', '%%'), array('%', '_'), $id));
         if ($priority != $form_values['old_priority'][$id]) {
-          $pid = db_result(db_query("SELECT pid FROM {url_alias} WHERE src = '%s'", $path));
+          $pid = db_result(db_query("SELECT pid FROM {url_alias} WHERE src = '%s'", $form_values['path'][$id]));
           db_query("
             UPDATE {xmlsitemap_additional}
             SET pid = %s, previously_changed = last_changed, last_changed = %d, priority = %s
             WHERE path = '%s'
-          ", empty($pid) ? 'NULL' : $pid, time(), $priority, $path);
+          ", empty($pid) ? 'NULL' : $pid, time(), $priority, $form_values['path'][$id]);
           $update = TRUE;
         }
       }
