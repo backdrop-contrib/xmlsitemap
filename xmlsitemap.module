@@ -197,12 +197,13 @@ function xmlsitemap_settings_additional() {
   );
   $result = pager_query("SELECT path, priority FROM {xmlsitemap_additional} ORDER BY last_changed DESC", 50);
   while ($link = db_fetch_object($result)) {
+    $id = $link->path == 'new' ? '_new' : str_replace(array('_', '%'), array('__', '_'), urlencode($link->path));
+    $form['delete'][$id] = array('#type' => 'checkbox', '#default_value' => FALSE);
+    $form['path'][$id] = array('#type' => 'value', '#value' => $link->path);
+    $form['link'][$id] = array('#value' => '<a href="'. xmlsitemap_url($link->path, drupal_lookup_path('alias', $link->path) ? drupal_lookup_path('alias', $link->path) : NULL) .'">'. $link->path .'</a>');
     $priority = isset($link->priority) ? $link->priority : 'NULL';
-    $form['delete'][$link->path] = array('#type' => 'checkbox', '#default_value' => FALSE);
-    $form['path'][$link->path] = array('#type' => 'value', '#value' => $link->path);
-    $form['link'][$link->path] = array('#value' => '<a href="'. xmlsitemap_url($link->path, drupal_lookup_path('alias', $link->path) ? drupal_lookup_path('alias', $link->path) : NULL) .'">'. $link->path .'</a>');
-    $form['old_priority'][$link->path] = array('#type' => 'value', '#value' => $priority);
-    $form['priority'][$link->path] = array('#type' => 'select', '#default_value' => $priority, '#options' => xmlsitemap_priority_options('default'));
+    $form['old_priority'][$id] = array('#type' => 'value', '#value' => $priority);
+    $form['priority'][$id] = array('#type' => 'select', '#default_value' => $priority, '#options' => xmlsitemap_priority_options('default'));
   }
   $form['pager'] = array('#value' => theme('pager', NULL, 50));
   return system_settings_form($form);
@@ -216,12 +217,12 @@ function theme_xmlsitemap_settings_additional($form) {
   $output = '';
   $output .= drupal_render($form['xmlsitemap_additional_links_priority']);
   $header = array(t('Delete'), t('Path'), t('Priority'));
-  foreach (element_children($form['link']) as $path) {
+  foreach (element_children($form['link']) as $id) {
     $row = array();
-    $row[] = isset($form['delete'][$path]) ? drupal_render($form['delete'][$path]) : array_merge(array('header' => TRUE, 'valign' => 'bottom'), theme('table_select_header_cell'));
-    $row[] = drupal_render($form['link'][$path]);
-    $row[] = drupal_render($form['priority'][$path]);
-    $rows[$path] = array('data' => $row, 'valign' => 'top');
+    $row[] = isset($form['delete'][$id]) ? drupal_render($form['delete'][$id]) : array_merge(array('header' => TRUE, 'valign' => 'bottom'), theme('table_select_header_cell'));
+    $row[] = drupal_render($form['link'][$id]);
+    $row[] = drupal_render($form['priority'][$id]);
+    $rows[$id] = array('data' => $row, 'valign' => 'top');
   }
   if (!empty($rows)) {
     $output .= theme('table', $header, $rows);
@@ -241,10 +242,11 @@ function xmlsitemap_settings_additional_submit($form_id, $form_values) {
       $update = TRUE;
     }
     if (!empty($form_values['delete'])) {
-      foreach ($form_values['delete'] as $path => $delete) {
+      foreach ($form_values['delete'] as $id => $delete) {
+        $path = $id == '_new' ? 'new' : urldecode(str_replace(array('_', '%%'), array('%', '_'), $id));
         if ($delete || $path == trim($form_values['link']['new'])) {
           db_query("DELETE FROM {xmlsitemap_additional} WHERE path = '%s'", $path);
-          unset($form_values['priority'][$path]);
+          unset($form_values['priority'][$id]);
           $update = TRUE;
         }
       }
@@ -260,8 +262,9 @@ function xmlsitemap_settings_additional_submit($form_id, $form_values) {
       $update = TRUE;
     }
     if (!empty($form_values['priority'])) {
-      foreach ($form_values['priority'] as $path => $priority) {
-        if ($priority != $form_values['old_priority'][$path]) {
+      foreach ($form_values['priority'] as $id => $priority) {
+        $path = $id == '_new' ? 'new' : urldecode(str_replace(array('_', '%%'), array('%', '_'), $id));
+        if ($priority != $form_values['old_priority'][$id]) {
           $pid = db_result(db_query("SELECT pid FROM {url_alias} WHERE src = '%s'", $path));
           db_query("
             UPDATE {xmlsitemap_additional}
