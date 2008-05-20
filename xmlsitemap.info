@@ -2,4 +2,4 @@
 name = XML Sitemap
 description = Creates an XML site map in accordance with the sitemaps.org specification.
 package = XML Sitemap
-
+core = 6.x

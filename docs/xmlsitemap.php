@@ -173,10 +173,10 @@ function hook_xmlsitemap_engines($op, $type = NULL) {
       if (variable_get('xmlsitemap_engines_google_submit', TRUE)) {
         $result = drupal_http_request(variable_get('xmlsitemap_engines_google_url', 'http://www.google.com/webmasters/tools/ping?sitemap='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)));
         if ($result->code == 200) {
-          watchdog('xmlsitemap', t('Sitemap successfully submitted to Google.'));
+          watchdog('xmlsitemap', 'Sitemap successfully submitted to Google.');
         }
         else {
-          watchdog('xmlsitemap', t('Error occurred submitting sitemap to Google: @code', array('@code' => $result->code)), WATCHDOG_ERROR);
+          watchdog('xmlsitemap', 'Error occurred submitting sitemap to Google: @code', array('@code' => $result->code), WATCHDOG_ERROR);
         }
       }
       break;

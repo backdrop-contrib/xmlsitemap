@@ -2,5 +2,5 @@
 name = XML Sitemap: Term
 description = Adds taxonomy terms to the site map.
 package = XML Sitemap
-dependencies = xmlsitemap
-
+dependencies[] = xmlsitemap
+core = "6.x"
