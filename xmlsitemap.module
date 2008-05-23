@@ -445,10 +445,10 @@ function _xmlsitemap_output_index($link_count) {
   $xsl_path = file_exists($xsl_path) ? _xmlsitemap_file_create_url($xsl_path) : $base_path . drupal_get_path('module', 'xmlsitemap') .'/gss/gss.xsl';
   $output .= '<?xml version="1.0" encoding="UTF-8"?>'."\n";
   $output .= '<?xml-stylesheet type="text/xsl" href="'. $xsl_path .'" ?>'."\n";
-  $output .= '<sitemapindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'."\n";
-  $output .= '              xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9"'."\n";
-  $output .= '              url="http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd"'."\n";
-  $output .= '              xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+  $output .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'."\n";
+  $output .= '              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'."\n";
+  $output .= '              xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9'."\n";
+  $output .= '                                  http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd">'."\n";
   $chunk_size = variable_get('xmlsitemap_chunk_size', 50000);
   for ($chunk = 0; $chunk < $link_count / $chunk_size; ++$chunk) {
     $output .= '<sitemap><loc>'. xmlsitemap_url("sitemap$chunk.xml", NULL, NULL, NULL, TRUE) .'</loc>';
@@ -492,10 +492,10 @@ function _xmlsitemap_output_chunk($chunk) {
   $xsl_path = file_exists($xsl_path) ? _xmlsitemap_file_create_url($xsl_path) : $base_path . drupal_get_path('module', 'xmlsitemap') .'/gss/gss.xsl';
   $output .= '<?xml version="1.0" encoding="UTF-8"?>'."\n";
   $output .= '<?xml-stylesheet type="text/xsl" href="'. $xsl_path .'" ?>'."\n";
-  $output .= '<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'."\n";
-  $output .= '        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9"'."\n";
-  $output .= '        url="http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"'."\n";
-  $output .= '        xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+  $output .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'."\n";
+  $output .= '        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'."\n";
+  $output .= '        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9'."\n";
+  $output .= '                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'."\n";
   $chunk_size = variable_get('xmlsitemap_chunk_size', 50000);
   $previous = $chunk * $chunk_size;
   $output .= implode("\n", _xmlsitemap_format(array_slice(_xmlsitemap_links(), $previous, $chunk_size)));
