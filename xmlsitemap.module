@@ -769,9 +769,6 @@ function _xmlsitemap_get_path_alias($path, $alias = NULL) {
   if (function_exists('custom_url_rewrite_outbound')) {
     custom_url_rewrite_outbound($result, $customarray = array('alias' => $alias), $path);
   }
-  if (module_exists('i18n')) {
-    i18n_get_lang_prefix($result, TRUE);
-  }
   return $result;
 }
 
