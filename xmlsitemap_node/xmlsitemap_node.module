@@ -136,10 +136,11 @@ function xmlsitemap_node_priority($node) {
       $maxcomments = db_result(db_query("SELECT MAX(comment_count) FROM {node_comment_statistics}"));
     }
   }
-  $priority = $node->priority_override;
-  if (!isset($node->priority_override)) {
-    $priority = 0;
-    $priority += variable_get("xmlsitemap_node_type_priority_$node->type", 0.5);
+  if (isset($node->priority_override)) {
+    $priority = $node->priority_override;
+  }
+  else {
+    $priority = variable_get("xmlsitemap_node_type_priority_$node->type", 0.5);
     if ($node->promote) {
       $priority += $promote_priority;
     }
@@ -149,8 +150,7 @@ function xmlsitemap_node_priority($node) {
     $priority = round($priority, 1);
     $priority = min($priority, 0.9);
   }
-  return $priority;
-}
+  return $priority;}
 
 /**
  * Implementation of hook_perm().
@@ -336,16 +336,12 @@ function xmlsitemap_node_comment($comment, $op) {
  * @return None
  */
 function _xmlsitemap_node_submit($form, &$form_state) {
-  switch ($form_id) {
-    case 'node_type_form':
-      $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
-      $type = isset($form_state['values']['old_type']) ? $form_state['values']['old_type'] : trim($form_state['values']['type']);
-      $priority = $form_state['values']['xmlsitemap_node_type_priority'];
-      $old_priority = $form_state['values']['xmlsitemap_old_priority'];
-      if ($op == t('Save content type') && $priority != $old_priority || $op == t('Reset to defaults') && $old_priority != 0.1) {
-        xmlsitemap_update_sitemap();
-      }
-      break;
+  $op   = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
+  $type = isset($form_state['values']['old_type']) ? $form_state['values']['old_type'] : trim($form_state['values']['type']);
+  $priority = $form_state['values']['xmlsitemap_node_type_priority'];
+  $old_priority = $form_state['values']['xmlsitemap_old_priority'];
+  if ($op == t('Save content type') && $priority != $old_priority || $op == t('Reset to defaults') && $old_priority != 0.1) {
+    xmlsitemap_update_sitemap();
   }
 }
 
