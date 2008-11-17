@@ -150,7 +150,8 @@ function xmlsitemap_node_priority($node) {
     $priority = round($priority, 1);
     $priority = min($priority, 0.9);
   }
-  return $priority;}
+  return $priority;
+}
 
 /**
  * Implementation of hook_perm().
