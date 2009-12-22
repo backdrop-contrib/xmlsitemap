@@ -2,7 +2,7 @@
 name = XML sitemap internationalization
 description = Enables multilingual XML sitemaps.
 package = XML sitemap
-core = 6.x
+core = 7.x
 dependencies[] = xmlsitemap
 dependencies[] = i18n
 files[] = xmlsitemap_i18n.module

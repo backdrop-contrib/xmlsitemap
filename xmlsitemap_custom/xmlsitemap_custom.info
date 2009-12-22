@@ -1,9 +1,9 @@
 ; $Id$
 name = XML sitemap custom
-description = "Adds user configurable links to the sitemap."
+description = Adds user configurable links to the sitemap.
 package = XML sitemap
+core = 7.x
 dependencies[] = xmlsitemap
-core = 6.x
 files[] = xmlsitemap_custom.module
 files[] = xmlsitemap_custom.admin.inc
 files[] = xmlsitemap_custom.install
