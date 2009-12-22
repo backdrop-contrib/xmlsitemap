@@ -1,0 +1,332 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_cron().
+ *
+ * Process old menu links not found in the {xmlsitemap} table.
+ */
+function xmlsitemap_menu_cron() {
+  if ($menus = xmlsitemap_menu_get_menus()) {
+    // Set the global user variable to the anonymous user.
+    xmlsitemap_switch_user(0);
+
+    $sql = "SELECT ml.mlid FROM {menu_links} ml LEFT JOIN {xmlsitemap} x ON x.type = 'menu' AND ml.mlid = x.id WHERE x.id IS NULL AND ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ")";
+    $query = db_query_range($sql, $menus, 0, xmlsitemap_var('batch_limit'));
+
+    while ($mlid = db_result($query)) {
+      $menu_item = xmlsitemap_menu_menu_link_load($mlid);
+      $link = xmlsitemap_menu_create_link($menu_item);
+      xmlsitemap_save_link($link);
+    }
+
+    // Set the global user variable back to the original user.
+    xmlsitemap_restore_user();
+  }
+}
+
+/**
+ * Implements hook_xmlsitemap_links().
+ */
+function xmlsitemap_menu_xmlsitemap_links($offset = 0, $limit = 0) {
+  $links = array();
+
+  if ($menus = xmlsitemap_menu_get_menus()) {
+    // Set the global user variable to the anonymous user.
+    xmlsitemap_switch_user(0);
+
+    $sql = "SELECT ml.mlid FROM {menu_links} ml WHERE ml.mlid > %d AND ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ") ORDER BY ml.mlid";
+    $args = array_merge(array($offset), $menus);
+    $query = ($limit ? db_query_range($sql, $args, 0, $limit) : db_query($sql, $args));
+
+    while ($mlid = db_result($query)) {
+      $menu_item = xmlsitemap_menu_menu_link_load($mlid);
+      $links[] = xmlsitemap_menu_create_link($menu_item);
+    }
+
+    // Set the global user variable back to the original user.
+    xmlsitemap_restore_user();
+  }
+
+  return $links;
+}
+
+/**
+ * Implements hook_xmlsitemap_links_batch_info().
+ */
+function xmlsitemap_menu_xmlsitemap_links_batch_info() {
+  $menus = xmlsitemap_menu_get_menus();
+  return array(
+    'max' => $menus ? db_result(db_query("SELECT COUNT(ml.mlid) FROM {menu_links} ml WHERE ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ")", $menus)) : 0,
+  );
+}
+
+/**
+ * Implements hook_xmlsitemap_link_info().
+ */
+function xmlsitemap_menu_xmlsitemap_link_info() {
+  return array(
+    'menu' => array(
+      'purge' => TRUE,
+      'table' => 'menu_links',
+      'id' => 'mlid',
+      'subtype' => 'menu_name',
+      'subtypes' => xmlsitemap_menu_get_menus(),
+    ),
+  );
+}
+
+/**
+ * Load a menu link and its associated sitemap link data.
+ */
+function xmlsitemap_menu_menu_link_load($mlid) {
+  $menu_item = menu_link_load($mlid);
+  if ($data = xmlsitemap_load_link(array('type' => 'menu', 'id' => $mlid))) {
+    $menu_item['xmlsitemap'] = $data;
+  }
+  return $menu_item;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Show a summary of menus on the XML sitemap settings page.
+ */
+function xmlsitemap_menu_form_xmlsitemap_settings_form_alter(&$form, $form_state) {
+  $type = array(
+    'type' => 'menu',
+    'title' => t('Menus'),
+    'item_title' => t('Menu'),
+    'access' => user_access('administer menu'),
+  );
+
+  $menus = menu_get_menus();
+  foreach ($menus as $menu => $name) {
+    $menus[$menu] = array(
+      'name' => $name,
+      'link' => 'admin/build/menu-customize/' . $menu . '/edit',
+      'status' => variable_get('xmlsitemap_menu_status_' . $menu, 0),
+      'priority' => variable_get('xmlsitemap_menu_priority_' . $menu, 0.5),
+    );
+  }
+
+  xmlsitemap_add_form_type_summary($form, $type, $menus);
+  $form['menu']['#weight'] = 40;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see menu_edit_menu()
+ * @see xmlsitemap_menu_menu_edit_menu_submit()
+ */
+function xmlsitemap_menu_form_menu_edit_menu_alter(&$form, $form_state) {
+  $menu = isset($form['menu_name']['#value']) ? $form['menu_name']['#value'] : '';
+
+  module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
+  $options = array(
+    'status' => variable_get('xmlsitemap_menu_status_' . $menu, 0),
+    'priority' => variable_get('xmlsitemap_menu_priority_' . $menu, 0.5),
+  );
+  xmlsitemap_add_form_type_options($form, 'menu', $options);
+
+  // @todo Enable this feature:
+  //$form['xmlsitemap']['xmlsitemap_menu_calculate_priority'] = array(
+  //  '#type' => 'checkbox',
+  //  '#title' => t('Calculate priority based on menu item depth and weight.'),
+  //  '#default_value' => variable_get('xmlsitemap_menu_calculate_priority_' . $menu, FALSE),
+  //);
+
+  $form['submit'] += array('#weight' => 50);
+  if (isset($form['delete'])) {
+    $form['delete'] += array('#weight' => 51);
+  }
+
+  $form['#submit'][] = 'xmlsitemap_menu_menu_edit_menu_submit';
+}
+
+/**
+ * Form submit handler; update settings when a menu is saved.
+ */
+function xmlsitemap_menu_menu_edit_menu_submit($form, $form_state) {
+  $menu = $form_state['values']['menu_name'];
+  $new_priority = $form_state['values']['xmlsitemap_menu_priority'];
+  $new_status = $form_state['values']['xmlsitemap_menu_status'];
+
+  if ($new_status != variable_get('xmlsitemap_menu_status_' . $menu, 0)) {
+    xmlsitemap_update_links(array('status' => $new_status), array('type' => 'menu', 'subtype' => $menu, 'status_override' => 0));
+  }
+  if ($new_priority != variable_get('xmlsitemap_menu_priority_' . $menu, 0.5)) {
+    xmlsitemap_update_links(array('priority' => $new_priority), array('type' => 'menu', 'subtype' => $menu, 'priority_override' => 0));
+  }
+
+  variable_set('xmlsitemap_menu_priority_' . $menu, $new_priority);
+  variable_set('xmlsitemap_menu_status_' . $menu, $new_status);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see menu_delete_menu_confirm()
+ * @see xmlsitemap_menu_form_menu_delete_menu_confirm_submit()
+ */
+function xmlsitemap_menu_form_menu_delete_menu_confirm_alter(&$form, $form_state) {
+  $form['#submit'][] = 'xmlsitemap_menu_form_menu_delete_menu_confirm_submit';
+}
+
+/**
+ * Form submit handler; delete sitemap links when a menu is deleted.
+ */
+function xmlsitemap_menu_form_menu_delete_menu_confirm_submit($form, $form_state) {
+  $menu = $form['#menu']['menu_name'];
+  xmlsitemap_delete_link(array('type' => 'menu', 'subtype' => $menu));
+  variable_del('xmlsitemap_menu_status_' . $menu);
+  variable_del('xmlsitemap_menu_priority_ ' . $menu);
+}
+
+//function xmlsitemap_menu_form_menu_overview_form_alter(&$form, $form_state) {
+//  $form['#submit'][] = 'xmlsitemap_menu_menu_overview_form_submit';
+//}
+//
+//function xmlsitemap_menu_menu_overview_form_submit($form, $form_state) {
+//  foreach (element_children($form) as $mlid) {
+//    if (isset($form[$mlid]['#item'])) {
+//      $menu_item = menu_link_load($form[$mlid]['#item']['mlid'], TRUE);
+//      xmlsitemap_menu_item_update($menu_item);
+//    }
+//  }
+//}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see menu_item_delete_form()
+ */
+function xmlsitemap_menu_form_menu_item_delete_form_alter(&$form, $form_state) {
+  $form['#submit'][] = 'xmlsitemap_menu_menu_item_delete_form_submit';
+}
+
+/**
+ * Form submit callback; delete the sitemap link when a menu item is deleted.
+ */
+function xmlsitemap_menu_menu_item_delete_form_submit($form, $form_state) {
+  xmlsitemap_menu_item_delete($form['#item']);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see menu_edit_item()
+ */
+function xmlsitemap_menu_form_menu_edit_item_alter(&$form, $form_state) {
+  $form['#submit'][] = 'xmlsitemap_menu_menu_edit_item_submit';
+}
+
+/**
+ * Form submit callback; update the sitemap link when a menu item is updated.
+ */
+function xmlsitemap_menu_menu_edit_item_submit($form, $form_state) {
+  xmlsitemap_switch_user(0);
+  $menu_item = xmlsitemap_menu_menu_link_load($form_state['values']['menu']['mlid']);
+  xmlsitemap_restore_user();
+  xmlsitemap_menu_item_update($menu_item);
+}
+
+function xmlsitemap_menu_item_update(array $menu_item) {
+  $link = xmlsitemap_menu_create_link($menu_item);
+  xmlsitemap_save_link($link);
+}
+
+function xmlsitemap_menu_item_delete(array $menu_item) {
+  xmlsitemap_delete_link(array('type' => 'menu', 'id' => $menu_item['mlid']));
+}
+
+/**
+ * Fetch an array of menus to be included in the sitemap.
+ */
+function xmlsitemap_menu_get_menus() {
+  $menus = array_keys(menu_get_menus());
+  foreach ($menus as $index => $menu) {
+    if (!variable_get('xmlsitemap_menu_status_' . $menu, 0)) {
+      unset($menus[$index]);
+    }
+  }
+  return $menus;
+}
+
+/**
+ * Create a sitemap link from a menu item.
+ *
+ * @param $menu_item
+ *   A loaded menu item.
+ */
+function xmlsitemap_menu_create_link(array $menu_item) {
+  if (!isset($menu_item['xmlsitemap'])) {
+    $menu_item['xmlsitemap'] = array();
+  }
+
+  $menu_item['xmlsitemap'] += array(
+    'type' => 'menu',
+    'id' => $menu_item['mlid'],
+    'loc' => $menu_item['link_path'],
+    'status' => variable_get('xmlsitemap_menu_status_' . $menu_item['menu_name'], 0),
+    'status_default' => variable_get('xmlsitemap_menu_status_' . $menu_item['menu_name'], 0),
+    'status_override' => 0,
+    'priority' => variable_get('xmlsitemap_menu_priority_' . $menu_item['menu_name'], 0.5),
+    'priority_default' => variable_get('xmlsitemap_menu_priority_' . $menu_item['menu_name'], 0.5),
+    'priority_override' => 0,
+  );
+
+  // The following values must always be checked because they are volatile.
+  $menu_item['xmlsitemap']['subtype'] = $menu_item['menu_name'];
+  $menu_item['xmlsitemap']['access'] = $menu_item['access'] && !$menu_item['external'] && !$menu_item['hidden'];
+  $menu_item['xmlsitemap']['language'] = isset($menu_item['options']['langcode']) ? $menu_item['options']['langcode'] : '';
+
+  return $menu_item['xmlsitemap'];
+}
+
+/**
+ * Calculate the priority of a menu link based on depth and weight.
+ */
+function xmlsitemap_menu_calculate_priority(array $menu_item) {
+  $priority = (MENU_MAX_DEPTH - $menu_item['depth'] + 1) / MENU_MAX_DEPTH;
+  $priority -= (50 + $menu_item['weight']) / (100 * (MENU_MAX_DEPTH + 1));
+  return $priority;
+}
+
+/**
+ * Internal default variables for template_var().
+ */
+function xmlsitemap_menu_variables() {
+  $defaults = array(
+    // Deprecated variables set to NULL so they are still removed on uninstall.
+    'xmlsitemap_menu_menus' => NULL,
+    'xmlsitemap_menu_calculate_priority' => NULL,
+  );
+  $menus = array_keys(menu_get_menus());
+  foreach ($menus as $menu) {
+    $defaults['xmlsitemap_menu_status_' . $menu] = 0;
+    $defaults['xmlsitemap_menu_priority_' . $menu] = 0.5;
+    $defaults['xmlsitemap_menu_calculate_priority_' . $menu] = FALSE;
+  }
+  return $defaults;
+}
+
+/**
+ * Internal implementation of variable_get().
+ */
+function xmlsitemap_menu_var($name, $default = NULL) {
+  static $defaults = NULL;
+  if (!isset($defaults)) {
+    $defaults = xmlsitemap_menu_variables();
+  }
+
+  $name = 'xmlsitemap_menu_' . $name;
+
+  // @todo Remove when stable.
+  if (!isset($defaults[$name])) {
+    trigger_error(t('Default variable for %variable not found.', array('%variable' => $name)));
+  }
+
+  return variable_get($name, isset($default) || !isset($defaults[$name]) ? $default : $defaults[$name]);
+}

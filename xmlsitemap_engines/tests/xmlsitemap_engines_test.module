@@ -1,0 +1,45 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_menu().
+ */
+function xmlsitemap_engines_test_menu() {
+  $items['ping'] = array(
+    'page callback' => 'xmlsitemap_engines_test_pinged',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_xmlsitemap_engine_info().
+ */
+function xmlsitemap_engines_test_xmlsitemap_engine_info() {
+  $engines['simpletest'] = array(
+    'name' => t('SimpleTest'),
+    'url' => 'http://example.com/',
+  );
+  return $engines;
+}
+
+/**
+ * Implements hook_xmlsitemap_engine_info_alter().
+ */
+function xmlsitemap_engines_test_xmlsitemap_engine_info_alter(&$engines) {
+  $engines['simpletest']['url'] = url('ping', array('absolute' => TRUE, 'query' => 'sitemap=[sitemap]'));
+}
+
+function xmlsitemap_engines_test_pinged() {
+  if (empty($_GET['sitemap'])) {
+    watchdog('xmlsitemap', 'No sitemap parameter provided.', NULL, WATCHDOG_WARNING);
+    //drupal_set_message(t('No sitemap parameter provided.'), 'error');
+    echo t('No sitemap parameter provided.');
+  }
+  else {
+    watchdog('xmlsitemap', 'Recieved ping for @sitemap.', array('@sitemap' => $_GET['sitemap']));
+    //drupal_set_message(t('Recieved sitemap ping for @sitemap.', array('@sitemap' => $_GET['sitemap'])));
+    echo t('Recieved sitemap ping for @sitemap.', array('@sitemap' => $_GET['sitemap']));
+  }
+}

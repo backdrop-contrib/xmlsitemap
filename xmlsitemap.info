@@ -1,5 +1,16 @@
 ; $Id$
-name = XML Sitemap
-description = Creates an XML site map in accordance with the sitemaps.org specification.
-package = XML Sitemap
-core = 6.x
+name = XML sitemap
+description = Creates an XML sitemap conforming to the <a href="http://sitemaps.org/">sitemaps.org protocol</a>.
+package = XML sitemap
+core = 7.x
+files[] = xmlsitemap.module
+files[] = xmlsitemap.inc
+files[] = xmlsitemap.admin.inc
+files[] = xmlsitemap.drush.inc
+files[] = xmlsitemap.pages.inc
+files[] = xmlsitemap.install
+files[] = xmlsitemap.test
+recommends[] = ctools
+recommends[] = robotstxt
+recommends[] = vertical_tabs
+configure = admin/config/search/xmlsitemap

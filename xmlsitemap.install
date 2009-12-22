@@ -2,153 +2,473 @@
 // $Id$
 
 /**
- * Implementation of hook_schema().
+ * @file
+ * Install, update and uninstall functions for the xmlsitemap module.
+ *
+ * @ingroup xmlsitemap
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function xmlsitemap_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  if (function_exists('user_access') && !user_access('access content', drupal_anonymous_user())) {
+    $requirements['xmlsitemap_access'] = array(
+      'title' => $t('XML sitemap anonymous content access'),
+      'value' => $t('Access denied'),
+      'description' => $t('In order to allow search engines to view the XML sitemap, the anonymous user role must have the <a href="@perm-link">%permission</a> permission.', array('@perm-link' => url('admin/user/permissions/' . DRUPAL_ANONYMOUS_RID, array('fragment' => 'module-node')), '%permission' => 'access content')),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+  if (variable_get('clean_url', 0) && file_exists('./sitemap.xml')) {
+    $requirements['xmlsitemap_file'] = array(
+      'title' => $t('XML sitemap'),
+      'value' => $t('Existing sitemap.xml file found.'),
+      'severity' => REQUIREMENT_ERROR,
+      'description' => $t('The XML sitemap module cannot display its XML output if there is an existing sitemap.xml file in your website root.'),
+    );
+  }
+
+  if ($phase == 'runtime') {
+    $directory = file_create_path(xmlsitemap_var('path'));
+    if (!file_check_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+      $requirements['xmlsitemap_directory'] = array(
+        'title' => $t('XML sitemap cache directory'),
+        'value' => $t('Not found or not writable'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $directory,
+      );
+    }
+    $max_links = XMLSITEMAP_MAX_SITEMAP_LINKS * XMLSITEMAP_MAX_SITEMAP_CHUNKS;
+    if (xmlsitemap_get_link_count() > $max_links) {
+      $requirements['xmlsitemap_link_count'] = array(
+        'title' => $t('XML sitemap link count'),
+        'value' => xmlsitemap_get_link_count(),
+        'description' => $t('You have exceeded the number of links that your sitemap can contain (@num).', array('@num' => number_format($max_links))),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+    if (xmlsitemap_get_chunk_count() > XMLSITEMAP_MAX_SITEMAP_CHUNKS) {
+      $requirements['xmlsitemap_chunk_count'] = array(
+        'title' => $t('XML sitemap page count'),
+        'value' => xmlsitemap_get_chunk_count(),
+        'description' => $t('You have exceeded the number of sitemap pages (1,000).'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+      if (!in_array(xmlsitemap_get_chunk_size(), array(50000, 'auto'))) {
+        $requirements['xmlsitemap_chunk_count']['description'] .= ' ' . t('Please increase the number of links per page.');
+      }
+    }
+
+    // Check when the cached files were last generated.
+    $generated_last = xmlsitemap_var('generated_last');
+    $generated_ago = REQUEST_TIME - $generated_last;
+    $requirements['xmlsitemap_generated'] = array(
+      'title' => $t('XML sitemap'),
+      'value' => $generated_last ? $t('Last generated on !date (!interval ago).', array('!date' => format_date($generated_last, 'small'), '!interval' => format_interval($generated_ago))) : $t('Cached files have not been generated yet.'),
+      'severity' => REQUIREMENT_OK,
+    );
+    if (xmlsitemap_var('rebuild_needed')) {
+      $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
+      $requirements['xmlsitemap_generated']['description'] = $t('The XML sitemap data is out of sync and needs to be <a href="@link-rebuild">completely rebuilt<a>.', array('@link-rebuild' => url('admin/settings/xmlsitemap/rebuild')));
+    }
+    elseif (xmlsitemap_var('regenerate_needed')) {
+      if ($generated_ago >= variable_get('cron_threshold_error', 1209600)) {
+        $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
+      }
+      elseif ($generated_ago >= variable_get('cron_threshold_warning', 172800)) {
+        $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_WARNING;
+      }
+      if ($requirements['xmlsitemap_generated']['severity']) {
+        $requirements['xmlsitemap_generated']['description'] = $t('The XML cached files are out of date and need to be regenerated. You can <a href="@link-cron">run cron manually</a> to regenerate the sitemap files.', array('@link-cron' => url('admin/reports/status/run-cron')));
+      }
+    }
+  }
+  return $requirements;
+}
+
+/**
+ * Check the status of all hook_requirements() from xmlsitemap modules.
+ *
+ * @param $return_only
+ *   If TRUE, will return the result, otherwise it will show a message.
+ * @return
+ *   TRUE if there is a warning or error requirement, or FALSE otherwise.
+ */
+function xmlsitemap_check_status() {
+  $severity = REQUIREMENT_OK;
+
+  foreach (module_implements('requirements') as $module) {
+    if (strpos($module, 'xmlsitemap') !== FALSE) {
+      module_load_install($module);
+      $requirements = module_invoke($module, 'requirements', 'runtime');
+      $severity = max($severity, drupal_requirements_severity($requirements));
+    }
+  }
+
+  return $severity == REQUIREMENT_ERROR;
+}
+
+/**
+ * Implements hook_install().
+ */
+function xmlsitemap_install() {
+  // Add tables.
+  drupal_install_schema('xmlsitemap');
+
+  // Set this module's weight to 1 so xmlsitemap_cron() runs after all other
+  // xmlsitemap_x_cron() runs.
+  db_query("UPDATE {system} SET weight = 1 WHERE type = 'module' AND name = 'xmlsitemap'");
+
+  // Load the module so we can use xmlsitemap_var().
+  drupal_load('module', 'xmlsitemap');
+
+  // Add files directory.
+  $path = file_create_path(xmlsitemap_var('path'));
+  file_check_directory($path, FILE_CREATE_DIRECTORY);
+
+  // Insert the homepage link into the {xmlsitemap} table so we do not show an
+  // empty sitemap after install.
+  db_query("INSERT INTO {xmlsitemap} (type, id, loc, priority, changefreq) VALUES ('frontpage', 0, '', %f, %d)", xmlsitemap_var('frontpage_priority'), xmlsitemap_var('frontpage_changefreq'));
+
+  // @todo Does the sitemap show up on first install or is it a 404 page?
+}
+
+/**
+ * Implements hook_enable().
+ */
+function xmlsitemap_enable() {
+  variable_set('xmlsitemap_regenerate_needed', TRUE);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function xmlsitemap_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('xmlsitemap');
+
+  // Remove variables.
+  drupal_load('module', 'xmlsitemap');
+  $variables = array_keys(xmlsitemap_variables());
+  foreach ($variables as $variable) {
+    variable_del($variable);
+  }
+
+  // Remove files directory.
+  xmlsitemap_clear_cache(TRUE);
+}
+
+/**
+ * Implements hook_schema().
  */
 function xmlsitemap_schema() {
-  $schema['xmlsitemap_additional'] = array(
-    'description' => t('The base table for xmlsitemap.'),
+  $schema['xmlsitemap'] = array(
+    'description' => 'The base table for xmlsitemap links.',
     'fields' => array(
-      'path' => array(
-        'description' => t('The path of this node.'),
+      'id' => array(
+        'description' => 'Primary key with type; a unique id for the item.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
+      'type' => array(
+        'description' => 'Primary key with id; the type of item (e.g. node, user, etc.).',
         'type' => 'varchar',
-        'length' => 128,
+        'length' => 12,
         'not null' => TRUE,
         'default' => '',
       ),
-      'pid' => array(
-        'description' => t('The id of the path.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'default' => 0,
+      'subtype' => array(
+        'description' => 'A sub-type identifier for the link (node type, menu name, term VID, etc.).',
+        'type' => 'varchar',
+        'length' => 32,
+        'default' => NULL,
       ),
-      'last_changed' => array(
-        'description' => t('Keeps track of new changes.'),
+      'loc' => array(
+        'description' => 'The URL to the item relative to the Drupal path.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'language' => array(
+        'description' => 'The {languages}.language of this link or an empty string if it is language-neutral.',
+        'type' => 'varchar',
+        'length' => 12,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'access' => array(
+        'description' => 'A boolean that represents if the item is viewable by the anonymous user. This field is useful to store the result of node_access() so we can retain changefreq and priority_override information.',
         'type' => 'int',
-        'unsigned' => TRUE,
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'status' => array(
+        'description' => 'An integer that represents if the item is included in the sitemap.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'status_override' => array(
+        'description' => 'A boolean that if TRUE means that the status field has been overridden from its default value.',
+        'type' => 'int',
+        'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
       ),
-      'previously_changed' => array(
-        'description' => t('Keeps track of old changes.'),
+      'lastmod' => array(
+        'description' => 'The UNIX timestamp of last modification of the item.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
       'priority' => array(
-        'description' => t('Stores the index value.'),
+        'description' => 'The priority of this URL relative to other URLs on your site. Valid values range from 0.0 to 1.0.',
         'type' => 'float',
-        'not null' => FALSE,
+        'default' => NULL,
+        // @todo Convert this field to non-nullable.
+        //'default' => 0.5,
+        //'not null' => NULL,
+      ),
+      'priority_override' => array(
+        'description' => 'A boolean that if TRUE means that the priority field has been overridden from its default value.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changefreq' => array(
+        'description' => 'The average time in seconds between changes of this item.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changecount' => array(
+        'description' => 'The number of times this item has been changed. Used to help calculate the next changefreq value.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
       ),
     ),
+    'primary key' => array('id', 'type'),
     'indexes' => array(
-      'pid' => array('pid'),
+      'loc' => array('loc'),
+      'access_status_loc' => array('access', 'status', 'loc'),
+      'type_subtype' => array('type', 'subtype'),
+      'language' => array('language'),
     ),
-    'primary key' => array('path'),
   );
 
   return $schema;
 }
 
-/**
- * Implementation of hook_install().
- */
-function xmlsitemap_install() {
-  // Create my tables.
-  db_query("DELETE FROM {url_alias} WHERE dst LIKE 'sitemap%.xml'");
-  drupal_install_schema('xmlsitemap');
+// @todo Remove these update functions before alpha.
+function xmlsitemap_update_1() {
+  $ret = array();
+  db_drop_unique_key($ret, 'xmlsitemap', 'loc');
+  return $ret;
 }
 
-/**
- * Implementation of hook_uninstall().
- */
-function xmlsitemap_uninstall() {
-  // Drop my tables.
-  $settings = db_query("SELECT name FROM {variable} WHERE name LIKE 'xmlsitemap\_%'");
-  while ($variable = db_fetch_object($settings)) {
-    variable_del($variable->name);
+function xmlsitemap_update_2() {
+  if (!variable_get('xmlsitemap_base_url', '')) {
+    variable_set('xmlsitemap_base_url', $GLOBALS['base_url']);
   }
-  drupal_uninstall_schema('xmlsitemap');
+  return array();
+}
+
+function xmlsitemap_update_3() {
+  $ret = array();
+  db_add_index($ret, 'xmlsitemap', 'loc', array('loc'));
+  return $ret;
+}
+
+function xmlsitemap_update_4() {
+  $ret = array();
+  $field = array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'default' => 1,
+    'unsigned' => TRUE,
+  );
+  db_change_field($ret, 'xmlsitemap', 'status', 'status', $field);
+  db_add_index($ret, 'xmlsitemap', 'status', array('status'));
+  return $ret;
+}
+
+function xmlsitemap_update_5() {
+  $ret = array();
+  db_drop_primary_key($ret, 'xmlsitemap');
+  db_add_primary_key($ret, 'xmlsitemap', array('id', 'type'));
+  return $ret;
+}
+
+function xmlsitemap_update_6() {
+  $ret = array();
+  if (db_column_exists('xmlsitemap', 'language')) {
+    db_drop_index($ret, 'xmlsitemap', 'language');
+    db_drop_field($ret, 'xmlsitemap', 'language');
+  }
+  variable_set('xmlsitemap_generated_last', variable_get('xmlsitemap_regenerate_last', 0));
+  variable_del('xmlsitemap_regenerate_last');
+  return $ret;
+}
+
+function xmlsitemap_update_7() {
+  $ret = array();
+  if (xmlsitemap_load_link(array('type' => 'custom'))) {
+    drupal_install_modules(array('xmlsitemap_custom'));
+  }
+  variable_del('xmlsitemap_custom_links');
+  return $ret;
+}
+
+function xmlsitemap_update_8() {
+  $ret = array();
+  $field = array(
+    'type' => 'float',
+    'default' => NULL,
+  );
+  db_add_field($ret, 'xmlsitemap', 'priority_override', $field);
+  return $ret;
+}
+
+function xmlsitemap_update_9() {
+  $ret = array();
+  $field = array(
+    'type' => 'int',
+    'default' => 0,
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+  );
+  db_change_field($ret, 'xmlsitemap', 'lastmod', 'lastmod', $field);
+  return $ret;
+}
+
+function xmlsitemap_update_10() {
+  $ret = array();
+  $ret[] = update_sql("UPDATE {system} SET weight = 1 WHERE type = 'module' AND name = 'xmlsitemap'");
+  return $ret;
+}
+
+function xmlsitemap_update_11() {
+  $ret = array();
+
+  // Delete any items with NULL status and drop the status index.
+  $ret[] = update_sql("DELETE FROM {xmlsitemap} WHERE status IS NULL");
+  db_drop_index($ret, 'xmlsitemap', 'status');
+
+  // Rename status to access.
+  $field = array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'default' => 1,
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+  );
+  db_change_field($ret, 'xmlsitemap', 'status', 'access', $field);
+
+  // Add a status field.
+  $field = array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'default' => 1,
+  );
+  db_add_field($ret, 'xmlsitemap', 'status', $field);
+
+  db_add_index($ret, 'xmlsitemap', 'access_status', array('access', 'status'));
+  return $ret;
+}
+
+function xmlsitemap_update_12() {
+  $ret = array();
+  db_drop_index($ret, 'xmlsitemap', 'access_status');
+  db_add_index($ret, 'xmlsitemap', 'access_status_loc', array('access', 'status', 'loc'));
+  return $ret;
+}
+
+function xmlsitemap_update_13() {
+  $ret = array();
+  db_change_field($ret, 'xmlsitemap', 'priority_override', 'priority_override_value', array('type' => 'float', 'default' => NULL));
+  $override_field = array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'default' => 0,
+    'not null' => TRUE,
+  );
+  db_add_field($ret, 'xmlsitemap', 'status_override', $override_field);
+  db_add_field($ret, 'xmlsitemap', 'priority_override', $override_field);
+  $ret[] = update_sql("UPDATE {xmlsitemap} SET priority_override = 1, priority = priority_override_value WHERE priority_override_value IS NOT NULL");
+  $ret[] = update_sql("UPDATE {xmlsitemap} SET priority = 0.5 WHERE priority_override_value IS NULL");
+  db_drop_field($ret, 'xmlsitemap', 'priority_override_value');
+  return $ret;
+}
+
+function xmlsitemap_update_14() {
+  $ret = array();
+  db_add_field($ret, 'xmlsitemap', 'subtype', array('type' => 'varchar', 'length' => 32, 'default' => NULL));
+  $fields = array('node' => 'node_type', 'menu' => 'menu_name', 'taxonomy' => 'term_vid');
+  foreach ($fields as $type => $field) {
+    if (db_column_exists('xmlsitemap', $field)) {
+      $ret[] = update_sql("UPDATE {xmlsitemap} SET subtype = $field WHERE type = '$type'");
+      db_drop_index($ret, 'xmlsitemap', $field);
+      db_drop_field($ret, 'xmlsitemap', $field);
+    }
+  }
+  db_add_index($ret, 'xmlsitemap', 'type_subtype', array('type', 'subtype'));
+  return $ret;
+}
+
+function xmlsitemap_update_15() {
+  $ret = array();
+  $ret[] = update_sql("DELETE FROM {xmlsitemap} WHERE status IS NULL OR access IS NULL");
+  $field = array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'default' => 1,
+    'not null' => TRUE,
+  );
+  db_change_field($ret, 'xmlsitemap', 'access', 'access', $field);
+  db_change_field($ret, 'xmlsitemap', 'status', 'status', $field);
+  return $ret;
+}
+
+function xmlsitemap_update_16() {
+  $ret = array();
+  $field = array(
+    'type' => 'varchar',
+    'length' => 12,
+    'not null' => TRUE,
+    'default' => '',
+  );
+  db_add_field($ret, 'xmlsitemap', 'language', $field);
+  db_add_index($ret, 'xmlsitemap', 'language', array('language'));
+  return $ret;
+}
+
+function xmlsitemap_update_17() {
+  $ret = array();
+  $ret[] = update_sql("UPDATE {xmlsitemap} SET access = 1 WHERE access > 1");
+  $ret[] = update_sql("UPDATE {xmlsitemap} SET status = 1 WHERE status > 1");
+  return $ret;
 }
 
 /**
- * Implementation of hook_enable().
+ * These strings exist only for the extractor to pick them up and make them
+ * available for translation. Putting them here keeps them from being parsed
+ * on normal pages.
+ *
+ * Idea borrowed from the date and event modules. Thanks karens and killes!
  */
-function xmlsitemap_enable() {
-  global $base_path;
-  $xsl = file_get_contents(drupal_get_path('module', 'xmlsitemap') .'/gss/gss.xsl');
-
-  $css_start = strpos($xsl, '<link href="') + strlen('<link href="');
-  $css_length = strpos($xsl, '" type="text/css" rel="stylesheet"/>') - $css_start;
-  $xsl = substr_replace($xsl, $base_path . drupal_get_path('module', 'xmlsitemap') .'/gss/gss.css', $css_start, $css_length);
-
-  $js_start = strpos($xsl, '<script src="') + strlen('<script src="');
-  $js_length = strpos($xsl, '"></script>') - $js_start;
-  $xsl = substr_replace($xsl, $base_path . drupal_get_path('module', 'xmlsitemap') .'/gss/gss.js', $js_start, $js_length);
-
-  if (file_check_directory(($path = file_directory_path() .'/xmlsitemap'), FILE_CREATE_DIRECTORY)) {
-    file_save_data($xsl, "$path/gss.xsl", FILE_EXISTS_REPLACE);
-  }
-  _xmlsitemap_gsitemap_replace();
-}
-
-/**
- * Replace Google Sitemap if it is installed.
- */
-function _xmlsitemap_gsitemap_replace() {
-  if (db_result(db_query("
-    SELECT 1 FROM {system}
-    WHERE type = 'module' AND name = 'gsitemap' AND (status = 1 OR schema_version >= 0)
-  "))) {
-    db_query("
-      INSERT INTO {xmlsitemap_additional} (path, pid, last_changed, previously_changed, priority)
-      SELECT path, pid, last_changed, previously_changed, priority FROM {gsitemap_additional}
-    ");
-    $modules = array('xmlsitemap_node', 'xmlsitemap_engines');
-    if (variable_get('gsitemap_showterms', FALSE)) {
-      $modules[] = 'xmlsitemap_term';
-      variable_del('gsitemap_showterms');
-    }
-    if (variable_get('gsitemap_showusers', FALSE)) {
-      $modules[] = 'xmlsitemap_user';
-      variable_del('gsitemap_showusers');
-    }
-    drupal_install_modules($modules);
-    $settings = db_query("SELECT * FROM {variable} WHERE name LIKE 'gsitemap\_%'");
-    while ($variable = db_fetch_object($settings)) {
-      switch ($variable->name) {
-        case 'gsitemap_frontpage':
-          $name = 'xmlsitemap_front_page_priority';
-          break;
-        case 'gsitemap_priority':
-          $name = 'xmlsitemap_additional_links_priority';
-          break;
-        case 'gsitemap_logacc':
-          $name = 'xmlsitemap_log_access';
-          break;
-        default:
-          $name = 'xmlsitemap'. strstr($variable->name, '_');
-          break;
-      }
-      variable_set($name, (float) unserialize($variable->value));
-    }
-    module_disable(array('gsitemap'));
-    drupal_uninstall_module('gsitemap');
-  }
-}
-
-/**
- * Implementation of hook_disable().
- */
-function xmlsitemap_disable() {
-  $path = file_directory_path() .'/xmlsitemap';
-  if ($dir = @opendir($path)) {
-    while (($file = readdir($dir)) !== FALSE) {
-      if ($file != '.' && $file != '..') {
-        unlink("$path/$file");
-      }
-    }
-    closedir($dir);
-    rmdir($path);
-  }
-}
+//function _xmlsitemap_translation_strings() {
+//}

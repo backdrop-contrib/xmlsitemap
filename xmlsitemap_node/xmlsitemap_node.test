@@ -1,0 +1,188 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Unit tests for the xmlsitemap_node module.
+ */
+
+class XMLSitemapNodeTestHelper extends XMLSitemapTestHelper {
+  protected $admin_user;
+  protected $normal_user;
+  protected $nodes = array();
+
+  function setUp() {
+    parent::setUp('xmlsitemap', 'xmlsitemap_node', 'comment');
+    $this->checkFilesDirectory();
+
+    $this->admin_user = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'administer xmlsitemap'));
+    $this->normal_user = $this->drupalCreateUser(array('create page content', 'edit any page content', 'access content'));
+  }
+
+  //function addNodes($count) {
+  //  for ($i = count($this->nodes); $i < ($count + 1); $i++) {
+  //    $this->nodes[$i] = $this->drupalCreateNode();
+  //  }
+  //}
+
+  protected function assertNodeInSitemap($node) {
+    return $this->assertInSitemap(array('type' => 'node', 'id' => (is_object($node) ? $node->nid : $node)));
+  }
+
+  protected function assertNodeNotInSitemap($node) {
+    return $this->assertNotInSitemap(array('type' => 'node', 'id' => (is_object($node) ? $node->nid : $node)));
+  }
+
+  protected function assertNodeLinkValues($node, array $values) {
+    $link = xmlsitemap_load_link(array('type' => 'node', 'id' => $node->nid));
+    if (!$link) {
+      $this->fail(t('Could not load sitemap link for node @nid.', array('@nid' => $node->nid)));
+    }
+    else {
+      $this->assertLinkValues($link, $values);
+    }
+  }
+}
+
+//class XMLSitemapNodeUnitTest extends DrupalWebTestCase {
+//  public static function getInfo() {
+//    return array(
+//      'name' => 'XML Sitemap node unit tests',
+//      'description' => 'Unit tests for the XML Sitemap node module.',
+//      'group' => 'XML Sitemap',
+//    );
+//  }
+//
+//  function setUp() {
+//    parent::setUp('xmlsitemap', 'xmlsitemap_node');
+//  }
+//}
+
+class XMLSitemapNodeFunctionalTest extends XMLSitemapNodeTestHelper {
+  public static function getInfo() {
+    return array(
+      'name' => 'XML sitemap node functional tests',
+      'description' => 'Interface tests for the XML sitemap node module.',
+      'group' => 'XML sitemap',
+    );
+  }
+
+  function testNodeSettings() {
+    $node = $this->drupalCreateNode(array('status' => FALSE, 'uid' => $this->normal_user->uid));
+    $this->assertNodeLinkValues($node, array('access' => 0, 'status' => 1, 'priority' => 0.5, 'status_override' => 0, 'priority_override' => 0));
+
+    $this->drupalLogin($this->normal_user);
+    $this->drupalGet('node/' . $node->nid . '/edit');
+    $this->assertNoField('xmlsitemap[status]');
+    $this->assertNoField('xmlsitemap[priority]');
+
+    $edit = array(
+      'title' => 'Test node title',
+      'body' => 'Test node body',
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $this->assertText('Page Test node title has been updated.');
+    $this->assertNodeLinkValues($node, array('access' => 0, 'status' => 1, 'priority' => 0.5, 'status_override' => 0, 'priority_override' => 0));
+
+    $this->drupalLogin($this->admin_user);
+    $this->drupalGet('node/' . $node->nid . '/edit');
+    $this->assertField('xmlsitemap[status]');
+    $this->assertField('xmlsitemap[priority]');
+
+    $edit = array(
+      'xmlsitemap[status]' => 0,
+      'xmlsitemap[priority]' => 0.9,
+      'status' => TRUE,
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $this->assertText('Page Test node title has been updated.');
+    $this->assertNodeLinkValues($node, array('access' => 1, 'status' => 0, 'priority' => 0.9, 'status_override' => 1, 'priority_override' => 1));
+
+    $edit = array(
+      'xmlsitemap[status]' => 'default',
+      'xmlsitemap[priority]' => 'default',
+      'status' => FALSE,
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $this->assertText('Page Test node title has been updated.');
+    $this->assertNodeLinkValues($node, array('access' => 0, 'status' => 1, 'priority' => 0.5, 'status_override' => 0, 'priority_override' => 0));
+  }
+
+  /**
+   * Test the content type settings.
+   */
+  function testTypeSettings() {
+    $this->drupalLogin($this->admin_user);
+
+    $node_old = $this->drupalCreateNode();
+    $this->assertNodeLinkValues($node_old, array('status' => 1, 'priority' => 0.5));
+
+    $edit = array(
+      'xmlsitemap_node_status' => FALSE,
+      'xmlsitemap_node_priority' => '0.0',
+    );
+    $this->drupalGet('admin/content/node-type/page');
+    $this->drupalPost('admin/content/node-type/page', $edit, t('Save content type'));
+    $this->assertText(t('The content type Page has been updated.'));
+
+    $node = $this->drupalCreateNode();
+    $this->assertNodeLinkValues($node, array('status' => 0, 'priority' => 0.0));
+    $this->assertNodeLinkValues($node_old, array('status' => 0, 'priority' => 0.0));
+
+    $edit = array(
+      'xmlsitemap_node_status' => TRUE,
+      'xmlsitemap_node_priority' => '0.5',
+    );
+    $this->drupalPost('admin/content/node-type/page', $edit, t('Save content type'));
+    $this->assertText(t('The content type Page has been updated.'));
+
+    $this->assertNodeLinkValues($node, array('status' => 1, 'priority' => 0.5));
+    $this->assertNodeLinkValues($node_old, array('status' => 1, 'priority' => 0.5));
+
+    //$this->drupalPost('node/' . $node->nid . '/edit', array(), t('Save'));
+    //$this->assertText(t('Page @title has been updated.', array('@title' => $node->title)));
+  }
+
+  /**
+   * Test the import of old nodes via cron.
+   */
+  function testCron() {
+    $this->drupalLogin($this->admin_user);
+
+    $limit = 5;
+    $this->drupalPost('admin/settings/xmlsitemap', array('xmlsitemap_batch_limit' => $limit), t('Save configuration'));
+    $this->assertText(t('The configuration options have been saved.'));
+
+    $nodes = array();
+    for ($i = 1; $i <= ($limit + 1); $i++) {
+      $node = $this->drupalCreateNode();
+      array_push($nodes, $node);
+      // Create a link with the same ID but different type.
+      $this->addSitemapLink(array('id' => $node->nid));
+      // Need to delay by one second so the nodes don't all have the same
+      // timestamp.
+      sleep(1);
+    }
+
+    // Clear all the node link data so we can emulate 'old' nodes.
+    db_query("DELETE FROM {xmlsitemap} WHERE type = 'node'");
+    foreach ($nodes as $node) {
+      $this->assertNodeNotInSitemap($node);
+    }
+
+    // Run cron to import old nodes.
+    drupal_cron_run();
+
+    for ($i = 1; $i <= ($limit + 1); $i++) {
+      $node = array_pop($nodes);
+      if ($i <= $limit) {
+        // The first $limit nodes should be inserted.
+        $this->assertNodeLinkValues($node, array('status' => 1, 'lastmod' => $node->changed));
+      }
+      else {
+        // Any beyond $limit should not be in the sitemap.
+        $this->assertNodeNotInSitemap($node);
+      }
+    }
+  }
+}
