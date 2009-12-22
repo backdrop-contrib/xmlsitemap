@@ -22,7 +22,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
 
   function testPing() {
     $edit = array('xmlsitemap_engines_engines[simpletest]' => TRUE);
-    $this->drupalPost('admin/settings/xmlsitemap/engines', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
     xmlsitemap_engines_cron();
@@ -32,12 +32,12 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
 
   function testCustomURL() {
     $edit = array('xmlsitemap_engines_custom_urls' => 'an-invalid-url');
-    $this->drupalPost('admin/settings/xmlsitemap/engines', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText(t('Invalid custom URL an-invalid-url.'));
     $this->assertNoText(t('The configuration options have been saved.'));
 
     $edit = array('xmlsitemap_engines_custom_urls' => url('ping', array('absolute' => TRUE)));
-    $this->drupalPost('admin/settings/xmlsitemap/engines', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
     xmlsitemap_engines_cron();
@@ -45,7 +45,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $this->assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'No sitemap parameter provided.'));
 
     $edit = array('xmlsitemap_engines_custom_urls' => url('ping', array('absolute' => TRUE, 'query' => '[sitemap]')));
-    $this->drupalPost('admin/settings/xmlsitemap/engines', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
 

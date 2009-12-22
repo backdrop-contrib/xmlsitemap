@@ -7,7 +7,7 @@
 function xmlsitemap_engines_help($path, $arg) {
   $output = '';
   switch ($path) {
-    case 'admin/settings/xmlsitemap/engines':
+    case 'admin/config/search/xmlsitemap/engines':
       if (!module_exists('site_verify')) {
         $output .= t('In order to verify site ownership with the search engines listed below, it is highly recommended to download and install the <a href="@site-verify">Site verification module</a>.', array('@site-verify' => 'http://drupal.org/project/site_verify'));
       }
@@ -21,7 +21,7 @@ function xmlsitemap_engines_help($path, $arg) {
  * Implements hook_menu().
  */
 function xmlsitemap_engines_menu() {
-  $items['admin/settings/xmlsitemap/engines'] = array(
+  $items['admin/config/search/xmlsitemap/engines'] = array(
     'title' => 'Search Engines',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_engines_settings_form'),
@@ -29,7 +29,7 @@ function xmlsitemap_engines_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'xmlsitemap_engines.admin.inc',
   );
-  //$items['admin/settings/xmlsitemap/engines/submit'] = array(
+  //$items['admin/config/search/xmlsitemap/engines/submit'] = array(
   //  'page callback' => 'xmlsitemap_engines_submit',
   //  'access callback' => 'xmlsitemap_engines_submit_access',
   //  'type' => MENU_CALLBACK,
@@ -55,7 +55,7 @@ function xmlsitemap_engines_submit_access() {
   }
 
   // Allow manual submissions to run.
-  //if ($_GET['q'] == 'admin/settings/xmlsitemap/engines/submit' && user_access('administer xmlsitemap')) {
+  //if ($_GET['q'] == 'admin/config/search/xmlsitemap/engines/submit' && user_access('administer xmlsitemap')) {
   //  return TRUE;
   //}
 

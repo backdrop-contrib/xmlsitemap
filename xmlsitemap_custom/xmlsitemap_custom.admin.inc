@@ -18,14 +18,14 @@ function xmlsitemap_custom_list_links() {
   while ($link = db_fetch_object($query)) {
     $rows[] = array(
       l($link->loc, $link->loc),
-      l(t('Edit'), 'admin/settings/xmlsitemap/custom/edit/' . $link->id, array('query' => drupal_get_destination())),
-      l(t('Delete'), 'admin/settings/xmlsitemap/custom/delete/' . $link->id, array('query' => drupal_get_destination())),
+      l(t('Edit'), 'admin/config/search/xmlsitemap/custom/edit/' . $link->id, array('query' => drupal_get_destination())),
+      l(t('Delete'), 'admin/config/search/xmlsitemap/custom/delete/' . $link->id, array('query' => drupal_get_destination())),
     );
   }
 
   $rows[] = array(
     array(
-      'data' => l(t('Add custom link'), 'admin/settings/xmlsitemap/custom/add', array('query' => drupal_get_destination())),
+      'data' => l(t('Add custom link'), 'admin/config/search/xmlsitemap/custom/add', array('query' => drupal_get_destination())),
       'colspan' => 3,
     ),
   );
@@ -92,10 +92,10 @@ function xmlsitemap_custom_edit_link_form($form_state, $link = array()) {
     '#weight' => 10,
   );
   $form['cancel'] = array(
-    '#value' => l(t('Cancel'), 'admin/settings/xmlsitemap/custom'),
+    '#value' => l(t('Cancel'), 'admin/config/search/xmlsitemap/custom'),
     '#weight' => 11,
   );
-  $form['#redirect'] = 'admin/settings/xmlsitemap/custom';
+  $form['#redirect'] = 'admin/config/search/xmlsitemap/custom';
 
   return $form;
 }
@@ -117,7 +117,7 @@ function xmlsitemap_custom_edit_link_form_validate(&$form, &$form_state) {
   xmlsitemap_restore_user();
 
   // Since the menu item access results are cached, manually check the current path.
-  if ($menu_item && strpos($link['loc'], 'admin/settings/xmlsitemap/custom') === 0 && !user_access('administer xmlsitemap', drupal_anonymous_user())) {
+  if ($menu_item && strpos($link['loc'], 'admin/config/search/xmlsitemap/custom') === 0 && !user_access('administer xmlsitemap', drupal_anonymous_user())) {
     $menu_item['access'] = FALSE;
   }
 
@@ -146,7 +146,7 @@ function xmlsitemap_custom_delete_link_form($form_state, array $link) {
   return confirm_form(
     $form,
     t('Are you sure you want to delete the custom link for %loc?', array('%loc' => $link['loc'])),
-    'admin/settings/xmlsitemap/custom',
+    'admin/config/search/xmlsitemap/custom',
     t('This action cannot be undone.'),
     t('Delete'),
     t('Cancel')
@@ -158,5 +158,5 @@ function xmlsitemap_custom_delete_link_form_submit($form, &$form_state) {
   xmlsitemap_delete_link(array('type' => 'custom', 'id' => $link['id']));
   drupal_set_message(t('The custom link for %loc has been deleted.', array('%loc' => $link['loc'])));
   watchdog('xmlsitemap', 'The custom link for %loc has been deleted.', array('%loc' => $link['loc']), WATCHDOG_NOTICE);
-  $form_state['redirect'] = 'admin/settings/xmlsitemap/custom';
+  $form_state['redirect'] = 'admin/config/search/xmlsitemap/custom';
 }

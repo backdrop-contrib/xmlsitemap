@@ -194,7 +194,7 @@ function xmlsitemap_rebuild_form() {
       drupal_set_message(t('Your sitemap is up to date and does not need to be rebuilt.'), 'error');
     }
     else {
-      $_REQUEST += array('destination' => 'admin/settings/xmlsitemap');
+      $_REQUEST += array('destination' => 'admin/config/search/xmlsitemap');
       drupal_set_message(t('A rebuild is not necessary. If you are just wanting to regenerate the XML sitemap files, you can <a href="@link-cron">run cron manually</a>.', array('@link-cron' => url('admin/reports/status/run-cron', array('query' => drupal_get_destination())))), 'warning');
     }
   }
@@ -220,7 +220,7 @@ function xmlsitemap_rebuild_form() {
   return confirm_form(
     $form,
     t('Are you sure you want to rebuild the sitemap?'),
-    'admin/settings/xmlsitemap',
+    'admin/config/search/xmlsitemap',
     '',
     t('Rebuild sitemap'),
     t('Cancel')
@@ -240,7 +240,7 @@ function xmlsitemap_rebuild_form_submit($form, &$form_state) {
   module_load_include('inc', 'xmlsitemap');
   $batch = xmlsitemap_rebuild_batch($form_state['values']['modules'], $form_state['values']['save_custom']);
   batch_set($batch);
-  $form_state['redirect'] = 'admin/settings/xmlsitemap';
+  $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 
 /**

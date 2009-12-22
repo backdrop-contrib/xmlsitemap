@@ -150,7 +150,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapNodeTestHelper {
     $this->drupalLogin($this->admin_user);
 
     $limit = 5;
-    $this->drupalPost('admin/settings/xmlsitemap', array('xmlsitemap_batch_limit' => $limit), t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap', array('xmlsitemap_batch_limit' => $limit), t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
     $nodes = array();

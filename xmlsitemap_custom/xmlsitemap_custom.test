@@ -27,7 +27,7 @@ class XMLSitemapCustomFunctionalTest extends XMLSitemapTestHelper {
   }
 
   function testCustomLinks() {
-    $this->drupalGet('admin/settings/xmlsitemap/custom');
+    $this->drupalGet('admin/config/search/xmlsitemap/custom');
     $this->clickLink(t('Add custom link'));
 
     // Test an invalid path.
@@ -44,7 +44,7 @@ class XMLSitemapCustomFunctionalTest extends XMLSitemapTestHelper {
 
     // Test that the current page, which should not give a false positive for
     // $menu_item['access'] since the result has been cached already.
-    $edit['loc'] = 'admin/settings/xmlsitemap/custom/add';
+    $edit['loc'] = 'admin/config/search/xmlsitemap/custom/add';
     $this->drupalPost(NULL, $edit, t('Save'));
     $this->assertText(t('The custom link @link is either invalid or it cannot be accessed by anonymous users.', array('@link' => $edit['loc'])));
     $this->assertNotInSitemap(array('type' => 'custom', 'loc' => $edit['loc']));
@@ -62,25 +62,25 @@ class XMLSitemapCustomFunctionalTest extends XMLSitemapTestHelper {
   function testCustomFileLinks() {
     // Test an invalid file.
     $edit['loc'] = $this->randomName();
-    $this->drupalPost('admin/settings/xmlsitemap/custom/add', $edit, t('Save'));
+    $this->drupalPost('admin/config/search/xmlsitemap/custom/add', $edit, t('Save'));
     $this->assertText(t('The custom link @link is either invalid or it cannot be accessed by anonymous users.', array('@link' => $edit['loc'])));
     $this->assertNotInSitemap(array('type' => 'custom', 'loc' => $edit['loc']));
 
     // Test an unaccessible file .
     //$edit['loc'] = '.htaccess';
-    //$this->drupalPost('admin/settings/xmlsitemap/custom/add', $edit, t('Save'));
+    //$this->drupalPost('admin/config/search/xmlsitemap/custom/add', $edit, t('Save'));
     //$this->assertText(t('The custom link @link is either invalid or it cannot be accessed by anonymous users.', array('@link' => $edit['loc'])));
     //$this->assertNotInSitemap(array('type' => 'custom', 'loc' => $edit['loc']));
 
     // Test a valid file.
     $edit['loc'] = 'misc/drupal.js';
-    $this->drupalPost('admin/settings/xmlsitemap/custom/add', $edit, t('Save'));
+    $this->drupalPost('admin/config/search/xmlsitemap/custom/add', $edit, t('Save'));
     $this->assertText('The custom link for ' . $edit['loc'] . ' was saved');
     $this->assertInSitemap(array('type' => 'custom', 'loc' => $edit['loc']));
 
     // Test a valid folder.
     $edit['loc'] = 'misc';
-    $this->drupalPost('admin/settings/xmlsitemap/custom/add', $edit, t('Save'));
+    $this->drupalPost('admin/config/search/xmlsitemap/custom/add', $edit, t('Save'));
     $this->assertText('The custom link for ' . $edit['loc'] . ' was saved');
     $this->assertInSitemap(array('type' => 'custom', 'loc' => $edit['loc']));
   }

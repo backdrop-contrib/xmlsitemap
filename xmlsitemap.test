@@ -157,7 +157,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   }
 
   protected function assertXMLSitemapProblems($problem_text = FALSE) {
-    $this->drupalGet('admin/settings/xmlsitemap');
+    $this->drupalGet('admin/config/search/xmlsitemap');
     $this->assertText(t('One or more problems were detected with your sitemap configuration. Please check the status report for more information.'));
     if ($problem_text) {
       $this->clickLink(t('status report'));
@@ -166,7 +166,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   }
 
   protected function assertNoXMLSitemapProblems() {
-    $this->drupalGet('admin/settings/xmlsitemap');
+    $this->drupalGet('admin/config/search/xmlsitemap');
     $this->assertNoText(t('One or more problems were detected with your sitemap configuration. Please check the status report for more information.'));
   }
 
@@ -628,7 +628,7 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
    */
   function testMinimumLifetime() {
     $edit = array('xmlsitemap_minimum_lifetime' => 300);
-    $this->drupalPost('admin/settings/xmlsitemap', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
     xmlsitemap_save_link(array('type' => 'testing', 'id' => 1, 'loc' => 'lifetime-test'));
@@ -656,19 +656,19 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
    */
   function testBaseURL() {
     $edit = array('xmlsitemap_base_url' => '');
-    $this->drupalPost('admin/settings/xmlsitemap', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap', $edit, t('Save configuration'));
     $this->assertText(t('Base URL field is required.'));
 
     $edit = array('xmlsitemap_base_url' => 'invalid');
-    $this->drupalPost('admin/settings/xmlsitemap', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap', $edit, t('Save configuration'));
     $this->assertText(t('Invalid base URL.'));
 
     $edit = array('xmlsitemap_base_url' => 'http://example.com/ ');
-    $this->drupalPost('admin/settings/xmlsitemap', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap', $edit, t('Save configuration'));
     $this->assertText(t('Invalid base URL.'));
 
     $edit = array('xmlsitemap_base_url' => 'http://example.com/');
-    $this->drupalPost('admin/settings/xmlsitemap', $edit, t('Save configuration'));
+    $this->drupalPost('admin/config/search/xmlsitemap', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
     $this->regenerateSitemap();

@@ -43,9 +43,9 @@ function xmlsitemap_help($path, $arg) {
       $sitemaps = xmlsitemap_get_sitemaps(TRUE);
       $output .= format_plural(count($sitemaps), 'Your sitemap is located at: !sitemaps', 'Your sitemaps are located at: !sitemaps', array('!sitemaps' => theme('item_list', $sitemaps)));
       break;
-    case 'admin/settings/xmlsitemap':
+    case 'admin/config/search/xmlsitemap':
       break;
-    case 'admin/settings/xmlsitemap/rebuild':
+    case 'admin/config/search/xmlsitemap/rebuild':
       $output .= '<p>' . t("This action rebuilds your site's XML sitemap and regenerates the cached files, and may be a lengthy process. If you just installed XML sitemap, this can be helpful to import all your site's content into the sitemap. Otherwise, this should only be used in emergencies.") . '</p>';
   }
 
@@ -77,7 +77,7 @@ function xmlsitemap_perm() {
  * Implements hook_menu().
  */
 function xmlsitemap_menu() {
-  $items['admin/settings/xmlsitemap'] = array(
+  $items['admin/config/search/xmlsitemap'] = array(
     'title' => 'XML sitemap',
     'description' => 'Configure the XML sitemap.',
     'page callback' => 'drupal_get_form',
@@ -85,14 +85,14 @@ function xmlsitemap_menu() {
     'access arguments' => array('administer xmlsitemap'),
     'file' => 'xmlsitemap.admin.inc',
   );
-  $items['admin/settings/xmlsitemap/settings'] = array(
+  $items['admin/config/search/xmlsitemap/settings'] = array(
     'title' => 'Settings',
     'access arguments' => array('administer xmlsitemap'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'xmlsitemap.admin.inc',
     'weight' => -10,
   );
-  $items['admin/settings/xmlsitemap/rebuild'] = array(
+  $items['admin/config/search/xmlsitemap/rebuild'] = array(
     'title' => 'Rebuild',
     'description' => 'Rebuild the site map.',
     'page callback' => 'drupal_get_form',
