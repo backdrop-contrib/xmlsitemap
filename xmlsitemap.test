@@ -233,10 +233,9 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     $sql .= " ORDER BY timestamp ASC";
     $query = db_query($sql, $seen_ids);
 
-    $messages = array();
-    while ($message = db_fetch_object($query)) {
+    $messages = $query->fetchAllAssoc('wid');
+    foreach ($messages as &$message) {
       $message->text = $message->timestamp . ' ' . t($message->message, unserialize($message->variables));
-      $messages[$message->wid] = $message;
     }
 
     $seen_ids = array_merge($seen_ids, array_keys($messages));

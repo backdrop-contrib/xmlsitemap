@@ -25,19 +25,11 @@ function xmlsitemap_get_path_alias($path, $language) {
   static $last_language;
 
   if (!isset($aliases)) {
-    $aliases['all'] = array();
-    $query = db_query("SELECT src, dst FROM {url_alias} WHERE language = '' ORDER BY pid");
-    while ($alias = db_fetch_array($query)) {
-      $aliases['all'][$alias['src']] = $alias['dst'];
-    }
+    $aliases['all'] = db_query("SELECT source, alias FROM {url_alias} WHERE language = '' ORDER BY pid")->fetchAllKeyed();
   }
   if ($language && $last_language != $language) {
     unset($aliases[$last_language]);
-    $aliases[$language] = array();
-    $query = db_query("SELECT src, dst FROM {url_alias} WHERE language = '%s' ORDER BY pid", $language);
-    while ($alias = db_fetch_array($query)) {
-      $aliases[$language][$alias['src']] = $alias['dst'];
-    }
+    $aliases[$language] = db_query("SELECT source, alias FROM {url_alias} WHERE language = :language ORDER BY pid", array(':language' => $language))->fetchAllKeyed();
     $last_language = $language;
   }
 
@@ -293,7 +285,7 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
   // Add the XML header and XSL if desired.
   xmlsitemap_generate_chunk_header('urlset', $handle, $status, $language);
 
-  while ($link = db_fetch_array($query)) {
+  while ($link = $query->fetchAssoc()) {
     $url_options['language'] = $link['language'] ? $languages[$link['language']] : $language;
     $link['alias'] = xmlsitemap_get_path_alias($link['loc'], $url_options['language']->language);
     $link_url = url($link['alias'], $url_options);
@@ -534,7 +526,7 @@ function _xmlsitemap_get_blurb($check_version = TRUE) {
 }
 
 function _xmlsitemap_get_version() {
-  $file = db_fetch_object(db_query("SELECT filename, name, type, status, schema_version FROM {system} WHERE type = 'module' AND name = 'xmlsitemap'"));
+  $file = db_query("SELECT filename, name, type, status, schema_version FROM {system} WHERE type = 'module' AND name = 'xmlsitemap'")->fetch();
   $info = drupal_parse_info_file(drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.info');
   drupal_alter('system_info', $info, $file);
   return (isset($info['version']) ? $info['version'] : '');

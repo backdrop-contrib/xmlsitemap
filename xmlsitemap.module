@@ -386,7 +386,7 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
 
   if ($original_link === NULL) {
     // Load only the fields necessary for data to be changed in the sitemap.
-    $original_link = db_fetch_array(db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = '%s' AND id = %d", $link['type'], $link['id'], 0, 1));
+    $original_link = db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = :type AND id = :id", array(':type' => $link['type'], ':id' => $link['id']), 0, 1)->fetchAssoc();
   }
 
   if (!$original_link) {
@@ -447,7 +447,7 @@ function _xmlsitemap_build_conditions(array &$conditions = array(), array &$args
  */
 function xmlsitemap_load_link(array $conditions) {
   $args = _xmlsitemap_build_conditions($conditions);
-  $link = db_fetch_array(db_query_range("SELECT * FROM {xmlsitemap} WHERE ". implode(' AND ', $conditions), $args, 0, 1));
+  $link = db_query_range("SELECT * FROM {xmlsitemap} WHERE ". implode(' AND ', $conditions), $args, 0, 1)->fetchAssoc();
 
   // Allow other modules to respond after loading the link.
   //module_invoke_all('xmlsitemap_load_link', $link, $conditions, $args);
@@ -487,7 +487,7 @@ function xmlsitemap_save_link(array $link) {
     $link['changecount'] = 0;
   }
 
-  $existing = db_fetch_array(db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = '%s' AND id = %d", $link['type'], $link['id'], 0, 1));
+  $existing = db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = :type AND id = :id", array(':type' => $link['type'], ':id' => $link['id']), 0, 1)->fetchAssoc();
 
   // Check if this is a changed link and set the regenerate flag if necessary.
   if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {

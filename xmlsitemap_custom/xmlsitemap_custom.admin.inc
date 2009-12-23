@@ -14,8 +14,8 @@ function xmlsitemap_custom_list_links() {
   $rows = array();
 
   $sql = "SELECT id, loc, priority FROM {xmlsitemap} WHERE type = 'custom'" . tablesort_sql($header);
-  $query = db_query($sql);
-  while ($link = db_fetch_object($query)) {
+  $links = db_query($sql);
+  foreach ($links as $link) {
     $rows[] = array(
       l($link->loc, $link->loc),
       l(t('Edit'), 'admin/config/search/xmlsitemap/custom/edit/' . $link->id, array('query' => drupal_get_destination())),
