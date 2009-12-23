@@ -563,25 +563,6 @@ function xmlsitemap_delete_link(array $conditions) {
 }
 
 /**
- * Delete all cached sitemap XML files.
- *
- * @param $rmdir
- *   A boolean that if TRUE the directory will be removed after emptying.
- * @param $path
- *   An optional directory path, defaults to the xmlsiteamp cache directory.
- */
-function xmlsitemap_clear_cache($rmdir = FALSE, $path = NULL) {
-  if (!isset($path)) {
-    $path = file_create_path(xmlsitemap_var('path'));
-  }
-
-  file_scan_directory($path, '.*', array('.', '..', 'CVS', '.svn'), 'file_delete', TRUE);
-  if ($rmdir) {
-    rmdir($path);
-  }
-}
-
-/**
  * Get the filename of a specific sitemap page chunk.
  *
  * @param $chunk
@@ -594,7 +575,7 @@ function xmlsitemap_clear_cache($rmdir = FALSE, $path = NULL) {
  * @todo Move to xmlsitemap.inc
  */
 function xmlsitemap_get_chunk_file($chunk = 0, $language, $compressed = FALSE) {
-  return file_create_path(xmlsitemap_var('path')) .'/xmlsitemap-' . $language->language . '-' . $chunk . ($compressed ? '.gz' : '.xml');
+  return file_directory_path() . '/' . variable_get('xmlsitemap_path', 'xmlsitemap') . '/xmlsitemap-' . $language->language . '-' . $chunk . ($compressed ? '.gz' : '.xml');
 }
 
 /**
@@ -937,6 +918,10 @@ function xmlsitemap_xmlsitemap_link_info() {
  * Check that the sitemap files directory exists and is writable.
  */
 function xmlsitemap_check_directory() {
-  $directory = file_directory_path() . '/' . xmlsitemap_var('path');
-  return file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+  $path = file_directory_path() . '/' . variable_get('xmlsitemap_path', 'xmlsitemap');
+  $result = file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+  if (!$result) {
+    watchdog('file system', 'The directory %directory does not exist or is not writable.', array('%directory' => $path), WATCHDOG_ERROR);
+  }
+  return $result;
 }
