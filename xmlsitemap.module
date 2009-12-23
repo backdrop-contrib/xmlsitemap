@@ -527,13 +527,12 @@ function xmlsitemap_update_links($updates = array(), $conditions = array()) {
   }
 
   // Process updates.
-  $args = array();
-  _xmlsitemap_build_conditions($updates, $args, '=', '=');
-  _xmlsitemap_build_conditions($conditions, $args);
-  $sql = "UPDATE {xmlsitemap} SET " . implode(', ', $updates) . " WHERE " . implode(' AND ', $conditions);
-  db_query($sql, $args);
-
-  return db_affected_rows();
+  $query = db_update('xmlsitemap');
+  $query->fields($updates);
+  foreach ($conditions as $field => $value) {
+    $query->condition($field, $value);
+  }
+  return $query->execute();
 }
 
 /**
@@ -552,13 +551,11 @@ function xmlsitemap_delete_link(array $conditions) {
     _xmlsitemap_check_changed_links($conditions, array(), TRUE);
   }
 
-  $args = _xmlsitemap_build_conditions($conditions);
-  db_query("DELETE FROM {xmlsitemap} WHERE " . implode(' AND ', $conditions), $args);
-
-  // Allow other modules to respond after deleting the link.
-  //module_invoke_all('xmlsitemap_delete_link', $conditions, $args);
-
-  return db_affected_rows();
+  $query = db_delete('xmlsitemap');
+  foreach ($conditions as $field => $value) {
+    $query->condition($field, $value);
+  }
+  return $query->execute();
 }
 
 /**
@@ -671,7 +668,7 @@ function xmlsitemap_switch_user($new_user = NULL) {
       // Restore the original user.
       $user = $user_original;
       $user_original = NULL;
-      session_save_session(TRUE);
+      drupal_save_session(TRUE);
     }
     else {
       return FALSE;
@@ -682,14 +679,14 @@ function xmlsitemap_switch_user($new_user = NULL) {
     if (!$new_user) {
       $new_user = drupal_anonymous_user();
     }
-    elseif (!$new_user = user_load(array('uid' => $new_user))) {
+    elseif (!$new_user = user_load($new_user)) {
       return FALSE;
     }
 
     // Backup the original user object.
     if (!isset($user_original)) {
       $user_original = $user;
-      session_save_session(FALSE);
+      drupal_save_session(FALSE);
     }
 
     $user = $new_user;
@@ -698,7 +695,7 @@ function xmlsitemap_switch_user($new_user = NULL) {
     // Backup the original user object.
     if (!isset($user_original)) {
       $user_original = $user;
-      session_save_session(FALSE);
+      drupal_save_session(FALSE);
     }
 
     $user = $new_user;
@@ -791,7 +788,7 @@ function xmlsitemap_write_record($table, &$object, $primary_keys = array()) {
     }
 
     // Special case -- skip null value if field allows null.
-    if ($fields[$field] == NULL && $info['not null'] == FALSE) {
+    if ($fields[$field] == NULL && empty($info['not null'])) {
       continue;
     }
 
