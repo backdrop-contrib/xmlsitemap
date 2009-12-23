@@ -322,24 +322,6 @@ function xmlsitemap_calculate_changefreq($timestamps) {
 }
 
 /**
- * Given an table and field, return the field type.
- *
- * @param $table
- *   The table name.
- * @param $field
- *   The field name.
- * @return
- *   The schema type of {table}.field.
- */
-function _xmlsitemap_get_field_type($table, $field) {
-  static $schema;
-  if (!isset($schema[$table])) {
-    $schema[$table] = drupal_get_schema($table);
-  }
-  return $schema[$table]['fields'][$field]['type'];
-}
-
-/**
  * Check if there is a visible sitemap link given a certain set of conditions.
  *
  * @param $conditions
@@ -355,9 +337,13 @@ function _xmlsitemap_check_changed_links(array $conditions = array(), array $upd
   $conditions['status'] = (!empty($updates['status']) && empty($condition['status'])) ? 0 : 1;
   $conditions['access'] = (!empty($updates['access']) && empty($condition['access'])) ? 0 : 1;
 
-  $args = _xmlsitemap_build_conditions($conditions);
-  $sql = "SELECT 1 FROM {xmlsitemap} WHERE ". implode(' AND ', $conditions);
-  $changed = db_query_range($sql, 0, 1, $args)->fetchField();
+  $query = db_select('xmlsitemap');
+  $query->addExpression('1');
+  foreach ($conditions as $field => $value) {
+    $query->condition($field, $value);
+  }
+  $query->range(0, 1);
+  $changed = $query->execute()->fetchField();
 
   if ($changed && $flag) {
     variable_set('xmlsitemap_regenerate_needed', TRUE);
@@ -414,27 +400,6 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
 }
 
 /**
- * Condition builder for queries.
- *
- * @todo (Drupal7) Replace with DBTNG
- */
-function _xmlsitemap_build_conditions(array &$conditions = array(), array &$args = array(), $operator = '=', $null_operator = 'IS') {
-  foreach ($conditions as $field => $value) {
-    if (is_int($field)) {
-      continue;
-    }
-    elseif ($value === NULL) {
-      $conditions[$field] = "$field $null_operator NULL";
-    }
-    else {
-      $conditions[$field] = "$field $operator :$field";
-      $args[':' . $field] = $value;
-    }
-  }
-  return $args;
-}
-
-/**
  * Load a specific sitemap link.
  *
  * @param $conditions
@@ -445,8 +410,13 @@ function _xmlsitemap_build_conditions(array &$conditions = array(), array &$args
  * @todo Convert to use $type and $id as parameters.
  */
 function xmlsitemap_load_link(array $conditions) {
-  $args = _xmlsitemap_build_conditions($conditions);
-  $link = db_query_range("SELECT * FROM {xmlsitemap} WHERE ". implode(' AND ', $conditions), 0, 1, $args)->fetchAssoc();
+  $query = db_select('xmlsitemap', 'x');
+  $query->fields('x');
+  foreach ($conditions as $field => $value) {
+    $query->condition($field, $value);
+  }
+  $query->range(0, 1);
+  $link = $query->execute()->fetchAssoc();
 
   // Allow other modules to respond after loading the link.
   //module_invoke_all('xmlsitemap_load_link', $link, $conditions, $args);
@@ -532,6 +502,7 @@ function xmlsitemap_update_links($updates = array(), $conditions = array()) {
   foreach ($conditions as $field => $value) {
     $query->condition($field, $value);
   }
+
   return $query->execute();
 }
 
@@ -555,6 +526,7 @@ function xmlsitemap_delete_link(array $conditions) {
   foreach ($conditions as $field => $value) {
     $query->condition($field, $value);
   }
+
   return $query->execute();
 }
 
@@ -922,7 +894,7 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
           $module_link_info[$type] += array(
             'type' => $type,
             'module' => $module,
-            'purge' => TRUE, //module_hook($module, 'xmlsitemap_link_data'),
+            'purge' => TRUE,
             'table' => FALSE,
           );
         }

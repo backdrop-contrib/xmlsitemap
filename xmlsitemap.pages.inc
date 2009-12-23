@@ -49,13 +49,13 @@ function xmlsitemap_output_file($file, array $headers = array()) {
   }
 
   $headers += array(
-    'Content-type: text/xml; charset=utf-8',
-    //'Content-length: ' . filesize($file),
-    'Last-modified: ' . $last_modified,
-    'Etag: ' . $etag,
-    'Expires: ' . gmdate(DATE_RFC1123, $mtime + variable_get('xmlsitemap_minimum_lifetime', 0)),
-    'Cache-Control: must-revalidate',
-    'X-Robots-Tag: noindex, follow',
+    'Content-type' => 'text/xml; charset=utf-8',
+    //'Content-length' => filesize($file),
+    'Last-modified' => $last_modified,
+    'Etag' => $etag,
+    'Expires' => gmdate(DATE_RFC1123, $mtime + variable_get('xmlsitemap_minimum_lifetime', 0)),
+    'Cache-Control' => 'must-revalidate',
+    'X-Robots-Tag' => 'noindex, follow',
   );
 
   // Transfer the file as output.
@@ -67,32 +67,27 @@ function xmlsitemap_output_file($file, array $headers = array()) {
  *
  * @see file_transfer()
  */
-function xmlsitemap_file_transfer($source, $headers) {
+function xmlsitemap_file_transfer($uri, $headers) {
   if (ob_get_level()) {
     ob_end_clean();
   }
 
-  foreach ($headers as $header) {
-    // To prevent HTTP header injection, we delete new lines that are
-    // not followed by a space or a tab.
-    // See http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-    $header = preg_replace('/\r?\n(?!\t| )/', '', $header);
-    drupal_set_header($header);
+  foreach ($headers as $name => $value) {
+    drupal_add_http_header($name, $value);
   }
-
+  drupal_send_headers();
+  $scheme = $scheme = variable_get('file_default_scheme', 'public');
   // Transfer file in 1024 byte chunks to save memory usage.
-  if ($handle = fopen($source, 'rb')) {
-    while (!feof($handle)) {
-      print fread($handle, 1024);
+  if ($scheme && file_stream_wrapper_valid_scheme($scheme) && $fd = fopen($uri, 'rb')) {
+    while (!feof($fd)) {
+      print fread($fd, 1024);
     }
-    fclose($handle);
+    fclose($fd);
   }
   else {
     drupal_not_found();
   }
-
-  module_invoke_all('exit');
-  exit();
+  drupal_exit();
 }
 
 /**
@@ -115,13 +110,15 @@ function xmlsitemap_output_xsl() {
     'URL location' => t('URL location'),
     'Change frequency' => t('Change frequency'),
     'Priority' => t('Priority'),
-    '[xsl-css]' => base_path() . $module_path . '/xsl/xmlsitemap.xsl.css',
+    '[jquery]' => base_path() . 'misc/jquery.js',
+    '[jquery-tablesort]' => base_path() . $module_path . '/xsl/jquery.tablesorter.min.js',
     '[xsl-js]' => base_path() . $module_path . '/xsl/xmlsitemap.xsl.js',
+    '[xsl-css]' => base_path() . $module_path . '/xsl/xmlsitemap.xsl.css',
   );
   $xsl_content = strtr($xsl_content, $replacements);
 
   // Output the XSL content.
-  drupal_set_header('Content-type: application/xml; charset=utf-8');
-  drupal_set_header('X-Robots-Tag: noindex, follow');
+  drupal_add_http_header('Content-type', 'application/xml; charset=utf-8');
+  drupal_add_http_header('X-Robots-Tag', 'noindex, follow');
   echo $xsl_content;
 }
