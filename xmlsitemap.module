@@ -322,21 +322,21 @@ function xmlsitemap_calculate_changefreq($timestamps) {
 }
 
 /**
- * Given an {xmlsitemap} field, return the correct %-placeholder.
+ * Given an table and field, return the field type.
  *
+ * @param $table
+ *   The table name.
  * @param $field
- *   The {xmlsitemap} schema field name.
+ *   The field name.
  * @return
- *   The placeholder string to embed in a query for that type.
- *
- * @see db_type_placeholder()
+ *   The schema type of {table}.field.
  */
-function _xmlsitemap_get_placeholder($field) {
+function _xmlsitemap_get_field_type($table, $field) {
   static $schema;
-  if (!isset($schema)) {
-    $schema = drupal_get_schema('xmlsitemap');
+  if (!isset($schema[$table])) {
+    $schema[$table] = drupal_get_schema($table);
   }
-  return db_type_placeholder($schema['fields'][$field]['type']);
+  return $schema[$table]['fields'][$field]['type'];
 }
 
 /**
@@ -357,7 +357,7 @@ function _xmlsitemap_check_changed_links(array $conditions = array(), array $upd
 
   $args = _xmlsitemap_build_conditions($conditions);
   $sql = "SELECT 1 FROM {xmlsitemap} WHERE ". implode(' AND ', $conditions);
-  $changed = db_query_range($sql, $args, 0, 1)->fetchField();
+  $changed = db_query_range($sql, 0, 1, $args)->fetchField();
 
   if ($changed && $flag) {
     variable_set('xmlsitemap_regenerate_needed', TRUE);
@@ -386,7 +386,7 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
 
   if ($original_link === NULL) {
     // Load only the fields necessary for data to be changed in the sitemap.
-    $original_link = db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = :type AND id = :id", array(':type' => $link['type'], ':id' => $link['id']), 0, 1)->fetchAssoc();
+    $original_link = db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = :type AND id = :id", 0, 1, array(':type' => $link['type'], ':id' => $link['id']))->fetchAssoc();
   }
 
   if (!$original_link) {
@@ -427,9 +427,8 @@ function _xmlsitemap_build_conditions(array &$conditions = array(), array &$args
       $conditions[$field] = "$field $null_operator NULL";
     }
     else {
-      $placeholder = _xmlsitemap_get_placeholder($field);
-      $conditions[$field] = "$field $operator $placeholder";
-      $args[] = $value;
+      $conditions[$field] = "$field $operator :$field";
+      $args[':' . $field] = $value;
     }
   }
   return $args;
@@ -447,7 +446,7 @@ function _xmlsitemap_build_conditions(array &$conditions = array(), array &$args
  */
 function xmlsitemap_load_link(array $conditions) {
   $args = _xmlsitemap_build_conditions($conditions);
-  $link = db_query_range("SELECT * FROM {xmlsitemap} WHERE ". implode(' AND ', $conditions), $args, 0, 1)->fetchAssoc();
+  $link = db_query_range("SELECT * FROM {xmlsitemap} WHERE ". implode(' AND ', $conditions), 0, 1, $args)->fetchAssoc();
 
   // Allow other modules to respond after loading the link.
   //module_invoke_all('xmlsitemap_load_link', $link, $conditions, $args);
@@ -487,7 +486,7 @@ function xmlsitemap_save_link(array $link) {
     $link['changecount'] = 0;
   }
 
-  $existing = db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = :type AND id = :id", array(':type' => $link['type'], ':id' => $link['id']), 0, 1)->fetchAssoc();
+  $existing = db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = :type AND id = :id", 0, 1, array(':type' => $link['type'], ':id' => $link['id']))->fetchAssoc();
 
   // Check if this is a changed link and set the regenerate flag if necessary.
   if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {
@@ -726,10 +725,10 @@ function xmlsitemap_restore_user() {
  *
  * @todo Remove when http://drupal.org/node/227677 is fixed.
  */
-function xmlsitemap_write_record($table, &$object, $update = array()) {
-  // Standardize $update to an array.
-  if (is_string($update)) {
-    $update = array($update);
+function xmlsitemap_write_record($table, &$object, $primary_keys = array()) {
+  // Standardize $primary_keys to an array.
+  if (is_string($primary_keys)) {
+    $primary_keys = array($primary_keys);
   }
 
   $schema = drupal_get_schema($table);
@@ -746,74 +745,113 @@ function xmlsitemap_write_record($table, &$object, $update = array()) {
     $array = FALSE;
   }
 
-  $fields = $defs = $values = $serials = $placeholders = array();
+  $fields = array();
   $object_fields = get_object_vars($object);
 
   // Go through our schema, build SQL, and when inserting, fill in defaults for
   // fields that are not set.
   foreach ($schema['fields'] as $field => $info) {
     // Special case -- skip serial types if we are updating.
-    if ($info['type'] == 'serial') {
-      if (empty($update)) {
-        // Track serial fields so we can helpfully populate them after the query.
-        $serials[] = $field;
-      }
+    if ($info['type'] == 'serial' && !empty($primary_keys)) {
       continue;
     }
 
-    // For inserts, populate defaults from Schema if not already provided
-    if (!isset($object->$field) && !count($update) && isset($info['default']) && !array_key_exists($field, $object_fields)) {
+    // For inserts, populate defaults from schema if not already provided.
+    if (!isset($object->$field) && empty($primary_keys) && isset($info['default']) && !array_key_exists($field, $object_fields)) {
       $object->$field = $info['default'];
+    }
+
+    // Track serial field so we can helpfully populate them after the query.
+    // NOTE: Each table should come with one serial field only.
+    if ($info['type'] == 'serial') {
+      $serial = $field;
     }
 
     // Build arrays for the fields, placeholders, and values in our query.
     if (isset($object->$field) || (array_key_exists($field, $object_fields) && empty($info['not null']))) {
-      $fields[] = $field;
       if (isset($object->$field)) {
-        $placeholders[] = db_type_placeholder($info['type']);
-        $values[] = empty($info['serialize']) ? $object->$field : serialize($object->$field);
+        if (empty($info['serialize'])) {
+          $fields[$field] = $object->$field;
+        }
+        elseif (!empty($object->$field)) {
+          $fields[$field] = serialize($object->$field);
+        }
+        else {
+          $fields[$field] = '';
+        }
       }
       else {
-        $placeholders[] = '%s';
-        $values[] = 'NULL';
+        $fields[$field] = 'NULL';
       }
+    }
+
+    // We don't need to care about type casting if value does not exist.
+    if (!isset($fields[$field])) {
+      continue;
+    }
+
+    // Special case -- skip null value if field allows null.
+    if ($fields[$field] == NULL && $info['not null'] == FALSE) {
+      continue;
+    }
+
+    // Type cast if field does not allow null. Required by DB API.
+    if ($info['type'] == 'int' || $info['type'] == 'serial') {
+      $fields[$field] = (int) $fields[$field];
+    }
+    elseif ($info['type'] == 'float') {
+      $fields[$field] = (float) $fields[$field];
+    }
+    else {
+      $fields[$field] = (string) $fields[$field];
     }
   }
 
   // Build the SQL.
   $query = '';
-  if (!count($update)) {
-    $query = "INSERT INTO {". $table ."} (". implode(', ', $fields) .') VALUES ('. implode(', ', $placeholders) .')';
+  if (!count($primary_keys)) {
+    $options = array('return' => Database::RETURN_INSERT_ID);
+    if (isset($serial) && isset($fields[$serial])) {
+      // If the serial column has been explicitly set with an ID, then we don't
+      // require the database to return the last insert id.
+      if ($fields[$serial]) {
+        $options['return'] = Database::RETURN_AFFECTED;
+      }
+      // If a serial column does exist with no value (i.e. 0) then remove it as
+      // the database will insert the correct value for us.
+      else {
+        unset($fields[$serial]);
+      }
+    }
+    $query = db_insert($table, $options)->fields($fields);
     $return = SAVED_NEW;
   }
   else {
-    $query = '';
-    foreach ($fields as $id => $field) {
-      if ($query) {
-        $query .= ', ';
-      }
-      $query .= $field .' = '. $placeholders[$id];
+    $query = db_update($table)->fields($fields);
+    foreach ($primary_keys as $key) {
+      $query->condition($key, $object->$key);
     }
-
-    foreach ($update as $key) {
-      $conditions[] = "$key = ". db_type_placeholder($schema['fields'][$key]['type']);
-      $values[] = $object->$key;
-    }
-
-    $query = "UPDATE {". $table ."} SET $query WHERE ". implode(' AND ', $conditions);
     $return = SAVED_UPDATED;
   }
 
   // Execute the SQL.
-  if (db_query($query, $values)) {
-    if ($serials) {
-      // Get last insert ids and fill them in.
-      foreach ($serials as $field) {
-        $object->$field = db_last_insert_id($table, $field);
+  if ($last_insert_id = $query->execute()) {
+    if (isset($serial)) {
+      // If the database was not told to return the last insert id, it will be
+      // because we already know it.
+      if (isset($options) && $options['return'] != Database::RETURN_INSERT_ID) {
+        $object->$serial = $fields[$serial];
+      }
+      else {
+        $object->$serial = $last_insert_id;
       }
     }
   }
-  else {
+  // If we have a single-field primary key but got no insert ID, the
+  // query failed. Note that we explicitly check for FALSE, because
+  // a valid update query which doesn't change any values will return
+  // zero (0) affected rows.
+  elseif ($last_insert_id === FALSE && count($primary_keys) == 1) {
     $return = FALSE;
   }
 

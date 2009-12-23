@@ -280,7 +280,7 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
   $url_options = xmlsitemap_get_url_options(array('alias' => TRUE));
   $offset = max($chunk - 1, 0) * xmlsitemap_get_chunk_size();
   $limit = xmlsitemap_get_chunk_size();
-  $query = db_query_range($sql, $args, $offset, $limit);
+  $query = db_query_range($sql, $offset, $limit, $args);
 
   // Add the XML header and XSL if desired.
   xmlsitemap_generate_chunk_header('urlset', $handle, $status, $language);
@@ -508,7 +508,8 @@ function _xmlsitemap_get_blurb($check_version = TRUE) {
 
   if (!isset($blurb)) {
     $blurb = FALSE;
-    if (!$check_version || preg_match('/dev|unstable|alpha|beta/i', _xmlsitemap_get_version())) {
+    $version = _xmlsitemap_get_version();
+    if (!$check_version || ($version && preg_match('/dev|unstable|alpha|beta/i', $version))) {
       $sponsors = array(
         l('Symantec', 'http://www.symantec.com/'),
         l('WebWise Solutions', 'http://www.webwiseone.com/'),
@@ -526,8 +527,6 @@ function _xmlsitemap_get_blurb($check_version = TRUE) {
 }
 
 function _xmlsitemap_get_version() {
-  $file = db_query("SELECT filename, name, type, status, schema_version FROM {system} WHERE type = 'module' AND name = 'xmlsitemap'")->fetch();
-  $info = drupal_parse_info_file(drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.info');
-  drupal_alter('system_info', $info, $file);
-  return (isset($info['version']) ? $info['version'] : '');
+  $modules = _system_rebuild_module_data();
+  return $modules['xmlsitemap']->info['version'];
 }

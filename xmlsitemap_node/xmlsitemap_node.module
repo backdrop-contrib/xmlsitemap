@@ -207,8 +207,9 @@ function xmlsitemap_node_form_alter(&$form, $form_state, $form_id) {
 function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
   $links = array();
 
-  $sql = "SELECT n.nid FROM {node} n WHERE n.nid > %d ORDER BY n.nid";
-  $nids = ($limit ? db_query_range($sql, $offset, 0, $limit) : db_query($sql, $offset));
+  $sql = "SELECT n.nid FROM {node} n WHERE n.nid > :offset ORDER BY n.nid";
+  $args = array(':offset' => $offset);
+  $nids = ($limit ? db_query_range($sql, 0, $limit, $args) : db_query($sql, $args));
 
   foreach ($nids as $nid) {
     $node = node_load($nid, NULL, TRUE);

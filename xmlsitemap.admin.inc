@@ -15,6 +15,9 @@
  * @see xmlsitemap_settings_form_validate()
  */
 function xmlsitemap_settings_form() {
+  $form['xmlsitemap_settings'] = array(
+    '#type' => 'vertical_tabs',
+  );
   $form['xmlsitemap'] = array(
     '#type' => 'fieldset',
     '#title' => t('Settings'),
@@ -39,7 +42,7 @@ function xmlsitemap_settings_form() {
     '#title' => t('Generate sitemaps for the following languages'),
     '#options' => array(language_default('language') => language_default('name')),
     '#default_value' => xmlsitemap_var('languages'),
-    '#process' => array('expand_checkboxes', '_xmlsitemap_process_language_checkboxes'),
+    '#process' => array('form_process_checkboxes', '_xmlsitemap_process_language_checkboxes'),
     '#description' => !module_exists('xmlsitemap_i18n') ? t('To enable multilingual features, enable the XML sitemap internationalization module.') : '',
   );
 

@@ -12,7 +12,7 @@ function xmlsitemap_menu_cron() {
     xmlsitemap_switch_user(0);
 
     $sql = "SELECT ml.mlid FROM {menu_links} ml LEFT JOIN {xmlsitemap} x ON x.type = 'menu' AND ml.mlid = x.id WHERE x.id IS NULL AND ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ")";
-    $mlids = db_query_range($sql, $menus, 0, xmlsitemap_var('batch_limit'));
+    $mlids = db_query_range($sql, 0, xmlsitemap_var('batch_limit'), $menus);
 
     foreach ($mlids as $mlid) {
       $menu_item = xmlsitemap_menu_menu_link_load($mlid);
@@ -37,7 +37,7 @@ function xmlsitemap_menu_xmlsitemap_links($offset = 0, $limit = 0) {
 
     $sql = "SELECT ml.mlid FROM {menu_links} ml WHERE ml.mlid > %d AND ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ") ORDER BY ml.mlid";
     $args = array_merge(array($offset), $menus);
-    $mlids = ($limit ? db_query_range($sql, $args, 0, $limit) : db_query($sql, $args));
+    $mlids = ($limit ? db_query_range($sql, 0, $limit, $args) : db_query($sql, $args));
 
     foreach ($mlids as $mlid) {
       $menu_item = xmlsitemap_menu_menu_link_load($mlid);
