@@ -293,7 +293,7 @@ function xmlsitemap_add_form_type_summary(&$form, $type, $items) {
     '#value' => theme('table', $header, $rows),
   );
 
-  $count = db_result(db_query("SELECT COUNT(id) FROM {xmlsitemap} WHERE type = '%s' AND access = 1 AND status = 1", $type['type']));
+  $count = db_query("SELECT COUNT(id) FROM {xmlsitemap} WHERE type = '%s' AND access = 1 AND status = 1", $type['type'])->fetchField();
   $form[$type['type']]['count'] = array(
     '#type' => 'item',
     '#value' => format_plural($count, 'There is 1 @type link in the XML sitemap.', 'There are @count @type links in the XML sitemap.', array('@type' => drupal_strtolower($type['type']))),

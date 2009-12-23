@@ -33,8 +33,8 @@ function xmlsitemap_requirements($phase) {
   }
 
   if ($phase == 'runtime') {
-    $directory = file_create_path(xmlsitemap_var('path'));
-    if (!file_check_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+    $directory = file_directory_path() . '/' . xmlsitemap_var('path');
+    if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
       $requirements['xmlsitemap_directory'] = array(
         'title' => $t('XML sitemap cache directory'),
         'value' => $t('Not found or not writable'),
@@ -116,9 +116,6 @@ function xmlsitemap_check_status() {
  * Implements hook_install().
  */
 function xmlsitemap_install() {
-  // Add tables.
-  drupal_install_schema('xmlsitemap');
-
   // Set this module's weight to 1 so xmlsitemap_cron() runs after all other
   // xmlsitemap_x_cron() runs.
   db_query("UPDATE {system} SET weight = 1 WHERE type = 'module' AND name = 'xmlsitemap'");
@@ -127,12 +124,12 @@ function xmlsitemap_install() {
   drupal_load('module', 'xmlsitemap');
 
   // Add files directory.
-  $path = file_create_path(xmlsitemap_var('path'));
-  file_check_directory($path, FILE_CREATE_DIRECTORY);
+  $path = file_directory_path() . '/' . xmlsitemap_var('path');
+  file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
 
   // Insert the homepage link into the {xmlsitemap} table so we do not show an
   // empty sitemap after install.
-  db_query("INSERT INTO {xmlsitemap} (type, id, loc, priority, changefreq) VALUES ('frontpage', 0, '', %f, %d)", xmlsitemap_var('frontpage_priority'), xmlsitemap_var('frontpage_changefreq'));
+  db_query("INSERT INTO {xmlsitemap} (type, id, loc, priority, changefreq) VALUES ('frontpage', 0, '', :priority, :changefreq)", array(':priority' => xmlsitemap_var('frontpage_priority'), 'changefreq' => xmlsitemap_var('frontpage_changefreq')));
 
   // @todo Does the sitemap show up on first install or is it a 404 page?
 }
@@ -148,9 +145,6 @@ function xmlsitemap_enable() {
  * Implements hook_uninstall().
  */
 function xmlsitemap_uninstall() {
-  // Remove tables.
-  drupal_uninstall_schema('xmlsitemap');
-
   // Remove variables.
   drupal_load('module', 'xmlsitemap');
   $variables = array_keys(xmlsitemap_variables());

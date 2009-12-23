@@ -183,7 +183,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
       $args[] = ($field == 'variables' && is_array($value)) ? serialize($value) : $value;
     }
 
-    return db_result(db_query_range("SELECT 1 FROM {watchdog} WHERE " . implode(' AND ', $conditions), $args, 0, 1));
+    return db_query_range("SELECT 1 FROM {watchdog} WHERE " . implode(' AND ', $conditions), $args, 0, 1)->fetchField();
   }
 
   protected function assertWatchdogMessage(array $conditions, $message = 'Watchdog message found.') {
@@ -335,12 +335,12 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     variable_set('xmlsitemap_chunk_size', 4);
 
     // Make the total number of links just equal to the chunk size.
-    $count = db_result(db_query("SELECT COUNT(id) FROM {xmlsitemap}"));
+    $count = db_query("SELECT COUNT(id) FROM {xmlsitemap}")->fetchField();
     for ($i = $count; $i < 4; $i++) {
       $this->addSitemapLink();
       $this->assertEqual(xmlsitemap_get_chunk_count(TRUE), 1);
     }
-    $this->assertEqual(db_result(db_query("SELECT COUNT(id) FROM {xmlsitemap}")), 4);
+    $this->assertEqual(db_query("SELECT COUNT(id) FROM {xmlsitemap}")->fetchField(), 4);
 
     // Add a disabled link, should not change the chunk count.
     $this->addSitemapLink(array('status' => FALSE));
@@ -357,7 +357,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
 
     // Delete all links. The chunk count should be 1 not 0.
     db_query("DELETE FROM {xmlsitemap}");
-    $this->assertEqual(db_result(db_query("SELECT COUNT(id) FROM {xmlsitemap}")), 0);
+    $this->assertEqual(db_query("SELECT COUNT(id) FROM {xmlsitemap}")->fetchField(), 0);
     $this->assertEqual(xmlsitemap_get_chunk_count(TRUE), 1);
   }
 
@@ -444,7 +444,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $this->assertEqual($user->uid, $original_user->uid);
 
     // Attempt to switch to an invalid user ID.
-    $invalid_uid = db_result(db_query("SELECT MAX(uid) FROM {users}")) + 100;
+    $invalid_uid = db_query("SELECT MAX(uid) FROM {users}")->fetchField() + 100;
     $this->assertEqual(xmlsitemap_switch_user($invalid_uid), FALSE);
     $this->assertEqual($user->uid, $original_user->uid);
     $this->assertEqual(xmlsitemap_restore_user(), FALSE);
@@ -697,7 +697,7 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
     $this->assertNoXMLSitemapProblems();
 
     // Test anonymous users access to sitemap.xml.
-    $anon_permissions = db_result(db_query("SELECT perm FROM {permission} WHERE rid = %d", DRUPAL_ANONYMOUS_RID));
+    $anon_permissions = db_query("SELECT perm FROM {permission} WHERE rid = %d", DRUPAL_ANONYMOUS_RID)->fetchField();
     db_query("UPDATE {permission} SET perm = '' WHERE rid = %d", DRUPAL_ANONYMOUS_RID);
     $this->assertXMLSitemapProblems(t('In order to allow search engines to view the XML sitemap, the anonymous user role must have the access content permission.'));
     db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", $anon_permissions, DRUPAL_ANONYMOUS_RID);

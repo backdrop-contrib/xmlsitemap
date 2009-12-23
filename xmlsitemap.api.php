@@ -70,7 +70,7 @@ function hook_xmlsitemap_links_batch_info() {
   return array(
     'current' => 0,
     // This value is used to start selecting items (WHERE id > current).
-    'max' => db_result(db_query("SELECT COUNT(id) FROM {mymodule}")),
+    'max' => db_query("SELECT COUNT(id) FROM {mymodule}")->fetchField(),
     // This should be the total number of items to process.
   );
 }

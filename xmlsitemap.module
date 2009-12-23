@@ -127,18 +127,6 @@ function xmlsitemap_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap.pages.inc',
   );
-<<<<<<< xmlsitemap.module
-  $chunk_count = variable_get('xmlsitemap_chunk_count', 0);
-  for ($chunk = 0; $chunk < $chunk_count; ++$chunk) {
-    $items["sitemap$chunk.xml"] = array(
-      'title' => 'Site map !number',
-      'title arguments' => array('!number' => $chunk),
-      'page callback' => '_xmlsitemap_output',
-      'page arguments' => array((string)$chunk),
-      'type' => MENU_CALLBACK,
-      'access arguments' => $access_content
-    );
-=======
 
   return $items;
 }
@@ -150,7 +138,6 @@ function xmlsitemap_cron() {
   if (!xmlsitemap_var('regenerate_needed')
       || (REQUEST_TIME - xmlsitemap_var('generated_last')) < xmlsitemap_var('minimum_lifetime')) {
     return;
->>>>>>> 1.20.2.45.2.122
   }
 
   module_load_include('inc', 'xmlsitemap');
@@ -273,7 +260,7 @@ function xmlsitemap_get_chunk_count($reset = FALSE) {
 function xmlsitemap_get_link_count($reset = FALSE) {
   static $count;
   if (!isset($count) || $reset) {
-    $count = db_result(db_query("SELECT COUNT(id) FROM {xmlsitemap} WHERE access = 1 AND status = 1"));
+    $count = db_query("SELECT COUNT(id) FROM {xmlsitemap} WHERE access = 1 AND status = 1")->fetchField();
   }
   return $count;
 }
@@ -370,7 +357,7 @@ function _xmlsitemap_check_changed_links(array $conditions = array(), array $upd
 
   $args = _xmlsitemap_build_conditions($conditions);
   $sql = "SELECT 1 FROM {xmlsitemap} WHERE ". implode(' AND ', $conditions);
-  $changed = db_result(db_query_range($sql, $args, 0, 1));
+  $changed = db_query_range($sql, $args, 0, 1)->fetchField();
 
   if ($changed && $flag) {
     variable_set('xmlsitemap_regenerate_needed', TRUE);
@@ -672,49 +659,19 @@ function xmlsitemap_variables() {
 }
 
 /**
-<<<<<<< xmlsitemap.module
- * Determine the frequency of updates to a link.
- * @param $interval: The number of seconds since last change
- * @return A string representing the update frequency according to the
- * sitemaps.org protocol
- */
-function _xmlsitemap_frequency($interval) {
-  $frequencies = array(
-    'always' => 3600,
-    'hourly' => 86400,
-    'daily' => 604800,
-    'weekly' => 2419200,
-    'monthly' => 29030400,
-    'yearly' => 100000000,
-    'never' => 0,
-  );
-  $frequency = 'never';
-  if (array_key_exists($interval, $frequencies)) {
-    $frequency = $interval;
-=======
  * Internal implementation of variable_get().
  */
 function xmlsitemap_var($name, $default = NULL) {
   static $defaults = NULL;
   if (!isset($defaults)) {
     $defaults = xmlsitemap_variables();
->>>>>>> 1.20.2.45.2.122
   }
-<<<<<<< xmlsitemap.module
-  elseif (is_numeric($interval)) {
-    foreach ($frequencies as $frequency => $value) {
-      if ($interval < $value) {
-        break;
-      }
-    }
-=======
 
   $name = 'xmlsitemap_'. $name;
 
   // @todo Remove when stable.
   if (!isset($defaults[$name])) {
     trigger_error(t('Default variable for %variable not found.', array('%variable' => $name)));
->>>>>>> 1.20.2.45.2.122
   }
 
   return variable_get($name, isset($default) || !isset($defaults[$name]) ? $default : $defaults[$name]);

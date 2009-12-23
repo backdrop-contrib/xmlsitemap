@@ -12,9 +12,9 @@ function xmlsitemap_menu_cron() {
     xmlsitemap_switch_user(0);
 
     $sql = "SELECT ml.mlid FROM {menu_links} ml LEFT JOIN {xmlsitemap} x ON x.type = 'menu' AND ml.mlid = x.id WHERE x.id IS NULL AND ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ")";
-    $query = db_query_range($sql, $menus, 0, xmlsitemap_var('batch_limit'));
+    $mlids = db_query_range($sql, $menus, 0, xmlsitemap_var('batch_limit'));
 
-    while ($mlid = db_result($query)) {
+    foreach ($mlids as $mlid) {
       $menu_item = xmlsitemap_menu_menu_link_load($mlid);
       $link = xmlsitemap_menu_create_link($menu_item);
       xmlsitemap_save_link($link);
@@ -37,9 +37,9 @@ function xmlsitemap_menu_xmlsitemap_links($offset = 0, $limit = 0) {
 
     $sql = "SELECT ml.mlid FROM {menu_links} ml WHERE ml.mlid > %d AND ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ") ORDER BY ml.mlid";
     $args = array_merge(array($offset), $menus);
-    $query = ($limit ? db_query_range($sql, $args, 0, $limit) : db_query($sql, $args));
+    $mlids = ($limit ? db_query_range($sql, $args, 0, $limit) : db_query($sql, $args));
 
-    while ($mlid = db_result($query)) {
+    foreach ($mlids as $mlid) {
       $menu_item = xmlsitemap_menu_menu_link_load($mlid);
       $links[] = xmlsitemap_menu_create_link($menu_item);
     }
@@ -57,7 +57,7 @@ function xmlsitemap_menu_xmlsitemap_links($offset = 0, $limit = 0) {
 function xmlsitemap_menu_xmlsitemap_links_batch_info() {
   $menus = xmlsitemap_menu_get_menus();
   return array(
-    'max' => $menus ? db_result(db_query("SELECT COUNT(ml.mlid) FROM {menu_links} ml WHERE ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ")", $menus)) : 0,
+    'max' => $menus ? db_query("SELECT COUNT(ml.mlid) FROM {menu_links} ml WHERE ml.menu_name IN (" . db_placeholders($menus, 'varchar') . ")", $menus)->fetchField() : 0,
   );
 }
 

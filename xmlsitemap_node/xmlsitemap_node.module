@@ -8,8 +8,8 @@
  */
 function xmlsitemap_node_cron() {
   // Start with the most recently changed nodes first.
-  $query = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {xmlsitemap} x ON x.type = 'node' AND n.nid = x.id WHERE x.id IS NULL ORDER BY n.changed DESC", 0, xmlsitemap_var('batch_limit'));
-  while ($nid = db_result($query)) {
+  $nids = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {xmlsitemap} x ON x.type = 'node' AND n.nid = x.id WHERE x.id IS NULL ORDER BY n.changed DESC", 0, xmlsitemap_var('batch_limit'));
+  foreach ($nids as $nid) {
     $node = node_load($nid, NULL, TRUE);
     $link = xmlsitemap_node_create_link($node);
     xmlsitemap_save_link($link);
@@ -208,9 +208,9 @@ function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
   $links = array();
 
   $sql = "SELECT n.nid FROM {node} n WHERE n.nid > %d ORDER BY n.nid";
-  $query = ($limit ? db_query_range($sql, $offset, 0, $limit) : db_query($sql, $offset));
+  $nids = ($limit ? db_query_range($sql, $offset, 0, $limit) : db_query($sql, $offset));
 
-  while ($nid = db_result($query)) {
+  foreach ($nids as $nid) {
     $node = node_load($nid, NULL, TRUE);
     $links[] = xmlsitemap_node_create_link($node);
   }
@@ -221,21 +221,10 @@ function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
 /**
  * Implements hook_xmlsitemap_links_batch_info().
  */
-<<<<<<< xmlsitemap_node.module
-function _xmlsitemap_node_submit($form, &$form_state) {
-  $op   = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
-  $type = isset($form_state['values']['old_type']) ? $form_state['values']['old_type'] : trim($form_state['values']['type']);
-  $priority = $form_state['values']['xmlsitemap_node_type_priority'];
-  $old_priority = $form_state['values']['xmlsitemap_old_priority'];
-  if ($op == t('Save content type') && $priority != $old_priority || $op == t('Reset to defaults') && $old_priority != 0.1) {
-    xmlsitemap_update_sitemap();
-  }
-=======
 function xmlsitemap_node_xmlsitemap_links_batch_info() {
   return array(
-    'max' => db_result(db_query("SELECT COUNT(n.nid) FROM {node} n")),
+    'max' => db_query("SELECT COUNT(n.nid) FROM {node} n")->fetchField(),
   );
->>>>>>> 1.19.2.20.2.73
 }
 
 /**
@@ -294,11 +283,7 @@ function xmlsitemap_node_get_timestamps($node) {
   static $timestamps = array();
 
   if (!isset($timestamps[$node->nid])) {
-    $timestamps[$node->nid] = array();
-    $query = db_query("SELECT c.timestamp FROM {comments} c WHERE c.nid = %d AND c.status = %d UNION ALL SELECT nr.timestamp FROM {node_revisions} nr WHERE nr.nid = %d", $node->nid, COMMENT_PUBLISHED, $node->nid);
-    while ($timestamp = db_result($query)) {
-      $timestamps[$node->nid][] = (int) $timestamp;
-    }
+    $timestamps[$node->nid] = db_query("SELECT c.timestamp FROM {comments} c WHERE c.nid = %d AND c.status = %d UNION ALL SELECT nr.timestamp FROM {node_revisions} nr WHERE nr.nid = %d", $node->nid, COMMENT_PUBLISHED, $node->nid)->fetchCol();
   }
 
   return $timestamps[$node->nid];
