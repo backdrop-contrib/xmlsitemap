@@ -88,23 +88,5 @@ function hook_xmlsitemap_link_alter(&$link) {
 }
 
 /**
- * Alter the query selecting data from {xmlsitemap} during sitemap generation.
- *
- * Do not alter LIMIT or OFFSET as the query will be passed through
- * db_query_range() with a set limit and offset.
- *
- * @param $query
- *   An array of a query object, keyed by SQL keyword (SELECT, FROM, WHERE, etc).
- * @param $args
- *   An array of arguments to be passed to db_query() with $query.
- * @param $language
- *   The language object being used for sitemap generation.
- */
-function hook_xmlsitemap_query_alter(array &$query, array &$args, stdClass $language) {
-  $query['WHERE'] .= " AND x.language = '%s'";
-  $args[] = $language->language;
-}
-
-/**
  * @} End of "addtogroup hooks".
  */

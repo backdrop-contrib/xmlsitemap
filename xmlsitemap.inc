@@ -25,19 +25,19 @@ function xmlsitemap_get_path_alias($path, $language) {
   static $last_language;
 
   if (!isset($aliases)) {
-    $aliases['all'] = db_query("SELECT source, alias FROM {url_alias} WHERE language = '' ORDER BY pid")->fetchAllKeyed();
+    $aliases[LANGUAGE_NONE] = db_query("SELECT source, alias FROM {url_alias} WHERE language = :language ORDER BY pid", array(':language' => LANGUAGE_NONE))->fetchAllKeyed();
   }
-  if ($language && $last_language != $language) {
+  if ($language != LANGUAGE_NONE && $last_language != $language) {
     unset($aliases[$last_language]);
     $aliases[$language] = db_query("SELECT source, alias FROM {url_alias} WHERE language = :language ORDER BY pid", array(':language' => $language))->fetchAllKeyed();
     $last_language = $language;
   }
 
-  if ($language && isset($aliases[$language][$path])) {
+  if ($language != LANGUAGE_NONE && isset($aliases[$language][$path])) {
     return $aliases[$language][$path];
   }
-  elseif (isset($aliases['all'][$path])) {
-    return $aliases['all'][$path];
+  elseif (isset($aliases[LANGUAGE_NONE][$path])) {
+    return $aliases[LANGUAGE_NONE][$path];
   }
   else {
     return $path;
@@ -106,8 +106,7 @@ function _xmlsitemap_get_optimal_memory_limit() {
     $optimal_limit += xmlsitemap_get_chunk_size() * 500;
 
     // Add memory for storing the url aliases.
-    $aliases = db_query("SELECT COUNT(pid) FROM {url_alias} WHERE language = ''")->fetchField();
-    $aliases += db_query("SELECT COUNT(pid) as pid_count FROM {url_alias} WHERE language <> '' GROUP BY language ORDER BY pid_count DESC")->fetchField();
+    $aliases = db_query("SELECT COUNT(pid) FROM {url_alias}")->fetchField();
     $optimal_limit += $aliases * 250;
   }
   return $optimal_limit;
@@ -254,7 +253,7 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
 
   if (!isset($languages)) {
     $languages = language_list();
-    $languages[''] = language_default();
+    $languages[LANGUAGE_NONE] = language_default();
   }
 
   $url_options = xmlsitemap_get_url_options(array('alias' => TRUE));
@@ -277,7 +276,7 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
   xmlsitemap_generate_chunk_header('urlset', $handle, $status, $language);
 
   foreach ($links->fetchAssoc() as $link) {
-    $url_options['language'] = $link['language'] ? $languages[$link['language']] : $language;
+    $url_options['language'] = $link['language'] != LANGUAGE_NONE ? $languages[$link['language']] : $language;
     $link['alias'] = xmlsitemap_get_path_alias($link['loc'], $url_options['language']->language);
     $link_url = url($link['alias'], $url_options);
 

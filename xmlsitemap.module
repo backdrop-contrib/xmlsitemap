@@ -440,7 +440,7 @@ function xmlsitemap_save_link(array $link) {
     'priority_override' => 0,
     'changefreq' => 0,
     'changecount' => 0,
-    'language' => '',
+    'language' => LANGUAGE_NONE,
   );
 
   // Allow other modules to alter the link before saving.

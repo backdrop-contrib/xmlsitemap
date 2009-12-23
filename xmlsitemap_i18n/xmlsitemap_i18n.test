@@ -43,12 +43,12 @@ class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
 
   function testLanguageSelection() {
     // Create our three different language nodes.
-    $node = $this->addSitemapLink(array('type' => 'node', 'language' => ''));
+    $node = $this->addSitemapLink(array('type' => 'node', 'language' => LANGUAGE_NONE));
     $node_en = $this->addSitemapLink(array('type' => 'node', 'language' => 'en'));
     $node_fr = $this->addSitemapLink(array('type' => 'node', 'language' => 'fr'));
 
     // Create three non-node language nodes.
-    $link = $this->addSitemapLink(array('language' => ''));
+    $link = $this->addSitemapLink(array('language' => LANGUAGE_NONE));
     $link_en = $this->addSitemapLink(array('language' => 'en'));
     $link_fr = $this->addSitemapLink(array('language' => 'fr'));
 

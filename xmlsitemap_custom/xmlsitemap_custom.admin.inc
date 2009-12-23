@@ -44,7 +44,7 @@ function xmlsitemap_custom_edit_link_form($form_state, $link = array()) {
     'lastmod' => 0,
     'changefreq' => 0,
     'changecount' => 0,
-    'language' => '',
+    'language' => LANGUAGE_NONE,
   );
 
   $form['type'] = array(
@@ -82,7 +82,7 @@ function xmlsitemap_custom_edit_link_form($form_state, $link = array()) {
     '#type' => 'select',
     '#title' => t('Language'),
     '#default_value' => $link['language'],
-    '#options' => array('' => t('Language neutral')) + $languages,
+    '#options' => array(LANGUAGE_NONE => t('Language neutral')) + $languages,
     '#access' => $languages,
   );
 
@@ -121,7 +121,7 @@ function xmlsitemap_custom_edit_link_form_validate(&$form, &$form_state) {
     $menu_item['access'] = FALSE;
   }
 
-  if (db_query_range("SELECT 1 FROM {xmlsitemap} WHERE type <> 'custom' AND loc = :loc AND status = 1 AND access = 1 AND language IN (:language, '')", 0, 1, array(':loc' => $link['loc'], ':language' => $link['language']))->fetchField()) {
+  if (db_query_range("SELECT 1 FROM {xmlsitemap} WHERE type <> 'custom' AND loc = :loc AND status = 1 AND access = 1 AND language IN (:languages)", 0, 1, array(':loc' => $link['loc'], ':languages' => array(LANGUAGE_NONE, $link['language'])))->fetchField()) {
     form_set_error('loc', t('There is already an existing link in the sitemap with the path %link.', array('%link' => $link['loc'])));
   }
   elseif (empty($menu_item['access']) && !is_readable('./' . $link['loc'])) {

@@ -43,12 +43,12 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     }
   }
 
-  protected function getLanguageObj($langcode = '', $reset = FALSE) {
+  protected function getLanguageObj($langcode = LANGUAGE_NONE, $reset = FALSE) {
     static $languages;
 
     if (!isset($languages) || $reset) {
       $languages = language_list('language', TRUE);
-      $languages[''] = NULL;
+      $languages[LANGUAGE_NONE] = NULL;
     }
 
     return $languages[$langcode];
@@ -84,7 +84,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     return $link;
   }
 
-  protected function drupalGetSitemap($language = '', $regenerate = FALSE) {
+  protected function drupalGetSitemap($language = LANGUAGE_NONE, $regenerate = FALSE) {
     if ($regenerate) {
       $this->regenerateSitemap();
     }
