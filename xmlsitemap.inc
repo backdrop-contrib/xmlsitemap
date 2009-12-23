@@ -72,7 +72,7 @@ function xmlsitemap_regenerate() {
  */
 function _xmlsitemap_regenerate_before() {
   // Attempt to increase the available processing time and memory limit.
-  @set_time_limit(240);
+  drupal_set_time_limit(240);
   _xmlsitemap_set_memory_limit();
 
   // Set a timer so we can track how long this takes.
@@ -89,13 +89,7 @@ function _xmlsitemap_regenerate_before() {
 
 function _xmlsitemap_get_memory_usage($start = FALSE) {
   static $memory_start;
-  $current = 0;
-  if (function_exists('memory_get_peak_usage')) {
-    $current = memory_get_peak_usage(TRUE);
-  }
-  if (function_exists('memory_get_usage')) {
-    $current = version_compare(PHP_VERSION, '5.2') ? memory_get_usage(TRUE) : memory_get_usage();
-  }
+  $current = memory_get_peak_usage(TRUE);
   if (!isset($memory_start) || $start) {
     $memory_start = $current;
   }
@@ -263,29 +257,26 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
     $languages[''] = language_default();
   }
 
-  $query = array(
-    'SELECT'   => 'SELECT x.loc, x.lastmod, x.changefreq, x.changecount, x.priority, x.language',
-    'FROM'     => 'FROM {xmlsitemap} x',
-    'WHERE'    => 'WHERE x.access = 1 AND x.status = 1',
-    'ORDER BY' => 'ORDER BY x.language, x.loc',
-  );
-  $args = array();
-
-  // Allow other modules to alter the sitemap query SQL and arguments.
-  $data = &$query;
-  $data['__drupal_alter_by_ref'] = array(&$args);
-  drupal_alter('xmlsitemap_query', $data, $language);
-
-  $sql = implode($query, ' ');
   $url_options = xmlsitemap_get_url_options(array('alias' => TRUE));
+
+  $query = db_select('xmlsitemap', 'x');
+  $query->fields('x', array('loc', 'lastmod', 'changefreq', 'changecount', 'priority', 'language', 'access', 'status'));
+  $query->condition('access', 1);
+  $query->condition('status', 1);
+  $query->orderBy('language', 'DESC');
+  $query->orderBy('loc');
+  $query->addTag('xmlsitemap');
+  $query->addMetaData('language', $language);
+
   $offset = max($chunk - 1, 0) * xmlsitemap_get_chunk_size();
   $limit = xmlsitemap_get_chunk_size();
-  $query = db_query_range($sql, $offset, $limit, $args);
+  $query->range($offset, $limit);
+  $links = $query->execute();
 
   // Add the XML header and XSL if desired.
   xmlsitemap_generate_chunk_header('urlset', $handle, $status, $language);
 
-  while ($link = $query->fetchAssoc()) {
+  foreach ($links->fetchAssoc() as $link) {
     $url_options['language'] = $link['language'] ? $languages[$link['language']] : $language;
     $link['alias'] = xmlsitemap_get_path_alias($link['loc'], $url_options['language']->language);
     $link_url = url($link['alias'], $url_options);
@@ -406,18 +397,15 @@ function xmlsitemap_rebuild_batch_clear($modules, $save_custom, &$context) {
   }
 
   if ($purge) {
-    $where = array();
-    $where[] = 'type IN (' . db_placeholders($purge, 'varchar') . ')';
-
+    $query = db_delete('xmlsitemap');
+    $query->condition('type', $purge);
     // If we want to save the custom data, make sure to exclude any links
     // that are not using default inclusion or priority.
     if ($save_custom) {
-      $where[] = 'status_override = 0';
-      $where[] = 'priority_override = 0';
+      $query->condition('status_override', 0);
+      $query->condition('priority_override', 0);
     }
-
-    $sql = "DELETE FROM {xmlsitemap} WHERE " . implode(' AND ', $where);
-    db_query($sql, $purge);
+    $query->execute();
   }
 
   $context['message'] = t('Purging links.');
