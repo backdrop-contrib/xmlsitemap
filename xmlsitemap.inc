@@ -275,8 +275,8 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
   // Add the XML header and XSL if desired.
   xmlsitemap_generate_chunk_header('urlset', $handle, $status, $language);
 
-  foreach ($links->fetchAssoc() as $link) {
-    $url_options['language'] = $link['language'] != LANGUAGE_NONE ? $languages[$link['language']] : $language;
+  while ($link = $links->fetchAssoc()) {
+    $url_options['language'] = ($link['language'] != LANGUAGE_NONE ? $languages[$link['language']] : $language);
     $link['alias'] = xmlsitemap_get_path_alias($link['loc'], $url_options['language']->language);
     $link_url = url($link['alias'], $url_options);
 

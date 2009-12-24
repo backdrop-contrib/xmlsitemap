@@ -172,17 +172,16 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   private function getWatchdogMessage(array $conditions) {
     static $watchdog_schema;
 
-    if (!isset($watchdog_schema)) {
-      $watchdog_schema = drupal_get_schema('watchdog');
-    }
-
-    $args = array();
+    $query = db_select('watchdog');
+    $query->fields('watchdog');
     foreach ($conditions as $field => $value) {
-      $conditions[$field] = $field . ' = ' . db_type_placeholder($watchdog_schema['fields'][$field]['type']);
-      $args[] = ($field == 'variables' && is_array($value)) ? serialize($value) : $value;
+      if ($field == 'variables' && is_array($value)) {
+        $value = serialize($value);
+      }
+      $query->conditions($field, $value);
     }
 
-    return db_query_range("SELECT 1 FROM {watchdog} WHERE " . implode(' AND ', $conditions), 0, 1, $args)->fetchField();
+    return $query->execute()->fetchAll();
   }
 
   protected function assertWatchdogMessage(array $conditions, $message = 'Watchdog message found.') {
@@ -226,14 +225,14 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
       return;
     }
 
-    $sql = "SELECT wid, type, severity, message, variables, timestamp FROM {watchdog}";
+    $query = db_select('watchdog');
+    $query->fields('watchdog', array('wid', 'type', 'severity', 'message', 'variables', 'timestamp'));
     if ($seen_ids) {
-      $sql .= " WHERE wid NOT IN (" . db_placeholders($seen_ids) . ")";
+      $query->condition('wid', $seen_ids);
     }
-    $sql .= " ORDER BY timestamp ASC";
-    $query = db_query($sql, $seen_ids);
+    $query->orderBy('timestamp', 'ASC');
+    $messages = $query->execute()->fetchAllAssoc('wid');
 
-    $messages = $query->fetchAllAssoc('wid');
     foreach ($messages as &$message) {
       $message->text = $message->timestamp . ' ' . t($message->message, unserialize($message->variables));
     }
@@ -597,17 +596,16 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
   }
 
   function setUp() {
-    parent::setUp('xmlsitemap', 'path');
+    parent::setUp('path');
     $this->admin_user = $this->drupalCreateUser(array('access content', 'administer site configuration', 'administer xmlsitemap'));
     $this->drupalLogin($this->admin_user);
-    $this->checkFilesDirectory();
-    $this->regenerateSitemap();
   }
 
   /**
    * Test the sitemap file caching.
    */
   function testSitemapCaching() {
+    $this->regenerateSitemap();
     $this->drupalGet('sitemap.xml');
     $this->assertResponse(200);
     $etag = $this->drupalGetHeader('etag');
@@ -693,10 +691,9 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
     $this->assertNoXMLSitemapProblems();
 
     // Test anonymous users access to sitemap.xml.
-    $anon_permissions = db_query("SELECT perm FROM {permission} WHERE rid = %d", DRUPAL_ANONYMOUS_RID)->fetchField();
-    db_query("UPDATE {permission} SET perm = '' WHERE rid = %d", DRUPAL_ANONYMOUS_RID);
+    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
     $this->assertXMLSitemapProblems(t('In order to allow search engines to view the XML sitemap and content on your site, the anonymous user role must have the access content permission.'));
-    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", $anon_permissions, DRUPAL_ANONYMOUS_RID);
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
     $this->assertNoXMLSitemapProblems();
 
     // Test chunk count > 1000.
@@ -709,7 +706,7 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
   function testDuplicatePaths() {
     $link1 = $this->addSitemapLink(array('loc' => 'duplicate'));
     $link2 = $this->addSitemapLink(array('loc' => 'duplicate'));
-    $this->drupalGetSitemap('', TRUE);
+    $this->drupalGetSitemap(LANGUAGE_NONE, TRUE);
     $this->assertUniqueText('duplicate');
   }
 }

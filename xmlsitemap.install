@@ -127,7 +127,7 @@ function xmlsitemap_install() {
 
   // Insert the homepage link into the {xmlsitemap} table so we do not show an
   // empty sitemap after install.
-  db_query("INSERT INTO {xmlsitemap} (type, id, loc, priority, changefreq) VALUES ('frontpage', 0, '', :priority, :changefreq)", array(':priority' => xmlsitemap_var('frontpage_priority'), 'changefreq' => xmlsitemap_var('frontpage_changefreq')));
+  db_query("INSERT INTO {xmlsitemap} (type, id, loc, priority, changefreq, language) VALUES ('frontpage', 0, '', :priority, :changefreq, :language)", array(':priority' => xmlsitemap_var('frontpage_priority'), 'changefreq' => xmlsitemap_var('frontpage_changefreq'), ':language' => LANGUAGE_NONE));
 
   // @todo Does the sitemap show up on first install or is it a 404 page?
 }
