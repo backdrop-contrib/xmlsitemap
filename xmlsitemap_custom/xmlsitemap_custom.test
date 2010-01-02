@@ -23,7 +23,8 @@ class XMLSitemapCustomFunctionalTest extends XMLSitemapTestHelper {
     $this->drupalLogin($this->admin_user);
 
     // Set a path alias for the node page.
-    path_set_alias('node', 'content');
+    $alias = array('source' => 'node', 'alias' => 'content');
+    path_save($alias);
   }
 
   function testCustomLinks() {
