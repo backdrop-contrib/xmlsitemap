@@ -468,10 +468,10 @@ function xmlsitemap_save_link(array $link) {
   }
 
   if ($existing) {
-    xmlsitemap_write_record('xmlsitemap', $link, array('type', 'id'));
+    drupal_write_record('xmlsitemap', $link, array('type', 'id'));
   }
   else {
-    xmlsitemap_write_record('xmlsitemap', $link);
+    drupal_write_record('xmlsitemap', $link);
   }
 
   // Allow other modules to respond after saving the link.
@@ -691,149 +691,6 @@ function xmlsitemap_switch_user($new_user = NULL) {
  */
 function xmlsitemap_restore_user() {
   return xmlsitemap_switch_user();
-}
-
-/**
- * Special implementation of drupal_write_record() to allow NULL values.
- *
- * @todo Remove when http://drupal.org/node/227677 is fixed.
- */
-function xmlsitemap_write_record($table, &$object, $primary_keys = array()) {
-  // Standardize $primary_keys to an array.
-  if (is_string($primary_keys)) {
-    $primary_keys = array($primary_keys);
-  }
-
-  $schema = drupal_get_schema($table);
-  if (empty($schema)) {
-    return FALSE;
-  }
-
-  // Convert to an object if needed.
-  if (is_array($object)) {
-    $object = (object) $object;
-    $array = TRUE;
-  }
-  else {
-    $array = FALSE;
-  }
-
-  $fields = array();
-  $object_fields = get_object_vars($object);
-
-  // Go through our schema, build SQL, and when inserting, fill in defaults for
-  // fields that are not set.
-  foreach ($schema['fields'] as $field => $info) {
-    // Special case -- skip serial types if we are updating.
-    if ($info['type'] == 'serial' && !empty($primary_keys)) {
-      continue;
-    }
-
-    // For inserts, populate defaults from schema if not already provided.
-    if (!isset($object->$field) && empty($primary_keys) && isset($info['default']) && !array_key_exists($field, $object_fields)) {
-      $object->$field = $info['default'];
-    }
-
-    // Track serial field so we can helpfully populate them after the query.
-    // NOTE: Each table should come with one serial field only.
-    if ($info['type'] == 'serial') {
-      $serial = $field;
-    }
-
-    // Build arrays for the fields, placeholders, and values in our query.
-    if (isset($object->$field) || (array_key_exists($field, $object_fields) && empty($info['not null']))) {
-      if (isset($object->$field)) {
-        if (empty($info['serialize'])) {
-          $fields[$field] = $object->$field;
-        }
-        elseif (!empty($object->$field)) {
-          $fields[$field] = serialize($object->$field);
-        }
-        else {
-          $fields[$field] = '';
-        }
-      }
-      else {
-        $fields[$field] = 'NULL';
-      }
-    }
-
-    // We don't need to care about type casting if value does not exist.
-    if (!isset($fields[$field])) {
-      continue;
-    }
-
-    // Special case -- skip null value if field allows null.
-    if ($fields[$field] == NULL && empty($info['not null'])) {
-      continue;
-    }
-
-    // Type cast if field does not allow null. Required by DB API.
-    if ($info['type'] == 'int' || $info['type'] == 'serial') {
-      $fields[$field] = (int) $fields[$field];
-    }
-    elseif ($info['type'] == 'float') {
-      $fields[$field] = (float) $fields[$field];
-    }
-    else {
-      $fields[$field] = (string) $fields[$field];
-    }
-  }
-
-  // Build the SQL.
-  $query = '';
-  if (!count($primary_keys)) {
-    $options = array('return' => Database::RETURN_INSERT_ID);
-    if (isset($serial) && isset($fields[$serial])) {
-      // If the serial column has been explicitly set with an ID, then we don't
-      // require the database to return the last insert id.
-      if ($fields[$serial]) {
-        $options['return'] = Database::RETURN_AFFECTED;
-      }
-      // If a serial column does exist with no value (i.e. 0) then remove it as
-      // the database will insert the correct value for us.
-      else {
-        unset($fields[$serial]);
-      }
-    }
-    $query = db_insert($table, $options)->fields($fields);
-    $return = SAVED_NEW;
-  }
-  else {
-    $query = db_update($table)->fields($fields);
-    foreach ($primary_keys as $key) {
-      $query->condition($key, $object->$key);
-    }
-    $return = SAVED_UPDATED;
-  }
-
-  // Execute the SQL.
-  if ($last_insert_id = $query->execute()) {
-    if (isset($serial)) {
-      // If the database was not told to return the last insert id, it will be
-      // because we already know it.
-      if (isset($options) && $options['return'] != Database::RETURN_INSERT_ID) {
-        $object->$serial = $fields[$serial];
-      }
-      else {
-        $object->$serial = $last_insert_id;
-      }
-    }
-  }
-  // If we have a single-field primary key but got no insert ID, the
-  // query failed. Note that we explicitly check for FALSE, because
-  // a valid update query which doesn't change any values will return
-  // zero (0) affected rows.
-  elseif ($last_insert_id === FALSE && count($primary_keys) == 1) {
-    $return = FALSE;
-  }
-
-  // If we began with an array, convert back so we don't surprise the caller.
-  if ($array) {
-    $object = (array) $object;
-  }
-
-  return $return;
 }
 
 function xmlsitemap_process_form_link_options($form, &$form_state) {
