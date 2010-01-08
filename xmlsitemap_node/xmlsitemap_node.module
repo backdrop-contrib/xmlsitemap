@@ -136,24 +136,8 @@ function xmlsitemap_node_type_form_submit($form, $form_state) {
   if ($new_priority != variable_get('xmlsitemap_node_priority_' . $node_type, 0.5)) {
     xmlsitemap_update_links(array('priority' => $new_priority), array('type' => 'node', 'subtype' => $node_type, 'priority_override' => 0));
   }
-<<<<<<< xmlsitemap_node.module
-  if (isset($node->priority_override)) {
-    $priority = $node->priority_override;
-  }
-  else {
-    $priority = variable_get("xmlsitemap_node_type_priority_$node->type", 0.5);
-    if ($node->promote) {
-      $priority += $promote_priority;
-    }
-    if (!empty($maxcomments)) {
-      $priority += $node->comment_count / $maxcomments * $comment_priority;
-    }
-    $priority = round($priority, 1);
-    $priority = min($priority, 0.9);
-=======
   if ($node_type != $new_type) {
     xmlsitemap_update_links(array('subtype' => $new_type), array('type' => 'node', 'subtype' => $node_type));
->>>>>>> 1.19.2.20.2.73
   }
 }
 
@@ -255,8 +239,6 @@ function xmlsitemap_node_get_types() {
   }
   return $node_types;
 }
-<<<<<<< xmlsitemap_node.module
-=======
 
 /**
  * Implements hook_content_extra_fields().
@@ -359,4 +341,3 @@ function xmlsitemap_node_variables() {
 //
 //  return variable_get($name, isset($default) || !isset($defaults[$name]) ? $default : $defaults[$name]);
 //}
->>>>>>> 1.19.2.20.2.73
