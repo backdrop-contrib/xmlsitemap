@@ -15,9 +15,6 @@
  * @see xmlsitemap_settings_form_validate()
  */
 function xmlsitemap_settings_form() {
-  $form['xmlsitemap_settings'] = array(
-    '#type' => 'vertical_tabs',
-  );
   $form['xmlsitemap'] = array(
     '#type' => 'fieldset',
     '#title' => t('Settings'),
@@ -44,6 +41,9 @@ function xmlsitemap_settings_form() {
     '#default_value' => xmlsitemap_var('languages'),
     '#process' => array('form_process_checkboxes', '_xmlsitemap_process_language_checkboxes'),
     '#description' => !module_exists('xmlsitemap_i18n') ? t('To enable multilingual features, enable the XML sitemap internationalization module.') : '',
+  );
+  $form['xmlsitemap_settings'] = array(
+    '#type' => 'vertical_tabs',
   );
 
   $form['advanced'] = array(
@@ -292,7 +292,7 @@ function xmlsitemap_add_form_type_summary(&$form, $type, $items) {
     '#value' => theme('table', $header, $rows),
   );
 
-  $count = db_query("SELECT COUNT(id) FROM {xmlsitemap} WHERE type = '%s' AND access = 1 AND status = 1", $type['type'])->fetchField();
+  $count = db_query("SELECT COUNT(id) FROM {xmlsitemap} WHERE type = :type AND access = 1 AND status = 1", array(':type' => $type['type']))->fetchField();
   $form[$type['type']]['count'] = array(
     '#type' => 'item',
     '#value' => format_plural($count, 'There is 1 @type link in the XML sitemap.', 'There are @count @type links in the XML sitemap.', array('@type' => drupal_strtolower($type['type']))),
