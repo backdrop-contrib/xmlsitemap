@@ -82,6 +82,6 @@ function drush_xmlsitemap_rebuild() {
  * Process un-indexed XML sitemap links.
  */
 function drush_xmlsitemap_index() {
-  $limit = (int) drupal_get_option('limit', variable_get('xmlsitemap_batch_limit', 100));
+  $limit = (int) drush_get_option('limit', variable_get('xmlsitemap_batch_limit', 100));
   module_invoke_all('xmlsitemap_index_links', $limit);
 }
