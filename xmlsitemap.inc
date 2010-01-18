@@ -82,8 +82,7 @@ function _xmlsitemap_regenerate_before() {
   _xmlsitemap_get_memory_usage(TRUE);
 
   // Clear all cached sitemap files.
-  $path = file_directory_path() . '/' . variable_get('xmlsitemap_path', 'xmlsitemap');
-  file_unmanaged_delete_recursive($path);
+  xmlsitemap_clear_directory();
   xmlsitemap_check_directory();
 }
 

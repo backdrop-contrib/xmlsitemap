@@ -547,7 +547,7 @@ function xmlsitemap_delete_link(array $conditions) {
  * @todo Move to xmlsitemap.inc
  */
 function xmlsitemap_get_chunk_file($chunk = 0, $language, $compressed = FALSE) {
-  return file_directory_path() . '/' . variable_get('xmlsitemap_path', 'xmlsitemap') . '/xmlsitemap-' . $language->language . '-' . $chunk . ($compressed ? '.gz' : '.xml');
+  return xmlsitemap_get_directory() . '/xmlsitemap-' . $language->language . '-' . $chunk . ($compressed ? '.gz' : '.xml');
 }
 
 /**
@@ -782,14 +782,47 @@ function xmlsitemap_xmlsitemap_link_info() {
   );
 }
 
+function xmlsitemap_get_directory() {
+  $directory = &drupal_static(__FUNCTION__);
+
+  if (!isset($directory)) {
+    $directory = file_directory_path() . '/' . variable_get('xmlsitemap_path', 'xmlsitemap');
+  }
+
+  return $directory;
+}
+
 /**
  * Check that the sitemap files directory exists and is writable.
  */
 function xmlsitemap_check_directory() {
-  $path = file_directory_path() . '/' . variable_get('xmlsitemap_path', 'xmlsitemap');
-  $result = file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+  $directory = xmlsitemap_get_directory();
+  $result = file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   if (!$result) {
-    watchdog('file system', 'The directory %directory does not exist or is not writable.', array('%directory' => $path), WATCHDOG_ERROR);
+    watchdog('file system', 'The directory %directory does not exist or is not writable.', array('%directory' => $directory), WATCHDOG_ERROR);
   }
   return $result;
+}
+
+function xmlsitemap_clear_directory($delete = FALSE) {
+  $directory = xmlsitemap_get_directory();
+  return _xmlsitemap_delete_recursive($directory, $delete);
+}
+
+function _xmlsitemap_delete_recursive($path, $delete_root = FALSE) {
+  // Resolve streamwrapper URI to local path.
+  $path = drupal_realpath($path);
+  if (is_dir($path)) {
+    $dir = dir($path);
+    while (($entry = $dir->read()) !== FALSE) {
+      if ($entry == '.' || $entry == '..') {
+        continue;
+      }
+      $entry_path = $path . '/' . $entry;
+      file_unmanaged_delete_recursive($entry_path, TRUE);
+    }
+    $dir->close();
+    return $delete_root ? rmdir($path) : TRUE;
+  }
+  return file_unmanaged_delete($path);
 }
