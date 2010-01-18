@@ -20,12 +20,29 @@ function xmlsitemap_taxonomy_uninstall() {
 
 // @todo Remove these update functions before alpha.
 function xmlsitemap_taxonomy_update_1() {
-  $ret = array();
   $vids = array_keys(taxonomy_get_vocabularies());
   foreach ($vids as $vid) {
     if (variable_get('xmlsitemap_taxonomy_priority_' . $vid, 'default') === 'default') {
       variable_set('xmlsitemap_taxonomy_priority_' . $vid, 0.5);
     }
   }
-  return $ret;
 }
+
+/**
+ * Change 'taxonomy' type to 'taxonomy_term'.
+ */
+function xmlsitemap_taxonomy_update_2() {
+  $field = array(
+    'type' => 'varchar',
+    'length' => 32,
+    'not null' => TRUE,
+    'default' => '',
+  );
+  db_change_field('xmlsitemap', 'type', 'type', $field);
+  db_update('xmlsitemap')
+    ->fields(array('type' => 'taxonomy_term'))
+    ->condition('type', 'taxonomy')
+    ->execute();
+}
+
+// @todo Convert {xmlsitemap}.subtype from vid to vocabulary_machine_name.
