@@ -6,3 +6,4 @@ core = 7.x
 dependencies[] = xmlsitemap
 files[] = xmlsitemap_node.module
 files[] = xmlsitemap_node.install
+files[] = xmlsitemap_node.test
