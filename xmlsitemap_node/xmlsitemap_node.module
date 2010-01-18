@@ -149,8 +149,8 @@ function xmlsitemap_node_type_form_submit($form, $form_state) {
  * @see xmlsitemap_add_form_link_options()
  */
 function xmlsitemap_node_form_alter(&$form, $form_state, $form_id) {
-  if (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] .'_node_form' == $form_id) {
-    $node = drupal_clone($form['#node']);
+  if (!empty($form['#node_edit_form'])) {
+    $node = clone $form['#node'];
     if (!isset($node->nid)) {
       // Handle new nodes that do not have a value for nid yet.
       $node->nid = NULL;
