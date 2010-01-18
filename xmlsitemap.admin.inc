@@ -77,7 +77,7 @@ function xmlsitemap_settings_form() {
   );
   $path = variable_get('xmlsitemap_path', 'xmlsitemap');
   if (!xmlsitemap_check_directory()) {
-    form_set_error('xmlsitemap_path', t('The directory %directory does not exist or is not writable.', array('%directory' => file_directory_path() . '/' . $path)));
+    form_set_error('xmlsitemap_path', t('The directory %directory does not exist or is not writable.', array('%directory' => xmlsitemap_get_directory())));
   }
   $form['advanced']['xmlsitemap_path'] = array(
     '#type' => 'textfield',
