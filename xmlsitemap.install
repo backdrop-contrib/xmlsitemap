@@ -117,7 +117,11 @@ function xmlsitemap_check_status() {
 function xmlsitemap_install() {
   // Set this module's weight to 1 so xmlsitemap_cron() runs after all other
   // xmlsitemap_x_cron() runs.
-  db_query("UPDATE {system} SET weight = 1 WHERE type = 'module' AND name = 'xmlsitemap'");
+  db_update('system')
+    ->fields(array('weight' => 1))
+    ->condition('type', 'module')
+    ->condition('name', 'xmlsitemap')
+    ->execute();
 
   // Load the module so we can use xmlsitemap_var().
   drupal_load('module', 'xmlsitemap');

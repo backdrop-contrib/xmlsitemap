@@ -12,7 +12,11 @@
 function xmlsitemap_engines_install() {
   // Set this module's weight to 1 so xmlsitemap_engines_cron() runs after
   // the sitemap has been generated in xmlsitemap_cron().
-  db_query("UPDATE {system} SET weight = 2 WHERE type = 'module' AND name = 'xmlsitemap_engines'");
+  db_update('system')
+    ->fields(array('weight' => 2))
+    ->condition('type', 'module')
+    ->condition('name', 'xmlsitemap_engines')
+    ->execute();
 }
 
 /**
@@ -31,7 +35,6 @@ function xmlsitemap_engines_uninstall() {
  */
 function xmlsitemap_engines_update_1() {
   variable_set('xmlsitemap_engines_submit', array_filter(variable_get('xmlsitemap_engines_submit', array())));
-  return array();
 }
 
 /**
@@ -40,16 +43,17 @@ function xmlsitemap_engines_update_1() {
 function xmlsitemap_engines_update_2() {
   variable_set('xmlsitemap_engines_engines', variable_get('xmlsitemap_engines_submit', array()));
   variable_del('xmlsitemap_engines_submit');
-  return array();
 }
 
 /**
  * Increase the module weight so it always runs after sitemap generation.
  */
 function xmlsitemap_engines_update_3() {
-  $ret = array();
-  $ret[] = update_sql("UPDATE {system} SET weight = 2 WHERE type = 'module' AND name = 'xmlsitemap_engines'");
-  return $ret;
+  db_update('system')
+    ->fields(array('weight' => 2))
+    ->condition('type', 'module')
+    ->condition('name', 'xmlsitemap_engines')
+    ->execute();
 }
 
 /**
@@ -62,5 +66,4 @@ function xmlsitemap_engines_update_4() {
     $engines[$index] = 'bing';
   }
   variable_set('xmlsitemap_engines_engines', $engines);
-  return array();
 }
