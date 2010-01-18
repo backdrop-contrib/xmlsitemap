@@ -7,12 +7,20 @@
  * Process old nodes not found in the {xmlsitemap} table.
  */
 function xmlsitemap_node_cron() {
-  // Start with the most recently changed nodes first.
-  $nids = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {xmlsitemap} x ON x.type = 'node' AND n.nid = x.id WHERE x.id IS NULL ORDER BY n.changed DESC", 0, xmlsitemap_var('batch_limit'));
-  foreach ($nids as $nid) {
-    $node = node_load($nid, NULL, TRUE);
-    $link = xmlsitemap_node_create_link($node);
-    xmlsitemap_save_link($link);
+  xmlsitemap_node_xmlsitemap_index_links(xmlsitemap_var('batch_limit'));
+}
+
+/**
+ * Implements hook_xmlsitemap_index_links().
+ */
+function xmlsitemap_node_xmlsitemap_index_links($limit) {
+  if ($types = xmlsitemap_node_get_types()) {
+    $nids = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {xmlsitemap} x ON x.type = 'node' AND n.nid = x.id WHERE x.id IS NULL AND n.type IN :types ORDER BY n.nid DESC", 0, $limit, array(':types' => $types));
+    foreach ($nids as $nid) {
+      $node = node_load($nid, NULL, TRUE);
+      $link = xmlsitemap_node_create_link($node);
+      xmlsitemap_save_link($link);
+    }
   }
 }
 
@@ -88,7 +96,7 @@ function xmlsitemap_node_form_xmlsitemap_settings_form_alter(&$form, $form_state
     'access' => user_access('administer content types'),
   );
 
-  $node_types = node_get_types('names');
+  $node_types = node_type_get_names();
   foreach ($node_types as $node_type => $node_type_name) {
     $node_types[$node_type] = array(
       'name' => drupal_ucfirst($node_type_name),
@@ -231,7 +239,7 @@ function xmlsitemap_node_xmlsitemap_link_info() {
  * Fetch an array of node types to be included in the sitemap.
  */
 function xmlsitemap_node_get_types() {
-  $node_types = array_keys(node_get_types('names'));
+  $node_types = array_keys(node_type_get_names());
   foreach ($node_types as $index => $node_type) {
     if (!variable_get('xmlsitemap_node_status_' . $node_type, 0)) {
       unset($node_types[$index]);
@@ -313,7 +321,7 @@ function xmlsitemap_node_create_link(&$node) {
  */
 function xmlsitemap_node_variables() {
   $defaults = array();
-  $node_types = array_keys(node_get_types('names'));
+  $node_types = array_keys(node_type_get_names());
   foreach ($node_types as $node_type) {
     $defaults['xmlsitemap_node_priority_' . $node_type] = 0.5;
     $defaults['xmlsitemap_node_status_' . $node_type] = 0;

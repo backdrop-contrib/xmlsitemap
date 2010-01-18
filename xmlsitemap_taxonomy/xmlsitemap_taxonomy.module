@@ -7,8 +7,15 @@
  * Process old taxonomy terms not found in the {xmlsitemap} table.
  */
 function xmlsitemap_taxonomy_cron() {
+  xmlsitemap_taxonomy_xmlsitemap_index_links(xmlsitemap_var('batch_limit'));
+}
+
+/**
+ * Implements hook_xmlsitemap_index_links().
+ */
+function xmlsitemap_taxonomy_xmlsitemap_index_links($limit) {
   if ($vids = xmlsitemap_taxonomy_get_vids()) {
-    $tids = db_query_range("SELECT t.tid FROM {term_data} t LEFT JOIN {xmlsitemap} x ON x.type = 'taxonomy' AND t.tid = x.id WHERE x.id IS NULL AND t.vid IN (" . db_placeholders($vids) . ")", 0, xmlsitemap_var('batch_limit'), $vids);
+    $tids = db_query_range("SELECT t.tid FROM {term_data} t LEFT JOIN {xmlsitemap} x ON x.type = 'taxonomy' AND t.tid = x.id WHERE x.id IS NULL AND t.vid IN :vids ORDER BY t.tid DESC", 0, $limit, array(':vids' => $vids));
     foreach ($tids as $tid) {
       $term = xmlsitemap_taxonomy_taxonomy_term_load($tid);
       $link = xmlsitemap_taxonomy_create_link($term);
