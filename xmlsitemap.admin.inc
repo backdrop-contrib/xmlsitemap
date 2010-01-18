@@ -20,7 +20,6 @@ function xmlsitemap_settings_form() {
     '#title' => t('Settings'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
-    '#group' => 'xmlsitemap_settings',
   );
   $form['xmlsitemap']['xmlsitemap_minimum_lifetime'] = array(
     '#type' => 'select',
@@ -42,9 +41,6 @@ function xmlsitemap_settings_form() {
     '#process' => array('form_process_checkboxes', '_xmlsitemap_process_language_checkboxes'),
     '#description' => !module_exists('xmlsitemap_i18n') ? t('To enable multilingual features, enable the XML sitemap internationalization module.') : '',
   );
-  $form['xmlsitemap_settings'] = array(
-    '#type' => 'vertical_tabs',
-  );
 
   $form['advanced'] = array(
     '#type' => 'fieldset',
@@ -52,7 +48,6 @@ function xmlsitemap_settings_form() {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#weight' => 10,
-    '#group' => 'xmlsitemap_settings',
   );
   //$form['advanced']['xmlsitemap_gz'] = array(
   //  '#type' => 'checkbox',
@@ -103,6 +98,11 @@ function xmlsitemap_settings_form() {
     '#description' => t('Exposes additional settings intended for development.'),
   );
 
+  $form['xmlsitemap_settings'] = array(
+    '#type' => 'vertical_tabs',
+    '#weight' => 20,
+  );
+
   $form['frontpage'] = array(
     '#type' => 'fieldset',
     '#title' => t('Front page'),
@@ -129,8 +129,9 @@ function xmlsitemap_settings_form() {
   $form['#validate'][] = 'xmlsitemap_settings_form_validate';
   $form['#submit'][] = 'xmlsitemap_settings_form_submit';
   $form['array_filter'] = array('#type' => 'value', '#value' => TRUE);
+
   $form = system_settings_form($form);
-  $form['buttons']['#weight'] = 100;
+  $form['actions']['#weight'] = 100;
   return $form;
 }
 
