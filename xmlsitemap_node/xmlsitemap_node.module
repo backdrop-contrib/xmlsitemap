@@ -15,7 +15,7 @@ function xmlsitemap_node_cron() {
  */
 function xmlsitemap_node_xmlsitemap_index_links($limit) {
   if ($types = xmlsitemap_node_get_types()) {
-    $nids = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {xmlsitemap} x ON x.type = 'node' AND n.nid = x.id WHERE x.id IS NULL AND n.type IN :types ORDER BY n.nid DESC", 0, $limit, array(':types' => $types));
+    $nids = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {xmlsitemap} x ON x.type = 'node' AND n.nid = x.id WHERE x.id IS NULL AND n.type IN (:types) ORDER BY n.nid DESC", 0, $limit, array(':types' => $types));
     foreach ($nids as $nid) {
       $node = node_load($nid, NULL, TRUE);
       $link = xmlsitemap_node_create_link($node);
@@ -199,13 +199,15 @@ function xmlsitemap_node_form_alter(&$form, $form_state, $form_id) {
 function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
   $links = array();
 
-  $sql = "SELECT n.nid FROM {node} n WHERE n.nid > :offset ORDER BY n.nid";
-  $args = array(':offset' => $offset);
-  $nids = ($limit ? db_query_range($sql, 0, $limit, $args) : db_query($sql, $args));
+  if ($types = xmlsitemap_node_get_types()) {
+    $sql = "SELECT n.nid FROM {node} n WHERE n.nid > :offset AND type IN (:types) ORDER BY n.nid";
+    $args = array(':offset' => $offset, ':types' => $types);
+    $nids = ($limit ? db_query_range($sql, 0, $limit, $args) : db_query($sql, $args));
 
-  foreach ($nids as $nid) {
-    $node = node_load($nid, NULL, TRUE);
-    $links[] = xmlsitemap_node_create_link($node);
+    foreach ($nids as $nid) {
+      $node = node_load($nid, NULL, TRUE);
+      $links[] = xmlsitemap_node_create_link($node);
+    }
   }
 
   return $links;
@@ -215,8 +217,9 @@ function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
  * Implements hook_xmlsitemap_links_batch_info().
  */
 function xmlsitemap_node_xmlsitemap_links_batch_info() {
+  $types = xmlsitemap_node_get_types();
   return array(
-    'max' => db_query("SELECT COUNT(n.nid) FROM {node} n")->fetchField(),
+    'max' => $types ? db_query("SELECT COUNT(n.nid) FROM {node} n WHERE type IN (:types)", array(':types' => $types))->fetchField() : 0,
   );
 }
 

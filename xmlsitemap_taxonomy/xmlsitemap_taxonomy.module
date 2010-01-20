@@ -15,7 +15,7 @@ function xmlsitemap_taxonomy_cron() {
  */
 function xmlsitemap_taxonomy_xmlsitemap_index_links($limit) {
   if ($vids = xmlsitemap_taxonomy_get_vids()) {
-    $tids = db_query_range("SELECT t.tid FROM {term_data} t LEFT JOIN {xmlsitemap} x ON x.type = 'taxonomy_term' AND t.tid = x.id WHERE x.id IS NULL AND t.vid IN :vids ORDER BY t.tid DESC", 0, $limit, array(':vids' => $vids));
+    $tids = db_query_range("SELECT t.tid FROM {term_data} t LEFT JOIN {xmlsitemap} x ON x.type = 'taxonomy_term' AND t.tid = x.id WHERE x.id IS NULL AND t.vid IN (:vids) ORDER BY t.tid DESC", 0, $limit, array(':vids' => $vids));
     foreach ($tids as $tid) {
       $term = xmlsitemap_taxonomy_taxonomy_term_load($tid);
       $link = xmlsitemap_taxonomy_create_link($term);
@@ -31,8 +31,8 @@ function xmlsitemap_taxonomy_xmlsitemap_links($offset = 0, $limit = 0) {
   $links = array();
 
   if ($vids = xmlsitemap_taxonomy_get_vids()) {
-    $sql = "SELECT t.tid FROM {term_data} t WHERE t.tid > %d AND t.vid IN (" . db_placeholders($vids) . ") ORDER BY t.tid";
-    $args = array_merge(array($offset), $vids);
+    $sql = "SELECT t.tid FROM {term_data} t WHERE t.tid > :tid AND t.vid IN (:vids) ORDER BY t.tid";
+    $args = array(':tid' => $offset, ':vids' => $vids);
     $tids = ($limit ? db_query_range($sql, 0, $limit, $args) : db_query($sql, $args));
 
     foreach ($tids as $tid) {
@@ -50,7 +50,7 @@ function xmlsitemap_taxonomy_xmlsitemap_links($offset = 0, $limit = 0) {
 function xmlsitemap_taxonomy_xmlsitemap_links_batch_info() {
   $vids = xmlsitemap_taxonomy_get_vids();
   return array(
-    'max' => $vids ? db_query("SELECT COUNT(t.tid) FROM {term_data} t WHERE t.vid IN (" . db_placeholders($vids) . ")", $vids)->fetchField() : 0,
+    'max' => $vids ? db_query("SELECT COUNT(t.tid) FROM {term_data} t WHERE t.vid IN (:vids)", array(':vids' => $vids))->fetchField() : 0,
   );
 }
 
