@@ -200,7 +200,7 @@ function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
   $links = array();
 
   if ($types = xmlsitemap_node_get_types()) {
-    $sql = "SELECT n.nid FROM {node} n WHERE n.nid > :offset AND type IN (:types) ORDER BY n.nid";
+    $sql = "SELECT n.nid FROM {node} n WHERE n.nid > :offset AND n.type IN (:types) ORDER BY n.nid";
     $args = array(':offset' => $offset, ':types' => $types);
     $nids = ($limit ? db_query_range($sql, 0, $limit, $args) : db_query($sql, $args));
 
@@ -219,7 +219,7 @@ function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
 function xmlsitemap_node_xmlsitemap_links_batch_info() {
   $types = xmlsitemap_node_get_types();
   return array(
-    'max' => $types ? db_query("SELECT COUNT(n.nid) FROM {node} n WHERE type IN (:types)", array(':types' => $types))->fetchField() : 0,
+    'max' => $types ? db_query("SELECT COUNT(n.nid) FROM {node} n WHERE n.type IN (:types)", array(':types' => $types))->fetchField() : 0,
   );
 }
 
