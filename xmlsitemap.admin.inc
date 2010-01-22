@@ -326,16 +326,12 @@ function xmlsitemap_add_form_type_options(&$form, $module, $options) {
     '#title' => t('Default priority'),
     '#options' => xmlsitemap_get_priority_options(),
     '#default_value' => $options['priority'],
+    '#states' => array(
+      'invisible' => array(
+        'input[name="xmlsitemap_' . $module . '_status"]' => array('value' => 0),
+      ),
+    ),
   );
-
-  // Hide the priority field if the link is excluded.
-  if (module_exists('ctools')) {
-    ctools_include('dependent');
-    $form['xmlsitemap']['xmlsitemap_' . $module . '_priority'] += array(
-      '#process' => array('form_expand_ahah', 'ctools_dependent_process'),
-      '#dependency' => array('edit-xmlsitemap-' . $module . '-status' => array(1)),
-    );
-  }
 }
 
 /**
@@ -391,6 +387,11 @@ function xmlsitemap_add_form_link_options(&$form, $link) {
     '#options' => xmlsitemap_get_priority_options($link['priority_default']),
     '#default_value' => $link['priority_override'] ? number_format($link['priority'], 1) : 'default',
     '#description' => t('The priority of this URL relative to other URLs on your site.'),
+    '#states' => array(
+      'invisible' => array(
+        'input[name="xmlsitemap[status]"]' => array('value' => $link['status_default'] ? array('default', 1) : array(1)),
+      ),
+    ),
   );
   $form['xmlsitemap']['priority_default'] = array(
     '#type' => 'value',
@@ -414,16 +415,6 @@ function xmlsitemap_add_form_link_options(&$form, $link) {
   //  '#type' => 'value',
   //  '#value' => $node->xmlsitemap['changecount'],
   //);
-
-  // Hide the priority field if the link is excluded.
-  if (module_exists('ctools')) {
-    ctools_include('dependent');
-    $default = $link['status_default'] ? array('default', 1) : array(1);
-    $form['xmlsitemap']['priority'] += array(
-      '#process' => array('form_expand_ahah', 'ctools_dependent_process'),
-      '#dependency' => array('edit-xmlsitemap-status' => $default),
-    );
-  }
 
   // Add the submit handler to adjust the default values if selected.
   if (!in_array('xmlsitemap_process_form_link_options', $form['#submit'])) {
