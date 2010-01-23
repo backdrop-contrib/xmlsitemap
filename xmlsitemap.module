@@ -621,7 +621,7 @@ function xmlsitemap_variables() {
  * Internal implementation of variable_get().
  */
 function xmlsitemap_var($name, $default = NULL) {
-  static $defaults = NULL;
+  $defaults = &drupal_static(__FUNCTION__);
   if (!isset($defaults)) {
     $defaults = xmlsitemap_variables();
   }
@@ -630,7 +630,7 @@ function xmlsitemap_var($name, $default = NULL) {
 
   // @todo Remove when stable.
   if (!isset($defaults[$name])) {
-    trigger_error(t('Default variable for %variable not found.', array('%variable' => $name)));
+    trigger_error(strtr('Default variable for %variable not found.', array('%variable' => drupal_placeholder($name))));
   }
 
   return variable_get($name, isset($default) || !isset($defaults[$name]) ? $default : $defaults[$name]);
@@ -643,7 +643,7 @@ function xmlsitemap_var($name, $default = NULL) {
  */
 function xmlsitemap_switch_user($new_user = NULL) {
   global $user;
-  static $user_original;
+  $user_original = &drupal_static(__FUNCTION__);
 
   if (!isset($new_user)) {
     if (isset($user_original)) {
@@ -716,6 +716,7 @@ function xmlsitemap_process_form_link_options($form, &$form_state) {
 
 /**
  * @todo Document this function.
+ * @todo Make these translatable
  */
 function xmlsitemap_get_changefreq_options() {
   return array(
@@ -741,13 +742,9 @@ function xmlsitemap_get_changefreq_options() {
  * @see hook_xmlsitemap_link_info()
  * @see hook_xmlsitemap_link_info_alter()
  */
-function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
+function xmlsitemap_get_link_info($type = NULL) {
   global $language;
-  static $link_info;
-
-  if ($reset) {
-    $link_info = NULL;
-  }
+  $link_info = &drupal_static(__FUNCTION__);
 
   if (!isset($link_info)) {
     if ($cached = cache_get('xmlsitemap:link_info:' . $language->language)) {
@@ -836,13 +833,15 @@ function _xmlsitemap_delete_recursive($path, $delete_root = FALSE) {
 /**
  * Load a language object by its language code.
  *
+ * @todo Remove when http://drupal.org/node/660736 is fixed in Drupal core.
+ *
  * @param $language
  *   A language code. If not provided the default language will be returned.
  * @return
  *   A language object.
  */
 function xmlsitemap_language_load($language = LANGUAGE_NONE) {
-  static $languages;
+  $languages = &drupal_static(__FUNCTION__);
 
   if (!isset($languages)) {
     $languages = language_list();
