@@ -98,17 +98,24 @@ function xmlsitemap_requirements($phase) {
  *   TRUE if there is a warning or error requirement, or FALSE otherwise.
  */
 function xmlsitemap_check_status() {
-  $severity = REQUIREMENT_OK;
+  $messages = &drupal_static(__FUNCTION__);
 
-  foreach (module_implements('requirements') as $module) {
-    if (strpos($module, 'xmlsitemap') !== FALSE) {
-      module_load_install($module);
-      $requirements = module_invoke($module, 'requirements', 'runtime');
-      $severity = max($severity, drupal_requirements_severity($requirements));
+  if (!isset($messages)) {
+    $messages = array();
+    foreach (module_implements('requirements') as $module) {
+      if (strpos($module, 'xmlsitemap') !== FALSE) {
+        module_load_install($module);
+        $requirements = module_invoke($module, 'requirements', 'runtime');
+        foreach ($requirements as $requirement) {
+          if (isset($requirement['severity']) && max(REQUIREMENT_OK, $requirement['severity'])) {
+            $messages[] = $requirement['description'];
+          }
+        }
+      }
     }
   }
 
-  return $severity == REQUIREMENT_ERROR;
+  return $messages;
 }
 
 /**
