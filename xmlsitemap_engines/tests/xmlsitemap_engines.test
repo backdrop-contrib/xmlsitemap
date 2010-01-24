@@ -44,7 +44,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $this->assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'Submitted the sitemap to %url and received response @code.'));
     $this->assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'No sitemap parameter provided.'));
 
-    $edit = array('xmlsitemap_engines_custom_urls' => url('ping', array('absolute' => TRUE, 'query' => '[sitemap]')));
+    $edit = array('xmlsitemap_engines_custom_urls' => url('ping', array('absolute' => TRUE, 'query' => array('sitemap' => '[sitemap]'))));
     $this->drupalPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 

@@ -811,6 +811,18 @@ function xmlsitemap_clear_directory($delete = FALSE) {
   return _xmlsitemap_delete_recursive($directory, $delete);
 }
 
+/**
+ * Recursively delete all files and folders in the specified filepath.
+ *
+ * This is a backport of Drupal 7's file_unmanaged_delete_recursive().
+ *
+ * Note that this only deletes visible files with write permission.
+ *
+ * @param $path
+ *   A filepath relative to file_directory_path.
+ * @param $delete_root
+ *   A boolean if TRUE will delete the $path directory afterwards.
+ */
 function _xmlsitemap_delete_recursive($path, $delete_root = FALSE) {
   // Resolve streamwrapper URI to local path.
   $path = drupal_realpath($path);

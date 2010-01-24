@@ -91,11 +91,6 @@ function xmlsitemap_requirements($phase) {
 
 /**
  * Check the status of all hook_requirements() from xmlsitemap modules.
- *
- * @param $return_only
- *   If TRUE, will return the result, otherwise it will show a message.
- * @return
- *   TRUE if there is a warning or error requirement, or FALSE otherwise.
  */
 function xmlsitemap_check_status() {
   $messages = &drupal_static(__FUNCTION__);
