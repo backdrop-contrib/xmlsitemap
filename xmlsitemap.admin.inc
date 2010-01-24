@@ -289,7 +289,9 @@ function xmlsitemap_add_form_type_summary(&$form, $type, $items) {
   }
 
   $form[$type['type']]['list'] = array(
-    '#value' => theme('table', $header, $rows),
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
   );
 }
 

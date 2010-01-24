@@ -700,7 +700,7 @@ function xmlsitemap_restore_user() {
 
 function xmlsitemap_process_form_link_options($form, &$form_state) {
   $link = &$form_state['values']['xmlsitemap'];
-  $fields = array('status' => 1, 'priority' => 0.5);
+  $fields = array('status' => 0, 'priority' => 0.5);
 
   foreach ($fields as $field => $default) {
     if ($link[$field] === 'default') {
