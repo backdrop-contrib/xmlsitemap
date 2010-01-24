@@ -14,7 +14,7 @@ class XMLSitemapNodeTestHelper extends XMLSitemapTestHelper {
   function setUp() {
     parent::setUp('xmlsitemap', 'xmlsitemap_node', 'comment');
     $this->admin_user = $this->drupalCreateUser(array('administer nodes', 'bypass node access', 'administer content types', 'administer xmlsitemap'));
-    $this->normal_user = $this->drupalCreateUser(array('create page content', 'edit any page content', 'access content'));
+    $this->normal_user = $this->drupalCreateUser(array('create page content', 'edit any page content', 'access content', 'view own unpublished content'));
     variable_set('xmlsitemap_node_status_page', 1);
   }
 
@@ -69,6 +69,8 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapNodeTestHelper {
   }
 
   function testNodeSettings() {
+    $body_field = 'body[' . LANGUAGE_NONE . '][0][value]';
+
     $node = $this->drupalCreateNode(array('status' => FALSE, 'uid' => $this->normal_user->uid));
     $this->assertNodeSitemapLinkValues($node, array('access' => 0, 'status' => 1, 'priority' => 0.5, 'status_override' => 0, 'priority_override' => 0));
 
@@ -79,10 +81,10 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapNodeTestHelper {
 
     $edit = array(
       'title' => 'Test node title',
-      'body' => 'Test node body',
+      $body_field => 'Test node body',
     );
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
-    $this->assertText('Page Test node title has been updated.');
+    $this->assertText('Basic page Test node title has been updated.');
     $this->assertNodeSitemapLinkValues($node, array('access' => 0, 'status' => 1, 'priority' => 0.5, 'status_override' => 0, 'priority_override' => 0));
 
     $this->drupalLogin($this->admin_user);
@@ -96,7 +98,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapNodeTestHelper {
       'status' => TRUE,
     );
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
-    $this->assertText('Page Test node title has been updated.');
+    $this->assertText('Basic page Test node title has been updated.');
     $this->assertNodeSitemapLinkValues($node, array('access' => 1, 'status' => 0, 'priority' => 0.9, 'status_override' => 1, 'priority_override' => 1));
 
     $edit = array(
@@ -105,7 +107,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapNodeTestHelper {
       'status' => FALSE,
     );
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
-    $this->assertText('Page Test node title has been updated.');
+    $this->assertText('Basic page Test node title has been updated.');
     $this->assertNodeSitemapLinkValues($node, array('access' => 0, 'status' => 1, 'priority' => 0.5, 'status_override' => 0, 'priority_override' => 0));
   }
 
@@ -122,9 +124,8 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapNodeTestHelper {
       'xmlsitemap_node_status' => 0,
       'xmlsitemap_node_priority' => '0.0',
     );
-    $this->drupalGet('admin/content/node-type/page');
-    $this->drupalPost('admin/content/node-type/page', $edit, t('Save content type'));
-    $this->assertText(t('The content type Page has been updated.'));
+    $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
+    $this->assertText(t('The content type Basic page has been updated.'));
 
     $node = $this->drupalCreateNode();
     $this->assertNodeSitemapLinkValues($node, array('status' => 0, 'priority' => 0.0));
@@ -134,14 +135,14 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapNodeTestHelper {
       'xmlsitemap_node_status' => 1,
       'xmlsitemap_node_priority' => '0.5',
     );
-    $this->drupalPost('admin/content/node-type/page', $edit, t('Save content type'));
-    $this->assertText(t('The content type Page has been updated.'));
+    $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
+    $this->assertText(t('The content type Basic page has been updated.'));
 
     $this->assertNodeSitemapLinkValues($node, array('status' => 1, 'priority' => 0.5));
     $this->assertNodeSitemapLinkValues($node_old, array('status' => 1, 'priority' => 0.5));
 
     //$this->drupalPost('node/' . $node->nid . '/edit', array(), t('Save'));
-    //$this->assertText(t('Page @title has been updated.', array('@title' => $node->title)));
+    //$this->assertText(t('Basic page @title has been updated.', array('@title' => $node->title)));
   }
 
   /**
