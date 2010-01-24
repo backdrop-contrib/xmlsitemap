@@ -477,6 +477,10 @@ function xmlsitemap_update_17() {
 }
 
 function xmlsitemap_update_18() {
+  db_update('xmlsitemap')
+    ->fields(array('subtype' => ''))
+    ->isNull('subtype')
+    ->execute();
   $field = array(
     'type' => 'varchar',
     'length' => 32,
