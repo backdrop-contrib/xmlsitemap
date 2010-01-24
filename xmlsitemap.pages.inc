@@ -31,7 +31,7 @@ function xmlsitemap_output_chunk($chunk = 0) {
  */
 function xmlsitemap_output_file($file, array $headers = array()) {
   if (!file_exists($file) || !is_readable($file)) {
-    return drupal_not_found();
+    return MENU_NOT_FOUND;
   }
 
   $mtime = filemtime($file);
