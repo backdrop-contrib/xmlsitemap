@@ -30,7 +30,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     // Capture any (remaining) watchdog errors.
     $this->assertNoWatchdogErrors();
     // Reset the watchdog seen IDs for the next test run.
-    $this->getWatchdogMessages(TRUE);
+    $this->getWatchdogMessages(array(), TRUE);
 
     parent::tearDown();
   }
@@ -209,51 +209,55 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     $this->assertNoText(t('One or more problems were detected with your XML sitemap configuration'));
   }
 
-  private function getWatchdogMessage(array $conditions) {
-    $query = db_select('watchdog');
-    $query->fields('watchdog');
-    foreach ($conditions as $field => $value) {
-      if ($field == 'variables' && is_array($value)) {
-        $value = serialize($value);
-      }
-      $query->conditions($field, $value);
-    }
-    return $query->execute()->fetchAll();
-  }
-
-  protected function assertWatchdogMessage(array $conditions, $message = 'Watchdog message found.') {
-    $this->assertTrue($this->getWatchdogMessage($conditions), $message);
-  }
-
-  protected function assertNoWatchdogMessage(array $conditions, $message = 'Watchdog message not found.') {
-    $this->assertFalse($this->getWatchdogMessage($conditions), $message);
-  }
-
   /**
    * Fetch all seen watchdog messages.
+   *
+   * @todo Add unit tests for this function.
    */
-  protected function getWatchdogMessages($reset = FALSE) {
+  protected function getWatchdogMessages(array $conditions = array(), $reset = FALSE) {
     static $seen_ids = array();
+    static $levels;
 
     if (!module_exists('dblog') || $reset) {
       $seen_ids = array();
       return;
     }
+    if (!isset($levels)) {
+      $levels = watchdog_severity_levels();
+    }
 
     $query = db_select('watchdog');
     $query->fields('watchdog', array('wid', 'type', 'severity', 'message', 'variables', 'timestamp'));
+    foreach ($conditions as $field => $value) {
+      if ($field == 'variables' && is_array($value)) {
+        $value = serialize($value);
+      }
+      $query->condition($field, $value);
+    }
     if ($seen_ids) {
-      $query->condition('wid', $seen_ids);
+      $query->condition('wid', $seen_ids, 'NOT IN');
     }
     $query->orderBy('timestamp', 'ASC');
     $messages = $query->execute()->fetchAllAssoc('wid');
 
     foreach ($messages as &$message) {
-      $message->text = $message->timestamp . ' ' . t($message->message, unserialize($message->variables));
+      $message->variables = unserialize($message->variables);
+      if (!is_array($message->variables)) {
+        $message->variables = array();
+      }
+      $message->text = $message->timestamp . ' - ' . $levels[$message->severity] . ' - ' . t($message->message, $message->variables);
     }
 
     $seen_ids = array_merge($seen_ids, array_keys($messages));
     return $messages;
+  }
+
+  protected function assertWatchdogMessage(array $conditions, $message = 'Watchdog message found.') {
+    $this->assertTrue($this->getWatchdogMessages($conditions), $message);
+  }
+
+  protected function assertNoWatchdogMessage(array $conditions, $message = 'Watchdog message not found.') {
+    $this->assertFalse($this->getWatchdogMessages($conditions), $message);
   }
 
   /**
@@ -264,12 +268,10 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     $verbose = array();
 
     foreach ($messages as $message) {
-      if ($message->severity < WATCHDOG_NOTICE) {
+      if (in_array($message->severity, array(WATCHDOG_EMERG, WATCHDOG_ALERT, WATCHDOG_CRITICAL, WATCHDOG_ERROR, WATCHDOG_WARNING))) {
         $this->fail($message->text);
       }
-      else {
-        $verbose[] = $message->text;
-      }
+      $verbose[] = $message->text;
     }
 
     if ($verbose) {
