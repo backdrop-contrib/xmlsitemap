@@ -304,6 +304,11 @@ function xmlsitemap_node_create_link(&$node) {
   $node->xmlsitemap['changefreq'] = $node->nid ? xmlsitemap_calculate_changefreq($timestamps) : 0;
   $node->xmlsitemap['changecount'] = $node->nid ? count($timestamps) - 1 : 0;
 
+  // Node access must be reset since it a user may have changed published status, etc.
+  $access = &drupal_static('node_access');
+  unset($access[0][$node->nid]);
+  //node_access_acquire_grants($node);
+
   // The following values must always be checked because they are volatile.
   $node->xmlsitemap['lastmod'] = isset($node->changed) ? $node->changed : REQUEST_TIME;
   $node->xmlsitemap['access'] = $node->nid ? (bool) node_access('view', $node, drupal_anonymous_user()) : 1;
