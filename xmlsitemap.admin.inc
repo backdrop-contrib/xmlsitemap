@@ -323,7 +323,7 @@ function xmlsitemap_add_form_type_options(&$form, $module, $options) {
     '#default_value' => $options['priority'],
     '#states' => array(
       'invisible' => array(
-        'input[name="xmlsitemap_' . $module . '_status"]' => array('value' => 0),
+        'select[name="xmlsitemap_' . $module . '_status"]' => array('value' => '0'),
       ),
     ),
   );
@@ -384,10 +384,17 @@ function xmlsitemap_add_form_link_options(&$form, $link) {
     '#description' => t('The priority of this URL relative to other URLs on your site.'),
     '#states' => array(
       'invisible' => array(
-        'input[name="xmlsitemap[status]"]' => array('value' => $link['status_default'] ? array('default', 1) : array(1)),
+        'select[name="xmlsitemap[status]"]' => array('value' => '0'),
       ),
     ),
   );
+  if (!$link['status_default']) {
+    // If the default status is excluded, add a visible state on the include
+    // override option.
+    $form['xmlsitemap']['priority']['#states']['visible'] = array(
+      'select[name="xmlsitemap[status]"]' => array('value' => '1'),
+    );
+  }
   $form['xmlsitemap']['priority_default'] = array(
     '#type' => 'value',
     '#value' => $link['priority_default'],
