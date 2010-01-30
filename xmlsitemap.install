@@ -333,7 +333,7 @@ function xmlsitemap_update_6() {
 }
 
 function xmlsitemap_update_7() {
-  if (xmlsitemap_load_link(array('type' => 'custom'))) {
+  if (db_query_range("SELECT 1 FROM {xmlsitemap} WHERE type = 'custom'", 0, 1)->fetchField()) {
     drupal_install_modules(array('xmlsitemap_custom'));
   }
   variable_del('xmlsitemap_custom_links');

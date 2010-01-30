@@ -2,6 +2,21 @@
 // $Id$
 
 /**
+ * Implements hook_xmlsitemap_link_info().
+ */
+function xmlsitemap_taxonomy_xmlsitemap_link_info() {
+  return array(
+    'taxononomy' => array(
+      'purge' => TRUE,
+      'table' => 'term_data',
+      'id' => 'tid',
+      'subtype' => 'vid',
+      'subtypes' => xmlsitemap_taxonomy_get_vids(),
+    ),
+  );
+}
+
+/**
  * Implements hook_cron().
  *
  * Process old taxonomy terms not found in the {xmlsitemap} table.
@@ -52,48 +67,6 @@ function xmlsitemap_taxonomy_xmlsitemap_links_batch_info() {
   return array(
     'max' => $vids ? db_query("SELECT COUNT(t.tid) FROM {term_data} t WHERE t.vid IN (:vids)", array(':vids' => $vids))->fetchField() : 0,
   );
-}
-
-/**
- * Implements hook_xmlsitemap_link_info().
- */
-function xmlsitemap_taxonomy_xmlsitemap_link_info() {
-  return array(
-    'taxononomy' => array(
-      'purge' => TRUE,
-      'table' => 'term_data',
-      'id' => 'tid',
-      'subtype' => 'vid',
-      'subtypes' => xmlsitemap_taxonomy_get_vids(),
-    ),
-  );
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
- *
- * Show a summary of vocabularies on the XML sitemap settings page.
- */
-function xmlsitemap_taxonomy_form_xmlsitemap_settings_form_alter(&$form, $form_state) {
-  $type = array(
-    'type' => 'taxonomy_term',
-    'title' => t('Taxonomy'),
-    'item_title' => t('Vocabulary'),
-    'access' => user_access('administer taxonomy'),
-  );
-
-  $vocabularies = taxonomy_get_vocabularies();
-  foreach ($vocabularies as $vid => $vocabulary) {
-    $vocabularies[$vid] = array(
-      'name' => $vocabulary->name,
-      'link' => 'admin/content/taxonomy/edit/vocabulary/' . $vid,
-      'status' => xmlsitemap_taxonomy_var('status_' . $vid),
-      'priority' => xmlsitemap_taxonomy_var('priority_' . $vid),
-    );
-  }
-
-  xmlsitemap_add_form_type_summary($form, $type, $vocabularies);
-  $form['taxonomy_term']['#weight'] = 40;
 }
 
 /**
@@ -222,7 +195,7 @@ function xmlsitemap_taxonomy_taxonomy($op, $type, $array = NULL) {
 function xmlsitemap_taxonomy_create_link(stdClass $term) {
   if (!isset($term->xmlsitemap)) {
     $term->xmlsitemap = array();
-    if ($term->tid && $link = xmlsitemap_load_link(array('type' => 'taxonomy_term', 'id' => $term->tid))) {
+    if ($term->tid && $link = xmlsitemap_link_load('taxonomy_term', $term->tid)) {
       $term->xmlsitemap = $link;
     }
   }

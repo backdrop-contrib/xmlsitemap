@@ -418,14 +418,14 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
  *   An array of sitemap link arrays.
  */
 function xmlsitemap_link_load_multiple(array $conditions = array()) {
-  $query = db_select('xmlsitemap', 'x');
-  $query->fields('x');
+  $query = db_select('xmlsitemap');
+  $query->fields('xmlsitemap');
 
   foreach ($conditions as $field => $value) {
     $query->condition($field, $value);
   }
 
-  $links = $query->execute()->fetchAllAssoc();
+  $links = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
   return $links;
 }
