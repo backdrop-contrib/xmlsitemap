@@ -204,7 +204,7 @@ function xmlsitemap_taxonomy_create_link(stdClass $term) {
     'id' => $term->tid,
     'type' => 'taxonomy_term',
     'subtype' => $term->vid,
-    'loc' => taxonomy_term_path($term),
+    'loc' => 'taxonomy/term/' . $term->tid,
     'status' => variable_get('xmlsitemap_taxonomy_status_' . $term->vid, 0),
     'status_default' => variable_get('xmlsitemap_taxonomy_status_' . $term->vid, 0),
     'status_override' => 0,
