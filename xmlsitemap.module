@@ -409,28 +409,40 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
 }
 
 /**
- * Load a specific sitemap link.
+ * Load sitemap links from the database.
  *
  * @param $conditions
- *   An array of values to match keyed by field.
+ *   An array of conditions on the {xmlsitemap} table in the form
+ *   'field' => $value.
  * @return
- *   An array representing the first sitemap link matching the conditions found.
- *
- * @todo Convert to use $type and $id as parameters.
+ *   An array of sitemap link arrays.
  */
-function xmlsitemap_load_link(array $conditions) {
+function xmlsitemap_link_load_multiple(array $conditions = array()) {
   $query = db_select('xmlsitemap', 'x');
   $query->fields('x');
+
   foreach ($conditions as $field => $value) {
     $query->condition($field, $value);
   }
-  $query->range(0, 1);
-  $link = $query->execute()->fetchAssoc();
 
-  // Allow other modules to respond after loading the link.
-  //module_invoke_all('xmlsitemap_load_link', $link, $conditions, $args);
+  $links = $query->execute()->fetchAllAssoc();
 
-  return $link;
+  return $links;
+}
+
+/**
+ * Load a specific sitemap link from the database.
+ *
+ * @param $entity_type
+ *   A string with the entity type.
+ * @param $entity_id
+ *   An integer with the entity ID.
+ * @return
+ *   A sitemap link (array) or FALSE if the conditions were not found.
+ */
+function xmlsitemap_link_load($entity_type, $entity_id) {
+  $link = xmlsitemap_link_load_multiple(array('type' => $entity_type, 'id' => $entity_id));
+  return $link ? reset($link) : FALSE;
 }
 
 /**
@@ -516,17 +528,36 @@ function xmlsitemap_update_links($updates = array(), $conditions = array()) {
 }
 
 /**
- * Delete one or more sitemap links.
+ * Delete a specific sitemap link from the database.
  *
  * If a visible sitemap link was deleted, this will automatically set the
  * regenerate needed flag.
  *
- * @param $conditions
- *   An array of values to match keyed by field.
+ * @param $entity_type
+ *   A string with the entity type.
+ * @param $entity_id
+ *   An integer with the entity ID.
  * @return
  *   The number of links that were deleted.
  */
-function xmlsitemap_delete_link(array $conditions) {
+function xmlsitemap_link_delete($entity_type, $entity_id) {
+  $conditions = array('type' => $entity_type, 'id' => $entity_id);
+  return xmlsitemap_link_delete_multiple($conditions);
+}
+
+/**
+ * Delete multiple sitemap links from the database.
+ *
+ * If visible sitemap links were deleted, this will automatically set the
+ * regenerate needed flag.
+ *
+ * @param $conditions
+ *   An array of conditions on the {xmlsitemap} table in the form
+ *   'field' => $value.
+ * @return
+ *   The number of links that were deleted.
+ */
+function xmlsitemap_link_delete_multiple(array $conditions) {
   if (!variable_get('xmlsitemap_regenerate_needed', TRUE)) {
     _xmlsitemap_check_changed_links($conditions, array(), TRUE);
   }
@@ -535,7 +566,6 @@ function xmlsitemap_delete_link(array $conditions) {
   foreach ($conditions as $field => $value) {
     $query->condition($field, $value);
   }
-
   return $query->execute();
 }
 
@@ -860,4 +890,28 @@ function xmlsitemap_language_load($language = LANGUAGE_NONE) {
   }
 
   return $languages[$language];
+}
+
+function xmlsitemap_get_link_type_indexed_status($entity_type, $bundle = '') {
+  $info = xmlsitemap_get_link_info($entity_type);
+  $status = array();
+
+  $indexed = db_select('xmlsitemap');
+  $indexed->condition('type', $entity_type);
+  $indexed->condition('subtype', $bundle);
+  $visible = $indexed;
+  $visible->condition('status', 1);
+  $visible->condition('access', 1);
+
+  $status['indexed'] = $indexed->countQuery()->execute();
+  $status['visible'] = $visible->countQuery()->execute();
+
+  $total = db_select($info['base table']);
+  $total->addField($info['object keys']['id']);
+  if (!empty($info['object keys']['bundle'])) {
+    $total->condition($info['object keys']['bundle'], $bundle);
+  }
+  $status['total'] = $total->countQuery()->execute();
+
+  return $status;
 }

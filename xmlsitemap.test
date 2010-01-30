@@ -13,6 +13,7 @@
  */
 class XMLSitemapTestHelper extends DrupalWebTestCase {
   protected $admin_user;
+  protected $seen_ids = array();
 
   function setUp() {
     // Call parent::setUp() allowing test cases to pass further modules.
@@ -30,7 +31,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     // Capture any (remaining) watchdog errors.
     $this->assertNoWatchdogErrors();
     // Reset the watchdog seen IDs for the next test run.
-    $this->getWatchdogMessages(array(), TRUE);
+    $this->seen_ids = array();
 
     parent::tearDown();
   }
@@ -178,12 +179,10 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    *
    * @todo Add unit tests for this function.
    */
-  protected function getWatchdogMessages(array $conditions = array(), $reset = FALSE) {
-    static $seen_ids = array();
+  protected function getWatchdogMessages(array $conditions = array(), $exclude_seen = TRUE) {
     static $levels;
 
-    if (!module_exists('dblog') || $reset) {
-      $seen_ids = array();
+    if (!module_exists('dblog')) {
       return;
     }
     if (!isset($levels)) {
@@ -198,8 +197,8 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
       }
       $query->condition($field, $value);
     }
-    if ($seen_ids) {
-      $query->condition('wid', $seen_ids, 'NOT IN');
+    if ($exclude_seen && $this->seen_ids) {
+      $query->condition('wid', $this->seen_ids, 'NOT IN');
     }
     $query->orderBy('timestamp', 'ASC');
     $messages = $query->execute()->fetchAllAssoc('wid');
@@ -209,10 +208,10 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
       if (!is_array($message->variables)) {
         $message->variables = array();
       }
-      $message->text = $message->timestamp . ' - ' . $levels[$message->severity] . ' - ' . t($message->message, $message->variables);
+      $message->text = $message->timestamp . ' - ' . $levels[$message->severity] . ' - ' . $message->type . ' - ' . t($message->message, $message->variables);
     }
 
-    $seen_ids = array_merge($seen_ids, array_keys($messages));
+    $this->seen_ids = array_merge($this->seen_ids, array_keys($messages));
     return $messages;
   }
 
@@ -228,11 +227,11 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    * Check that there were no watchdog errors or worse.
    */
   protected function assertNoWatchdogErrors() {
-    $messages = $this->getWatchdogMessages();
+    $messages = $this->getWatchdogMessages(array(), FALSE);
     $verbose = array();
 
     foreach ($messages as $message) {
-      if (in_array($message->severity, array(WATCHDOG_EMERG, WATCHDOG_ALERT, WATCHDOG_CRITICAL, WATCHDOG_ERROR, WATCHDOG_WARNING))) {
+      if (in_array($message->severity, array(WATCHDOG_EMERG, WATCHDOG_ALERT, WATCHDOG_CRITICAL, WATCHDOG_ERROR, WATCHDOG_WARNING)) && !in_array($message->wid, $this->seen_ids)) {
         $this->fail($message->text);
       }
       $verbose[] = $message->text;

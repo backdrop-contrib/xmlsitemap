@@ -43,7 +43,7 @@ function xmlsitemap_node_node_update($node) {
  * Implements hook_node_delete().
  */
 function xmlsitemap_node_node_delete($node) {
-  xmlsitemap_delete_link(array('type' => 'node', 'id' => $node->nid));
+  xmlsitemap_link_delete('node', $node->nid);
 }
 
 /**
@@ -82,7 +82,7 @@ function xmlsitemap_node_comment_delete(stdClass $comment) {
 function xmlsitemap_node_node_type_delete($info) {
   variable_del('xmlsitemap_node_status_' . $info->type);
   variable_del('xmlsitemap_node_priority_' . $info->type);
-  //xmlsitemap_delete_link(array('type' => 'node', 'subtype' => $info->type));
+  //xmlsitemap_link_delete_multiple(array('type' => 'node', 'subtype' => $info->type));
 }
 
 /**
@@ -188,7 +188,7 @@ function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
   if ($types = xmlsitemap_node_get_types()) {
     $sql = "SELECT n.nid FROM {node} n WHERE n.nid > :offset AND n.type IN (:types) ORDER BY n.nid";
     $args = array(':offset' => $offset, ':types' => $types);
-    $nids = ($limit ? db_query_range($sql, 0, $limit, $args) : db_query($sql, $args));
+    $nids = ($limit ? db_query_range($sql, 0, $limit, $args)->fetchCol() : db_query($sql, $args)->fetchCol());
     $nodes = node_load_multiple($nids);
 
     foreach ($nodes as $node) {
@@ -281,7 +281,7 @@ function xmlsitemap_node_get_timestamps($node) {
 function xmlsitemap_node_create_link(&$node) {
   if (!isset($node->xmlsitemap) || !is_array($node->xmlsitemap)) {
     $node->xmlsitemap = array();
-    if ($node->nid && $link = xmlsitemap_load_link(array('type' => 'node', 'id' => $node->nid))) {
+    if ($node->nid && $link = xmlsitemap_link_load('node', $node->nid)) {
       $node->xmlsitemap = $link;
     }
   }
@@ -331,22 +331,3 @@ function xmlsitemap_node_variables() {
   }
   return $defaults;
 }
-
-///**
-// * Internal implementation of variable_get().
-// */
-//function xmlsitemap_node_var($name, $default = NULL) {
-//  static $defaults;
-//  if (!isset($defaults)) {
-//    $defaults = xmlsitemap_node_variables();
-//  }
-//
-//  $name = 'xmlsitemap_node_'. $name;
-//
-//  // @todo Remove when stable.
-//  if (!isset($defaults[$name])) {
-//    trigger_error(t('Default variable for %variable not found.', array('%variable' => $name)));
-//  }
-//
-//  return variable_get($name, isset($default) || !isset($defaults[$name]) ? $default : $defaults[$name]);
-//}
