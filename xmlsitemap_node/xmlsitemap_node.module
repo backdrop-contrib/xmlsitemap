@@ -2,18 +2,17 @@
 // $Id$
 
 /**
- * Implements hook_xmlsitemap_link_info().
+ * Implements hook_entity_info_alter().
  */
-function xmlsitemap_node_xmlsitemap_link_info() {
-  return array(
-    'node' => array(
-      'purge' => TRUE,
-      'table' => 'node',
-      'id' => 'nid',
-      'subtype' => 'type',
-      'subtypes' => xmlsitemap_node_get_types(),
-    ),
-  );
+function xmlsitemap_node_entity_info_alter(&$entity_info) {
+  foreach (node_type_get_names() as $type => $name) {
+    $types['node']['bundles'][$type] = array(
+      'xmlsitemap' => array(
+        'priority' => variable_get('xmlsitemap_node_priority_' . $type, 0.5),
+        'status' => variable_get('xmlsitemap_node_status_' . $type, 0),
+      ),
+    );
+  }
 }
 
 /**
