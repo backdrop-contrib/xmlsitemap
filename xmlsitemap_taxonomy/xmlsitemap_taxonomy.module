@@ -6,11 +6,9 @@
  */
 function xmlsitemap_taxonomy_entity_info_alter(&$entity_info) {
   foreach (taxonomy_vocabulary_get_names() as $machine_name => $vocabulary) {
-    $entity_info['taxonomy_term']['bundles'][$machine_name] = array(
-      'xmlsitemap' => array(
-        'priority' => variable_get('xmlsitemap_taxonomy_priority_' . $vocabulary->vid, 0.5),
-        'status' => variable_get('xmlsitemap_taxonomy_status_' . $vocabulary->vid, 0),
-      ),
+    $entity_info['taxonomy_term']['bundles'][$machine_name]['xmlsitemap'] = array(
+      'priority' => variable_get('xmlsitemap_taxonomy_priority_' . $vocabulary->vid, 0.5),
+      'status' => variable_get('xmlsitemap_taxonomy_status_' . $vocabulary->vid, 0),
     );
   }
 }
