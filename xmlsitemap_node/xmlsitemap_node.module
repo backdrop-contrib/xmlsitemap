@@ -5,6 +5,8 @@
  * Implements hook_entity_info_alter().
  */
 function xmlsitemap_node_entity_info_alter(&$entity_info) {
+  $entity_info['node']['label'] = t('Content');
+  $entity_info['node']['bundle label'] = t('Content type');
   $entity_info['node']['xmlsitemap'] = array();
   foreach (node_type_get_names() as $type => $name) {
     $entity_info['node']['bundles'][$type]['xmlsitemap'] = array(

@@ -24,7 +24,7 @@ function xmlsitemap_settings_form() {
   $form['xmlsitemap']['xmlsitemap_minimum_lifetime'] = array(
     '#type' => 'select',
     '#title' => t('Minimum sitemap lifetime'),
-    '#options' => array(0 => t('No minimum')) + drupal_map_assoc(array(300, 900, 1800, 3600, 10800, 21600, 32400, 43200, 86400, 172800, 259200, 604800), 'format_interval'),
+    '#options' => array(0 => t('No minimum')) + drupal_map_assoc(array(300, 900, 1800, 3600, 10800, 21600, 43200, 86400, 172800, 259200, 604800), 'format_interval'),
     '#default_value' => xmlsitemap_var('minimum_lifetime')
   );
   $form['xmlsitemap']['xmlsitemap_xsl'] = array(
@@ -191,8 +191,8 @@ function xmlsitemap_settings_form_submit($form, $form_state) {
  * @see xmlsitemap_rebuild_form_submit()
  */
 function xmlsitemap_rebuild_form() {
-  if (!$_POST && !xmlsitemap_var('rebuild_needed')) {
-    if (!xmlsitemap_var('regenerate_needed')) {
+  if (!$_POST && !variable_get('xmlsitemap_rebuild_needed', FALSE)) {
+    if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {
       drupal_set_message(t('Your sitemap is up to date and does not need to be rebuilt.'), 'error');
     }
     else {
@@ -201,16 +201,20 @@ function xmlsitemap_rebuild_form() {
     }
   }
 
-  // Show only the modules that implement the 6.x-2.x hooks.
-  $modules = module_implements('xmlsitemap_link_info', TRUE);
-
-  $form['modules'] = array(
+  $entities = xmlsitemap_get_link_info();
+  foreach ($entities as $entity => $info) {
+    if (empty($info['base table'])) {
+      // Only show entities which can be rebuilt.
+      unset($entities[$entity]);
+    }
+  }
+  $form['entities'] = array(
     '#type' => 'select',
-    '#title' => t("Select which modules' links you would like to rebuild"),
-    '#description' => t('If no modules are selected, the sitemap files will just be regenerated.'),
+    '#title' => t("Select which link types you would like to rebuild"),
+    '#description' => t('If no link types are selected, the sitemap files will just be regenerated.'),
     '#multiple' => TRUE,
-    '#options' => drupal_map_assoc($modules),
-    '#default_value' => xmlsitemap_var('rebuild_needed') || !xmlsitemap_var('developer_mode') ? $modules : array(),
+    '#options' => drupal_map_assoc(array_keys($entities)),
+    '#default_value' => xmlsitemap_var('rebuild_needed') || !xmlsitemap_var('developer_mode') ? array_keys($entities) : array(),
     '#access' => xmlsitemap_var('developer_mode'),
   );
   $form['save_custom'] = array(
@@ -240,7 +244,7 @@ function xmlsitemap_rebuild_form_submit($form, &$form_state) {
   variable_set('xmlsitemap_rebuild_needed', TRUE);
 
   module_load_include('inc', 'xmlsitemap');
-  $batch = xmlsitemap_rebuild_batch($form_state['values']['modules'], $form_state['values']['save_custom']);
+  $batch = xmlsitemap_rebuild_batch($form_state['values']['entities'], $form_state['values']['save_custom']);
   batch_set($batch);
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
@@ -249,14 +253,6 @@ function xmlsitemap_rebuild_form_submit($form, &$form_state) {
  * Add a table summary for an entity and its bundles.
  */
 function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info) {
-  $header = array(
-    t('Type'),
-    t('Inclusion'),
-    t('Priority'),
-    t('Total'),
-    t('Indexed'),
-    t('Visible'),
-  );
   $priorities = xmlsitemap_get_priority_options(NULL, FALSE);
   $statuses = xmlsitemap_get_status_options(NULL);
 
@@ -296,6 +292,14 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
   }
 
   if ($rows) {
+    $header = array(
+      $entity_info['bundle label'],
+      t('Inclusion'),
+      t('Priority'),
+      t('Available'),
+      t('Indexed'),
+      t('Visible'),
+    );
     $rows[] = array(
       array(
         'data' => t('Totals'),

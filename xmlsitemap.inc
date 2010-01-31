@@ -344,7 +344,7 @@ function xmlsitemap_generate_index($handle, &$status, $language) {
 /**
  * Batch information callback.
  */
-function xmlsitemap_rebuild_batch($modules = array(), $save_custom = FALSE) {
+function xmlsitemap_rebuild_batch($entities = array(), $save_custom = FALSE) {
   $batch = array(
     'operations' => array(),
     'finished' => 'xmlsitemap_rebuild_batch_finished',
@@ -353,13 +353,11 @@ function xmlsitemap_rebuild_batch($modules = array(), $save_custom = FALSE) {
   );
 
   // Purge any links first.
-  $batch['operations'][] = array('xmlsitemap_rebuild_batch_clear', array($modules, $save_custom));
+  $batch['operations'][] = array('xmlsitemap_rebuild_batch_clear', array($entities, $save_custom));
 
   // Fetch all the sitemap links and save them to the {xmlsitemap} table.
-  foreach ($modules as $module) {
-    if (module_hook($module, 'xmlsitemap_links')) {
-      $batch['operations'][] = array('xmlsitemap_rebuild_batch_fetch', array($module));
-    }
+  foreach ($entities as $entity) {
+    $batch['operations'][] = array('xmlsitemap_rebuild_batch_fetch', array($entity));
   }
 
   // Generate all the sitemap pages.
@@ -373,22 +371,12 @@ function xmlsitemap_rebuild_batch($modules = array(), $save_custom = FALSE) {
 }
 
 /**
- * Batch callback; clear sitemap links for modules.
+ * Batch callback; clear sitemap links for entites.
  */
-function xmlsitemap_rebuild_batch_clear($modules, $save_custom, &$context) {
-  $purge = array();
-  foreach ($modules as $module) {
-    $types = module_invoke($module, 'xmlsitemap_link_info');
-    foreach ($types as $type => $info) {
-      if ($info['purge']) {
-        $purge[] = $type;
-      }
-    }
-  }
-
-  if ($purge) {
+function xmlsitemap_rebuild_batch_clear(array $entities, $save_custom, &$context) {
+  if (!empty($entities)) {
     $query = db_delete('xmlsitemap');
-    $query->condition('type', $purge);
+    $query->condition('type', $entities);
     // If we want to save the custom data, make sure to exclude any links
     // that are not using default inclusion or priority.
     if ($save_custom) {

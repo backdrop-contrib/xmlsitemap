@@ -777,6 +777,7 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
 
   if ($reset) {
     $link_info = NULL;
+    entity_info_cache_clear();
   }
   elseif ($cached = cache_get('xmlsitemap:link_info:' . $language->language)) {
     $link_info = $cached->data;
@@ -802,8 +803,6 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
         'type' => $key,
         'base table' => FALSE,
         'bundles' => array(),
-        'object keys' => array(),
-        'admin' => array(),
       );
     }
     drupal_alter('xmlsitemap_link_info', $link_info);
