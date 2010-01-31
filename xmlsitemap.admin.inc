@@ -258,7 +258,6 @@ function xmlsitemap_rebuild_form_submit($form, &$form_state) {
   variable_set('xmlsitemap_rebuild_needed', TRUE);
 
   module_load_include('inc', 'xmlsitemap');
-
   $batch = xmlsitemap_rebuild_batch($form_state['values']['entities'], $form_state['values']['callbacks'], $form_state['values']['save_custom']);
   batch_set($batch);
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';

@@ -269,6 +269,7 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
 
   while ($link = $links->fetchAssoc()) {
     $url_options['language'] = ($link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $language);
+    // @todo $url_options['langauge'] could be NULL if language was not found.
     $link['alias'] = xmlsitemap_get_path_alias($link['loc'], $url_options['language']->language);
     $link_url = url($link['alias'], $url_options);
 
@@ -352,7 +353,6 @@ function xmlsitemap_rebuild_batch(array $entities, array $callbacks, $save_custo
     'file' => drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.inc',
   );
 
-
   // Purge any links first.
   $batch['operations'][] = array('xmlsitemap_rebuild_batch_clear', array($entities, (bool) $save_custom));
 
@@ -378,12 +378,14 @@ function xmlsitemap_rebuild_batch_clear(array $entities, $save_custom, &$context
   if (!empty($entities)) {
     $query = db_delete('xmlsitemap');
     $query->condition('type', $entities);
+
     // If we want to save the custom data, make sure to exclude any links
     // that are not using default inclusion or priority.
     if ($save_custom) {
       $query->condition('status_override', 0);
       $query->condition('priority_override', 0);
     }
+
     $query->execute();
   }
 
