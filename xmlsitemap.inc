@@ -344,7 +344,7 @@ function xmlsitemap_generate_index($handle, &$status, $language) {
 /**
  * Batch information callback.
  */
-function xmlsitemap_rebuild_batch($entities = array(), $save_custom = FALSE) {
+function xmlsitemap_rebuild_batch(array $entities, array $callbacks, $save_custom = FALSE) {
   $batch = array(
     'operations' => array(),
     'finished' => 'xmlsitemap_rebuild_batch_finished',
@@ -352,12 +352,13 @@ function xmlsitemap_rebuild_batch($entities = array(), $save_custom = FALSE) {
     'file' => drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.inc',
   );
 
+
   // Purge any links first.
-  $batch['operations'][] = array('xmlsitemap_rebuild_batch_clear', array($entities, $save_custom));
+  $batch['operations'][] = array('xmlsitemap_rebuild_batch_clear', array($entities, (bool) $save_custom));
 
   // Fetch all the sitemap links and save them to the {xmlsitemap} table.
   foreach ($entities as $entity) {
-    $batch['operations'][] = array('xmlsitemap_rebuild_batch_fetch', array($entity));
+    $batch['operations'][] = array($callbacks[$entity], array($entity));
   }
 
   // Generate all the sitemap pages.
@@ -390,37 +391,39 @@ function xmlsitemap_rebuild_batch_clear(array $entities, $save_custom, &$context
 }
 
 /**
- * Batch callback; fetch and add the sitemap links for a specific module.
+ * Batch callback; fetch and add the sitemap links for a specific entity.
  */
-function xmlsitemap_rebuild_batch_fetch($module, &$context) {
-  if (!isset($context['sandbox']['progress'])) {
-    $context['sandbox']['batch'] = module_hook($module, 'xmlsitemap_links_batch_info');
-    if ($context['sandbox']['batch']) {
-      $context['sandbox'] += module_invoke($module, 'xmlsitemap_links_batch_info');
-    }
-    else {
-      $context['sandbox']['links'] = module_invoke($module, 'xmlsitemap_links');
-      $context['sandbox']['max'] = count($context['sandbox']['links']);
-    }
-    $context['sandbox'] += array(
-      'progress' => 0,
-      'current' => 0,
-    );
+function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
+  if (!isset($context['sandbox']['info'])) {
+    $context['sandbox']['info'] = xmlsitemap_get_link_info($entity);
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['last_id'] = 0;
+  }
+  $info = $context['sandbox']['info'];
+
+  $query = db_select($info['base table']);
+  $query->addField($info['base table'], $info['object keys']['id']);
+  $query->condition($info['object keys']['id'], $context['sandbox']['last_id'], '>');
+  if (!empty($info['object keys']['bundle'])) {
+    $bundles = xmlsitemap_get_link_type_enabled_bundles($entity);
+    $query->condition($info['object keys']['bundle'], $bundles);
+  }
+  $query->orderBy($info['object keys']['id']);
+  $query->addTag('xmlsitemap_rebuild');
+  $query->addMetaData('entity', $entity);
+  $query->addMetaData('entity_info', $info);
+
+  if (!isset($context['sandbox']['max'])) {
+    $context['sandbox']['max'] = $query->countQuery()->execute()->fetchField();
   }
 
-  if ($context['sandbox']['batch']) {
-    $links = module_invoke($module, 'xmlsitemap_links', $context['sandbox']['current'], xmlsitemap_var('batch_limit'));
-  }
-  else {
-    $links = array_splice($context['sandbox']['links'], 0, xmlsitemap_var('batch_limit'));
-  }
+  $query->range(0, variable_get('xmlsitemap_batch_limit', 100));
 
-  foreach ($links as $link) {
-    xmlsitemap_save_link($link);
-    $context['sandbox']['progress']++;
-    $context['sandbox']['current'] = $link['id'];
-    $context['message'] = t('Now processing %module link @count.', array('%module' => $module, '@count' => $context['sandbox']['progress']));
-  }
+  $ids = $query->execute()->fetchCol();
+  $info['xmlsitemap']['process callback']($ids);
+  $context['sandbox']['last_id'] = end($ids);
+  $context['sandbox']['progress'] += count($ids);
+  $context['message'] = t('Now processing %entity @last_id (@progress of @count).', array('%entity' => $entity, '@last_id' => $context['sandbox']['last_id'], '@progress' => $context['sandbox']['progress'], '@count' => $context['sandbox']['max']));
 
   if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
     $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];

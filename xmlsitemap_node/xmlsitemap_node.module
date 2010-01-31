@@ -7,7 +7,9 @@
 function xmlsitemap_node_entity_info_alter(&$entity_info) {
   $entity_info['node']['label'] = t('Content');
   $entity_info['node']['bundle label'] = t('Content type');
-  $entity_info['node']['xmlsitemap'] = array();
+  $entity_info['node']['xmlsitemap'] = array(
+    'process callback' => 'xmlsitemap_node_xmlsitemap_process_node_links',
+  );
   foreach (node_type_get_names() as $type => $name) {
     $entity_info['node']['bundles'][$type]['xmlsitemap'] = array(
       'priority' => variable_get('xmlsitemap_node_priority_' . $type, 0.5),
@@ -29,13 +31,23 @@ function xmlsitemap_node_cron() {
  * Implements hook_xmlsitemap_index_links().
  */
 function xmlsitemap_node_xmlsitemap_index_links($limit) {
-  if ($types = xmlsitemap_node_get_types()) {
+  if ($types = xmlsitemap_get_link_type_enabled_bundles('node')) {
     $nids = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {xmlsitemap} x ON x.type = 'node' AND n.nid = x.id WHERE x.id IS NULL AND n.type IN (:types) ORDER BY n.nid DESC", 0, $limit, array(':types' => $types))->fetchCol();
-    $nodes = node_load_multiple($nids);
-    foreach ($nodes as $node) {
-      $link = xmlsitemap_node_create_link($node);
-      xmlsitemap_save_link($link);
-    }
+    xmlsitemap_node_xmlsitemap_process_node_links($nids);
+  }
+}
+
+/**
+ * Process node sitemap links.
+ *
+ * @param $nids
+ *   An array of node IDs.
+ */
+function xmlsitemap_node_xmlsitemap_process_node_links(array $nids) {
+  $nodes = node_load_multiple($nids);
+  foreach ($nodes as $node) {
+    $link = xmlsitemap_node_create_link($node);
+    xmlsitemap_save_link($link);
   }
 }
 
@@ -98,6 +110,25 @@ function xmlsitemap_node_node_type_delete($info) {
   variable_del('xmlsitemap_node_status_' . $info->type);
   variable_del('xmlsitemap_node_priority_' . $info->type);
   //xmlsitemap_link_delete_multiple(array('type' => 'node', 'subtype' => $info->type));
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function xmlsitemap_node_field_extra_fields() {
+  $extras = array();
+  $bundles = xmlsitemap_get_link_type_enabled_bundles('node');
+  foreach (node_type_get_names() as $type => $name) {
+    if (!in_array($type, $bundles)) {
+      continue;
+    }
+    $extras['node'][$type]['xmlsitemap'] = array(
+      'label' => t('XML sitemap'),
+      'description' => t('XML sitemap module element'),
+      'weight' => 30,
+    );
+  }
+  return $extras;
 }
 
 /**
@@ -165,64 +196,6 @@ function xmlsitemap_node_form_alter(&$form, $form_state, $form_id) {
       $form['xmlsitemap']['#description'] = t('The default XML sitemap settings for this content type can be changed <a href="@link-type">here</a>.', array('@link-type' => url('admin/structure/types/manage/' . str_replace('_', '-', $node->type), array('query' => drupal_get_destination()))));
     }
   }
-}
-
-/**
- * Implements hook_xmlsitemap_links().
- */
-function xmlsitemap_node_xmlsitemap_links($offset = 0, $limit = 0) {
-  $links = array();
-
-  if ($types = xmlsitemap_node_get_types()) {
-    $sql = "SELECT n.nid FROM {node} n WHERE n.nid > :offset AND n.type IN (:types) ORDER BY n.nid";
-    $args = array(':offset' => $offset, ':types' => $types);
-    $nids = ($limit ? db_query_range($sql, 0, $limit, $args)->fetchCol() : db_query($sql, $args)->fetchCol());
-    $nodes = node_load_multiple($nids);
-
-    foreach ($nodes as $node) {
-      $links[] = xmlsitemap_node_create_link($node);
-    }
-  }
-
-  return $links;
-}
-
-/**
- * Implements hook_xmlsitemap_links_batch_info().
- */
-function xmlsitemap_node_xmlsitemap_links_batch_info() {
-  $types = xmlsitemap_node_get_types();
-  return array(
-    'max' => $types ? db_query("SELECT COUNT(n.nid) FROM {node} n WHERE n.type IN (:types)", array(':types' => $types))->fetchField() : 0,
-  );
-}
-
-/**
- * Fetch an array of node types to be included in the sitemap.
- */
-function xmlsitemap_node_get_types() {
-  $node_types = array_keys(node_type_get_names());
-  foreach ($node_types as $index => $node_type) {
-    if (!variable_get('xmlsitemap_node_status_' . $node_type, 0)) {
-      unset($node_types[$index]);
-    }
-  }
-  return $node_types;
-}
-
-/**
- * Implements hook_field_extra_fields().
- */
-function xmlsitemap_node_field_extra_fields() {
-  $extras = array();
-  foreach (xmlsitemap_node_get_types() as $type) {
-    $extras['node'][$type]['xmlsitemap'] = array(
-      'label' => t('XML sitemap'),
-      'description' => t('XML sitemap module element'),
-      'weight' => 30,
-    );
-  }
-  return $extras;
 }
 
 /**
