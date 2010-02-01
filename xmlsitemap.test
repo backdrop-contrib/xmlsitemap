@@ -191,10 +191,11 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    *
    * @todo Add unit tests for this function.
    */
-  protected function getWatchdogMessages(array $conditions = array(), $exclude_seen = TRUE) {
+  protected function getWatchdogMessages(array $conditions = array(), $reset = FALSE) {
     static $levels;
 
-    if (!module_exists('dblog')) {
+    if (!module_exists('dblog') || $reset) {
+      $this->seen_ids = array();
       return;
     }
     if (!isset($levels)) {
@@ -209,10 +210,10 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
       }
       $query->condition($field, $value);
     }
-    if ($exclude_seen && $this->seen_ids) {
+    if ($this->seen_ids) {
       $query->condition('wid', $this->seen_ids, 'NOT IN');
     }
-    $query->orderBy('timestamp', 'ASC');
+    $query->orderBy('timestamp');
     $messages = $query->execute()->fetchAllAssoc('wid');
 
     foreach ($messages as &$message) {
@@ -239,11 +240,11 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    * Check that there were no watchdog errors or worse.
    */
   protected function assertNoWatchdogErrors() {
-    $messages = $this->getWatchdogMessages(array(), FALSE);
+    $messages = $this->getWatchdogMessages();
     $verbose = array();
 
     foreach ($messages as $message) {
-      if (in_array($message->severity, array(WATCHDOG_EMERG, WATCHDOG_ALERT, WATCHDOG_CRITICAL, WATCHDOG_ERROR, WATCHDOG_WARNING)) && !in_array($message->wid, $this->seen_ids)) {
+      if (in_array($message->severity, array(WATCHDOG_EMERG, WATCHDOG_ALERT, WATCHDOG_CRITICAL, WATCHDOG_ERROR, WATCHDOG_WARNING))) {
         $this->fail($message->text);
       }
       $verbose[] = $message->text;
@@ -527,9 +528,10 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
    */
   function testUpdateLinks() {
     // Add our testing data.
-    $link1 = $this->addSitemapLink(array('subtype' => 'group1'));
-    $link2 = $this->addSitemapLink(array('subtype' => 'group1'));
-    $link3 = $this->addSitemapLink(array('subtype' => 'group2'));
+    $links = array();
+    $links[1] = $this->addSitemapLink(array('subtype' => 'group1'));
+    $links[2] = $this->addSitemapLink(array('subtype' => 'group1'));
+    $links[3] = $this->addSitemapLink(array('subtype' => 'group2'));
     variable_set('xmlsitemap_regenerate_needed', FALSE);
     // id | type    | subtype | language | access | status | priority
     // 1  | testing | group1  | ''       | 1      | 1      | 0.5
@@ -706,7 +708,7 @@ class XMLSitemapRobotsTxtIntegrationTest extends XMLSitemapTestHelper {
   }
 
   function setUp() {
-    parent::setUp('xmlsitemap', 'robotstxt');
+    parent::setUp('robotstxt');
   }
 
   function testRobotsTxt() {
