@@ -336,11 +336,8 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
         'data' => $totals['visible'],
         'header' => TRUE,
       ),
-      /*$totals['total'],
-      $totals['indexed'],
-      $totals['visible'],*/
     );
-	$form['summary'] = array(
+    $form['summary'] = array(
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,

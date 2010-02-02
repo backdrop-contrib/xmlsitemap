@@ -5,7 +5,7 @@
  * Implements hook_entity_info_alter().
  */
 function xmlsitemap_taxonomy_entity_info_alter(&$entity_info) {
-  $entity_info['taxonomy_term']['bundle label'] = t('Vocabulary name');
+  $entity_info['taxonomy_term']['bundle label'] = t('Vocabulary');
   $entity_info['taxonomy_term']['xmlsitemap'] = array(
     'process callback' => 'xmlsitemap_taxonomy_xmlsitemap_process_taxonomy_term_links',
   );

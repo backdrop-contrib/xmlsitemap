@@ -655,7 +655,7 @@ function xmlsitemap_var($name, $default = NULL) {
     $defaults = xmlsitemap_variables();
   }
 
-  $name = 'xmlsitemap_'. $name;
+  $name = 'xmlsitemap_' . $name;
 
   // @todo Remove when stable.
   if (!isset($defaults[$name])) {
