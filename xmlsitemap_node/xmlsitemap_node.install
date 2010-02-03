@@ -10,11 +10,11 @@
  * Implements hook_uninstall().
  */
 function xmlsitemap_node_uninstall() {
-  // Remove variables.
-  drupal_load('module', 'xmlsitemap_node');
-  $variables = array_keys(xmlsitemap_node_variables());
-  foreach ($variables as $variable) {
-    variable_del($variable);
+  drupal_load('module', 'node');
+  drupal_load('module', 'xmlsitemap');
+  $node_types = array_keys(node_type_get_names());
+  foreach ($node_types as $node_type) {
+    xmlsitemap_link_bundle_delete('node', $node_type);
   }
 }
 
@@ -31,7 +31,7 @@ function xmlsitemap_node_update_1() {
 }
 
 function xmlsitemap_node_update_2() {
-  $node_types = array_keys(node_get_types('names'));
+  $node_types = array_keys(node_type_get_names());
   foreach ($node_types as $node_type) {
     if (variable_get('xmlsitemap_node_priority_' . $node_type, 'default') === 'default') {
       variable_set('xmlsitemap_node_priority_' . $node_type, 0.5);
@@ -59,4 +59,23 @@ function xmlsitemap_node_update_4() {
  */
 function xmlsitemap_node_update_5() {
   db_query("UPDATE {xmlsitemap} SET language = (SELECT {node}.language FROM {node} WHERE {node}.nid = {xmlsitemap}.id) WHERE {xmlsitemap}.type = 'node'");
+}
+
+/**
+ * Cleanup variables.
+ */
+function xmlsitemap_node_update_6200() {
+  drupal_load('module', 'node');
+  $node_types = array_keys(node_type_get_names());
+  foreach ($node_types as $node_type) {
+    $settings = array(
+      'status' => variable_get('xmlsitemap_node_status_' . $node_type, 0),
+      'priority' => variable_get('xmlsitemap_node_priority_' . $node_type, 0.5),
+    );
+    variable_set('xmlsitemap_settings_node_' . $node_type, $settings);
+    variable_del('xmlsitemap_node_status_' . $node_type);
+    variable_del('xmlsitemap_node_priority_' . $node_type);
+    variable_del('xmlsitemap_node_update_' . $node_type);
+  }
+  return array();
 }
