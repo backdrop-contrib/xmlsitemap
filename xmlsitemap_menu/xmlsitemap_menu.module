@@ -162,7 +162,7 @@ function xmlsitemap_menu_create_link(array $menu_item) {
     }
   }
 
-  $settings = xmlsitemap_link_bundle_settings_load('menu', $menu_item['menu_name']);
+  $settings = xmlsitemap_link_bundle_load('menu', $menu_item['menu_name']);
 
   $menu_item['xmlsitemap'] += array(
     'type' => 'menu',

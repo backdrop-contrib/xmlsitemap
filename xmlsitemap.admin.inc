@@ -271,6 +271,7 @@ function xmlsitemap_rebuild_form_submit($form, &$form_state) {
 function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info) {
   $priorities = xmlsitemap_get_priority_options(NULL, FALSE);
   $statuses = xmlsitemap_get_status_options(NULL);
+  $destination = drupal_get_destination();
 
   $rows = array();
   $totals = array('total' => 0, 'indexed' => 0, 'visible' => 0);
@@ -282,8 +283,15 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
     $totals['visible'] += $status['visible'];
 
     $row = array();
-    if (xmlsitemap_can_admin_bundle($bundle_info) && !empty($bundle_info['admin']['real path'])) {
-      $row[] = l($bundle_info['label'], $bundle_info['admin']['real path'], array('query' => drupal_get_destination()));
+    if (xmlsitemap_can_admin_bundle($entity, $bundle) && !empty($bundle_info['admin']['real path'])) {
+      $path = $bundle_info['admin']['real path'];
+      $options = array('query' => $destination);
+      if (module_exists('dialog')) {
+        $form['#attached']['library']['dialog'] = array('dialog', 'dialog');
+        $path = "admin/config/search/xmlsitemap/settings/$entity/$bundle/nojs";
+        $options['attributes']['class'] = array('use-dialog', 'use-ajax');
+      }
+      $row[] = l($bundle_info['label'], $path, $options);
     }
     else {
       $row[] = $bundle_info['label'];
@@ -341,6 +349,12 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
 function xmlsitemap_add_link_bundle_settings(array &$form, array $form_state, $entity, $bundle) {
   xmlsitemap_link_bundle_settings_form($form, $form_state, $entity, $bundle, FALSE);
 
+  // Manually call drupal_alter() on the $options form since it was not called
+  // using drupal_get_form().
+  $form_id = 'xmlsitemap_link_bundle_settings_form';
+  drupal_alter('form_' . $form_id, $form, $form_state);
+  drupal_alter('form', $form, $form_state, $form_id);
+
   // Make the base element a fieldset.
   $form['xmlsitemap'] += array(
     '#type' => 'fieldset',
@@ -363,7 +377,7 @@ function xmlsitemap_add_link_bundle_settings(array &$form, array $form_state, $e
 }
 
 function xmlsitemap_link_bundle_settings_form(array &$form, array $form_state, $entity, $bundle, $buttons = TRUE) {
-  $settings = xmlsitemap_link_bundle_settings_load($entity, $bundle);
+  $settings = xmlsitemap_link_bundle_load($entity, $bundle);
 
   $form['xmlsitemap'] = array(
     '#tree' => TRUE,
@@ -414,6 +428,32 @@ function xmlsitemap_link_bundle_settings_form_submit($form, $form_state) {
   drupal_set_message(t('Settings for the @bundle-label %bundle have been saved.', array('@bundle-label' => drupal_strtolower($info['bundle label']), '%bundle' => $info['bundles'][$bundle]['label'])));
 }
 
+function xmlsitemap_bundle_settings_dialog($entity, $bundle, $ajax = FALSE) {
+  $info = xmlsitemap_get_link_info($entity);
+
+  if (!$ajax) {
+    if (!empty($info['bundles'][$bundle]['admin']['real path'])) {
+      $destination = drupal_get_destination();
+      unset($_GET['destination']);
+      drupal_goto($info['bundles'][$bundle]['admin']['real path'], array('query' => $destination));
+    }
+    return MENU_NOT_FOUND;
+  }
+
+  if (!isset($info['bundles'][$bundle]) || !xmlsitemap_can_admin_bundle($entity, $bundle)) {
+    $output = array();
+    $output[] = dialog_command_display(t('You are not authorized to access this page.'), array('title' => t('Access denied')));
+    ajax_render($output);
+  }
+
+  $content = drupal_get_form('xmlsitemap_link_bundle_settings_form', $entity, $bundle);
+  $options = array(
+    'title' => t('@bundle XML sitemap settings', array('@bundle' => $info['bundles'][$bundle]['label'])),
+  );
+  $output[] = dialog_command_display($content, $options);
+  ajax_render($output);
+}
+
 /**
  * Add a link's XML sitemap options to the link's form.
  *
@@ -443,7 +483,7 @@ function xmlsitemap_add_form_link_options(&$form, $link) {
   }
 
   $bundle_info = $info['bundles'][$link['subtype']];
-  if (xmlsitemap_can_admin_bundle($bundle_info) && !empty($bundle_info['admin']['real path'])) {
+  if (xmlsitemap_can_admin_bundle($link['type'], $link['subtype']) && !empty($bundle_info['admin']['real path'])) {
     $form['xmlsitemap']['description'] = array(
       '#prefix' => '<div class="description">',
       '#suffix' => '</div>',

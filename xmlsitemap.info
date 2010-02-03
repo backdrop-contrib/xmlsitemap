@@ -10,6 +10,7 @@ files[] = xmlsitemap.drush.inc
 files[] = xmlsitemap.pages.inc
 files[] = xmlsitemap.install
 files[] = xmlsitemap.test
+recommends[] = dialog
 recommends[] = robotstxt
 recommends[] = vertical_tabs
 configure = admin/config/search/xmlsitemap
