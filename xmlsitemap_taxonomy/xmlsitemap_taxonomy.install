@@ -65,5 +65,3 @@ function xmlsitemap_taxonomy_update_6200() {
   variable_del('xmlsitemap_taxonomy_include_empty_terms');
   variable_del('xmlsitemap_taxonomy_calculate_priority');
 }
-
-// @todo Convert {xmlsitemap}.subtype from vid to vocabulary_machine_name.

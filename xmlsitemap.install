@@ -492,4 +492,19 @@ function xmlsitemap_update_18() {
   db_change_field('xmlsitemap', 'subtype', 'subtype', $field);
 }
 
-//@todo Update {xmlsitemap}.language from '' to LANGUAGE_NONE.
+/**
+ * Empty update.
+ */
+function xmlsitemap_update_6200() {
+  return array();
+}
+
+/**
+ * Update empty string languages to LANGUAGE_NONE.
+ */
+function xmlsitemap_update_7200() {
+  db_update('xmlsitemap')
+    ->fields(array('language' => LANGUAGE_NONE))
+    ->condition('language' => '')
+    ->execute();
+}

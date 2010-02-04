@@ -67,3 +67,9 @@ function xmlsitemap_engines_update_4() {
   }
   variable_set('xmlsitemap_engines_engines', $engines);
 }
+
+/**
+ * Empty update.
+ */
+function xmlsitemap_engines_update_6200() {
+}
