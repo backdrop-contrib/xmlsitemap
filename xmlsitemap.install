@@ -505,6 +505,6 @@ function xmlsitemap_update_6200() {
 function xmlsitemap_update_7200() {
   db_update('xmlsitemap')
     ->fields(array('language' => LANGUAGE_NONE))
-    ->condition('language' => '')
+    ->condition('language', '')
     ->execute();
 }
