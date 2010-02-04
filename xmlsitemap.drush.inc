@@ -40,7 +40,7 @@ function drush_xmlsitemap_regenerate() {
   $vars = array(
     '@timer' => timer_read('xmlsitemap_regenerate'),
     '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
-   );
+  );
   drush_print(dt('XML sitemap files regenerated in @timer ms. Peak memory usage: @memory-peak.', $vars));
 }
 
@@ -54,10 +54,29 @@ function drush_xmlsitemap_rebuild() {
   // Set the rebuild flag incase something fails during the rebuild.
   variable_set('xmlsitemap_rebuild_needed', TRUE);
 
+  // Build the list of rebuildable entities.
+  $entities = xmlsitemap_get_link_info();
+  $callbacks = $options = array();
+  foreach ($entities as $entity => $info) {
+    if (empty($info['xmlsitemap']['rebuild callback'])) {
+      // If the entity is missing a rebuild callback, skip.
+      continue;
+    }
+    if (!empty($info['object keys']['bundle']) && !xmlsitemap_get_link_type_enabled_bundles($entity)) {
+      // If the entity has bundles, but no enabled bundles, skip since
+      // rebuilding wouldn't get any links.
+      continue;
+    }
+    else {
+      // Build the list of callbacks and options for the form and batch
+      // processing.
+      $callbacks[$entity] = $info['xmlsitemap']['rebuild callback'];
+      $options[$entity] = $info['label'];
+    }
+  }
+
   // Build the batch array.
-  $modules = module_implements('xmlsitemap_link_info');
-  $batch = xmlsitemap_rebuild_batch($modules, TRUE);
-  $batch['progressive'] = FALSE;
+  $batch = xmlsitemap_rebuild_batch(array_keys($options), $callbacks, TRUE);
   batch_set($batch);
 
   // We need to manually set the progressive variable again.
@@ -71,7 +90,7 @@ function drush_xmlsitemap_rebuild() {
   $vars = array(
     '@timer' => timer_read('xmlsitemap_rebuild'),
     '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
-   );
+  );
   drush_print(dt('XML sitemap files rebuilt in @timer ms. Peak memory usage: @memory-peak.', $vars));
 }
 
