@@ -16,12 +16,6 @@
 function xmlsitemap_output_chunk($chunk = 0) {
   global $language;
 
-  // @todo Remove this from the final version?
-  if (isset($_GET['refresh']) && user_access('administer xmlsitemap')) {
-    module_load_include('inc', 'xmlsitemap');
-    xmlsitemap_generate($chunk, $language);
-  }
-
   $file = xmlsitemap_get_chunk_file($chunk, $language->language);
   xmlsitemap_output_file($file);
 }
@@ -120,5 +114,5 @@ function xmlsitemap_output_xsl() {
   // Output the XSL content.
   drupal_add_http_header('Content-type', 'application/xml; charset=utf-8');
   drupal_add_http_header('X-Robots-Tag', 'noindex, follow');
-  echo $xsl_content;
+  print $xsl_content;
 }
