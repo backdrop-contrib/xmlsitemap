@@ -294,8 +294,7 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
     $totals['visible'] += $status['visible'];
 
     $row = array();
-    if (xmlsitemap_can_admin_bundle($entity, $bundle) && !empty($bundle_info['admin']['real path'])) {
-      $path = $bundle_info['admin']['real path'];
+    if (xmlsitemap_can_admin_bundle($entity, $bundle) && $path = xmlsitemap_get_bundle_path($entity, $bundle)) {
       $options = array('query' => $destination);
       if (module_exists('dialog')) {
         $form['#attached']['library']['dialog'] = array('dialog', 'dialog');
@@ -443,10 +442,10 @@ function xmlsitemap_bundle_settings_dialog($entity, $bundle, $ajax = FALSE) {
   $info = xmlsitemap_get_link_info($entity);
 
   if (!$ajax) {
-    if (!empty($info['bundles'][$bundle]['admin']['real path'])) {
+    if ($path = xmlsitemap_get_bundle_path($entity, $bundle)) {
       $destination = drupal_get_destination();
       unset($_GET['destination']);
-      drupal_goto($info['bundles'][$bundle]['admin']['real path'], array('query' => $destination));
+      drupal_goto($path, array('query' => $destination));
     }
     return MENU_NOT_FOUND;
   }
@@ -494,11 +493,11 @@ function xmlsitemap_add_form_link_options(&$form, $link) {
   }
 
   $bundle_info = $info['bundles'][$link['subtype']];
-  if (xmlsitemap_can_admin_bundle($link['type'], $link['subtype']) && !empty($bundle_info['admin']['real path'])) {
+  if (xmlsitemap_can_admin_bundle($link['type'], $link['subtype']) && $path = xmlsitemap_get_bundle_path($entity, $bundle)) {
     $form['xmlsitemap']['description'] = array(
       '#prefix' => '<div class="description">',
       '#suffix' => '</div>',
-      '#markup' => t('The default XML sitemap settings for this @bundle can be changed <a href="@link-type">here</a>.', array('@bundle' => drupal_strtolower($info['bundle label']), '@link-type' => url($bundle_info['admin']['real path'], array('query' => drupal_get_destination())))),
+      '#markup' => t('The default XML sitemap settings for this @bundle can be changed <a href="@link-type">here</a>.', array('@bundle' => drupal_strtolower($info['bundle label']), '@link-type' => url($path, array('query' => drupal_get_destination())))),
     );
   }
 
