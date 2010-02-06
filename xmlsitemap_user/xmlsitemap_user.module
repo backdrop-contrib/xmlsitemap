@@ -9,7 +9,6 @@ function xmlsitemap_user_entity_info_alter(&$entity_info) {
   $entity_info['user']['xmlsitemap'] = array(
     'process callback' => 'xmlsitemap_user_xmlsitemap_process_user_links',
   );
-  $entity_info['user']['bundles']['user']['xmlsitemap'] = array('status' => 1);
 }
 
 /**
@@ -61,6 +60,27 @@ function xmlsitemap_user_user_update(&$edit, $account, $category) {
 
 function xmlsitemap_user_user_cancel($edit, $account, $method) {
   xmlsitemap_link_delete('user', $account->uid);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see user_admin_settings()
+ * @see xmlsitemap_add_link_bundle_settings()
+ */
+function xmlsitemap_user_form_user_admin_settings_alter(&$form, $form_state) {
+  module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
+  xmlsitemap_add_link_bundle_settings($form, $form_state, 'user', 'user');
+  $form['email_title'] += array('#weight' => 10);
+  $form['email'] += array('#weight' => 10);
+  array_unshift($form['#submit'], 'xmlsitemap_user_user_admin_settings_submit');
+}
+
+function xmlsitemap_user_user_admin_settings_submit($form, &$form_state) {
+  xmlsitemap_link_bundle_settings_save('user', 'user', $form_state['values']['xmlsitemap']);
+
+  // Do not allow node_type_form_submit() to run variable_set() on this.
+  unset($form_state['values']['xmlsitemap']);
 }
 
 /**
