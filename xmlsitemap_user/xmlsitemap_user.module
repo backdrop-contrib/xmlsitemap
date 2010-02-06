@@ -10,33 +10,7 @@ function xmlsitemap_user_entity_info_alter(&$entity_info) {
     'process callback' => 'xmlsitemap_user_xmlsitemap_process_user_links',
   );
   $entity_info['user']['bundles']['user']['xmlsitemap'] = array('status' => 1);
-  dpm($entity_info);
 }
-
-/**
- * Implements hook_xmlsitemap_link_info().
- */
-/*function xmlsitemap_user_xmlsitemap_link_info() {
-  $types['user'] = array(
-    'label' => t('Users'),
-    'bundle label' => t('Users'),
-    'base table' => 'users',
-    'object keys' => array(
-      'id' => 'uid',
-    ),
-    'bundles' => array(
-      'user' => array(
-        'label' => t('Users'),
-      ),
-    ),
-    'path callback' => 'user_path',
-    'load hook' => 'user_load',
-    'xmlsitemap' => array(
-      'process callback' => 'xmlsitemap_user_xmlsitemap_process_user_links',
-    ),
-  );
-  return $types;
-}*/
 
 /**
  * Implements hook_cron().
