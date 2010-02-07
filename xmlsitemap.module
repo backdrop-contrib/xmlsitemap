@@ -862,6 +862,10 @@ function xmlsitemap_link_frontpage_settings(&$form) {
   return $form;
 }
 
+function xmlsitemap_get_file_from_context(array $context, $chunk = 'index') {
+  return xmlsitemap_get_directory() . '/' . md5(serialize($context)) . "-{$chunk}.xml";
+}
+
 function xmlsitemap_get_directory() {
   $directory = &drupal_static(__FUNCTION__);
 
