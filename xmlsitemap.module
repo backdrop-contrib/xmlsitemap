@@ -969,6 +969,7 @@ function xmlsitemap_get_link_type_indexed_status($entity_type, $bundle = '') {
 
   $total = db_select($info['base table']);
   $total->addField('xmlsitemap', $info['object keys']['id']);
+  $total->condition($info['object keys']['id'], 0, '>');
   if (!empty($info['object keys']['bundle'])) {
     $total->condition($info['object keys']['bundle'], $bundle);
   }
