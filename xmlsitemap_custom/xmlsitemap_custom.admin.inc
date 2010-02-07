@@ -63,7 +63,7 @@ function xmlsitemap_custom_list_links() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
-    '#empty' => t('No custom links available. <a href="@link">Add custom link</a>.', array('@link' => url('admin/config/search/xmlsitemap/custom/add', array('query' => $destination)))),
+    '#empty' => t('No custom links available.') . ' ' . l(t('Add custom link'), 'admin/config/search/xmlsitemap/custom/add', array('query' => $destination)),
   );
   $build['xmlsitemap_custom_pager'] = array('#theme' => 'pager');
   return $build;
