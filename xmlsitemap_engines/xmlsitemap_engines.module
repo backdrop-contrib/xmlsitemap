@@ -146,12 +146,14 @@ function xmlsitemap_engines_get_engine_info($engine = NULL) {
     if ($cached = cache_get('xmlsitemap:engines:' . $language->language)) {
       $engines = $cached->data;
     }
-    // Fetch the results of all hook_xmlsitemap_engine_info() implementations.
-    $engines = module_invoke_all('xmlsitemap_engine_info');
-    // Allow other modulse to alter the engine info.
-    drupal_alter('xmlsitemap_engine_info', $engines);
-    // Cache by language since engine names are translated.
-    cache_set('xmlsitemap:engines:' . $language->language, $engines);
+    else {
+      // Fetch the results of all hook_xmlsitemap_engine_info() implementations.
+      $engines = module_invoke_all('xmlsitemap_engine_info');
+      // Allow other modulse to alter the engine info.
+      drupal_alter('xmlsitemap_engine_info', $engines);
+      // Cache by language since engine names are translated.
+      cache_set('xmlsitemap:engines:' . $language->language, $engines);
+    }
   }
 
   if (isset($engine)) {
