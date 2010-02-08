@@ -2,6 +2,16 @@
 // $Id$
 
 /**
+ * Implements hook_xmlsitemap_context().
+ */
+function xmlsitemap_i18n_xmlsitemap_context() {
+  global $language;
+
+  $context['language'] = $language->language;
+  return $context;
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  *
  * Set the regeneration needed flag if multilingual settings are changed.
