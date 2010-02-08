@@ -86,240 +86,240 @@
  */
 
 (function($) {
-	$.extend({
-		tablesorter: new function() {
-
-			var parsers = [], widgets = [];
-
-			this.defaults = {
-				cssHeader: "header",
-				cssAsc: "headerSortUp",
-				cssDesc: "headerSortDown",
-				sortInitialOrder: "asc",
-				sortMultiSortKey: "shiftKey",
-				sortForce: null,
-				sortAppend: null,
-				textExtraction: "simple",
-				parsers: {},
-				widgets: [],
-				widgetZebra: {css: ["even","odd"]},
-				headers: {},
-				widthFixed: false,
-				cancelSelection: true,
-				sortList: [],
-				headerList: [],
-				dateFormat: "us",
-				decimal: '.',
-				debug: false
-			};
-
-			/* debuging utils */
-			function benchmark(s,d) {
-				log(s + "," + (new Date().getTime() - d.getTime()) + "ms");
-			}
-
-			this.benchmark = benchmark;
-
-			function log(s) {
-				if (typeof console != "undefined" && typeof console.debug != "undefined") {
-					console.log(s);
-				} else {
-					alert(s);
-				}
-			}
+  $.extend({
+    tablesorter: new function() {
+
+      var parsers = [], widgets = [];
+
+      this.defaults = {
+        cssHeader: "header",
+        cssAsc: "headerSortUp",
+        cssDesc: "headerSortDown",
+        sortInitialOrder: "asc",
+        sortMultiSortKey: "shiftKey",
+        sortForce: null,
+        sortAppend: null,
+        textExtraction: "simple",
+        parsers: {},
+        widgets: [],
+        widgetZebra: {css: ["even","odd"]},
+        headers: {},
+        widthFixed: false,
+        cancelSelection: true,
+        sortList: [],
+        headerList: [],
+        dateFormat: "us",
+        decimal: '.',
+        debug: false
+      };
+
+      /* debuging utils */
+      function benchmark(s,d) {
+        log(s + "," + (new Date().getTime() - d.getTime()) + "ms");
+      }
+
+      this.benchmark = benchmark;
+
+      function log(s) {
+        if (typeof console != "undefined" && typeof console.debug != "undefined") {
+          console.log(s);
+        } else {
+          alert(s);
+        }
+      }
 
-			/* parsers utils */
-			function buildParserCache(table,$headers) {
+      /* parsers utils */
+      function buildParserCache(table,$headers) {
 
-				if(table.config.debug) { var parsersDebug = ""; }
-
-				var rows = table.tBodies[0].rows;
-
-				if(table.tBodies[0].rows[0]) {
-
-					var list = [], cells = rows[0].cells, l = cells.length;
-
-					for (var i=0;i < l; i++) {
-						var p = false;
-
-						if($.metadata && ($($headers[i]).metadata() && $($headers[i]).metadata().sorter)  ) {
-
-							p = getParserById($($headers[i]).metadata().sorter);
-
-						} else if((table.config.headers[i] && table.config.headers[i].sorter)) {
-
-							p = getParserById(table.config.headers[i].sorter);
-						}
-						if(!p) {
-							p = detectParserForColumn(table,cells[i]);
-						}
-
-						if(table.config.debug) { parsersDebug += "column:" + i + " parser:" +p.id + "\n"; }
-
-						list.push(p);
-					}
-				}
-
-				if(table.config.debug) { log(parsersDebug); }
-
-				return list;
-			};
-
-			function detectParserForColumn(table,node) {
-				var l = parsers.length;
-				for(var i=1; i < l; i++) {
-					if(parsers[i].is($.trim(getElementText(table.config,node)),table,node)) {
-						return parsers[i];
-					}
-				}
-				// 0 is always the generic parser (text)
-				return parsers[0];
-			}
+        if(table.config.debug) { var parsersDebug = ""; }
+
+        var rows = table.tBodies[0].rows;
+
+        if(table.tBodies[0].rows[0]) {
+
+          var list = [], cells = rows[0].cells, l = cells.length;
+
+          for (var i=0;i < l; i++) {
+            var p = false;
+
+            if($.metadata && ($($headers[i]).metadata() && $($headers[i]).metadata().sorter)  ) {
+
+              p = getParserById($($headers[i]).metadata().sorter);
+
+            } else if((table.config.headers[i] && table.config.headers[i].sorter)) {
+
+              p = getParserById(table.config.headers[i].sorter);
+            }
+            if(!p) {
+              p = detectParserForColumn(table,cells[i]);
+            }
+
+            if(table.config.debug) { parsersDebug += "column:" + i + " parser:" +p.id + "\n"; }
+
+            list.push(p);
+          }
+        }
+
+        if(table.config.debug) { log(parsersDebug); }
+
+        return list;
+      };
+
+      function detectParserForColumn(table,node) {
+        var l = parsers.length;
+        for(var i=1; i < l; i++) {
+          if(parsers[i].is($.trim(getElementText(table.config,node)),table,node)) {
+            return parsers[i];
+          }
+        }
+        // 0 is always the generic parser (text)
+        return parsers[0];
+      }
 
-			function getParserById(name) {
-				var l = parsers.length;
-				for(var i=0; i < l; i++) {
-					if(parsers[i].id.toLowerCase() == name.toLowerCase()) {
-						return parsers[i];
-					}
-				}
-				return false;
-			}
+      function getParserById(name) {
+        var l = parsers.length;
+        for(var i=0; i < l; i++) {
+          if(parsers[i].id.toLowerCase() == name.toLowerCase()) {
+            return parsers[i];
+          }
+        }
+        return false;
+      }
 
-			/* utils */
-			function buildCache(table) {
+      /* utils */
+      function buildCache(table) {
 
-				if(table.config.debug) { var cacheTime = new Date(); }
+        if(table.config.debug) { var cacheTime = new Date(); }
 
 
-				var totalRows = (table.tBodies[0] && table.tBodies[0].rows.length) || 0,
-					totalCells = (table.tBodies[0].rows[0] && table.tBodies[0].rows[0].cells.length) || 0,
-					parsers = table.config.parsers,
-					cache = {row: [], normalized: []};
+        var totalRows = (table.tBodies[0] && table.tBodies[0].rows.length) || 0,
+          totalCells = (table.tBodies[0].rows[0] && table.tBodies[0].rows[0].cells.length) || 0,
+          parsers = table.config.parsers,
+          cache = {row: [], normalized: []};
 
-					for (var i=0;i < totalRows; ++i) {
+          for (var i=0;i < totalRows; ++i) {
 
-						/** Add the table data to main data array */
-						var c = table.tBodies[0].rows[i], cols = [];
+            /** Add the table data to main data array */
+            var c = table.tBodies[0].rows[i], cols = [];
 
-						cache.row.push($(c));
+            cache.row.push($(c));
 
-						for(var j=0; j < totalCells; ++j) {
-							cols.push(parsers[j].format(getElementText(table.config,c.cells[j]),table,c.cells[j]));
-						}
+            for(var j=0; j < totalCells; ++j) {
+              cols.push(parsers[j].format(getElementText(table.config,c.cells[j]),table,c.cells[j]));
+            }
 
-						cols.push(i); // add position for rowCache
-						cache.normalized.push(cols);
-						cols = null;
-					};
+            cols.push(i); // add position for rowCache
+            cache.normalized.push(cols);
+            cols = null;
+          };
 
-				if(table.config.debug) { benchmark("Building cache for " + totalRows + " rows:", cacheTime); }
+        if(table.config.debug) { benchmark("Building cache for " + totalRows + " rows:", cacheTime); }
 
-				return cache;
-			};
+        return cache;
+      };
 
-			function getElementText(config,node) {
+      function getElementText(config,node) {
 
-				if(!node) return "";
+        if(!node) return "";
 
-				var t = "";
+        var t = "";
 
-				if(config.textExtraction == "simple") {
-					if(node.childNodes[0] && node.childNodes[0].hasChildNodes()) {
-						t = node.childNodes[0].innerHTML;
-					} else {
-						t = node.innerHTML;
-					}
-				} else {
-					if(typeof(config.textExtraction) == "function") {
-						t = config.textExtraction(node);
-					} else {
-						t = $(node).text();
-					}
-				}
-				return t;
-			}
+        if(config.textExtraction == "simple") {
+          if(node.childNodes[0] && node.childNodes[0].hasChildNodes()) {
+            t = node.childNodes[0].innerHTML;
+          } else {
+            t = node.innerHTML;
+          }
+        } else {
+          if(typeof(config.textExtraction) == "function") {
+            t = config.textExtraction(node);
+          } else {
+            t = $(node).text();
+          }
+        }
+        return t;
+      }
 
-			function appendToTable(table,cache) {
+      function appendToTable(table,cache) {
 
-				if(table.config.debug) {var appendTime = new Date()}
+        if(table.config.debug) {var appendTime = new Date()}
 
-				var c = cache,
-					r = c.row,
-					n= c.normalized,
-					totalRows = n.length,
-					checkCell = (n[0].length-1),
-					tableBody = $(table.tBodies[0]),
-					rows = [];
+        var c = cache,
+          r = c.row,
+          n= c.normalized,
+          totalRows = n.length,
+          checkCell = (n[0].length-1),
+          tableBody = $(table.tBodies[0]),
+          rows = [];
 
-				for (var i=0;i < totalRows; i++) {
-					rows.push(r[n[i][checkCell]]);
-					if(!table.config.appender) {
+        for (var i=0;i < totalRows; i++) {
+          rows.push(r[n[i][checkCell]]);
+          if(!table.config.appender) {
 
-						var o = r[n[i][checkCell]];
-						var l = o.length;
-						for(var j=0; j < l; j++) {
+            var o = r[n[i][checkCell]];
+            var l = o.length;
+            for(var j=0; j < l; j++) {
 
-							tableBody[0].appendChild(o[j]);
+              tableBody[0].appendChild(o[j]);
 
-						}
+            }
 
-						//tableBody.append(r[n[i][checkCell]]);
-					}
-				}
+            //tableBody.append(r[n[i][checkCell]]);
+          }
+        }
 
-				if(table.config.appender) {
+        if(table.config.appender) {
 
-					table.config.appender(table,rows);
-				}
+          table.config.appender(table,rows);
+        }
 
-				rows = null;
+        rows = null;
 
-				if(table.config.debug) { benchmark("Rebuilt table:", appendTime); }
+        if(table.config.debug) { benchmark("Rebuilt table:", appendTime); }
 
-				//apply table widgets
-				applyWidget(table);
+        //apply table widgets
+        applyWidget(table);
 
-				// trigger sortend
-				setTimeout(function() {
-					$(table).trigger("sortEnd");
-				},0);
+        // trigger sortend
+        setTimeout(function() {
+          $(table).trigger("sortEnd");
+        },0);
 
-			};
+      };
 
-			function buildHeaders(table) {
+      function buildHeaders(table) {
 
-				if(table.config.debug) { var time = new Date(); }
+        if(table.config.debug) { var time = new Date(); }
 
-				var meta = ($.metadata) ? true : false, tableHeadersRows = [];
+        var meta = ($.metadata) ? true : false, tableHeadersRows = [];
 
-				for(var i = 0; i < table.tHead.rows.length; i++) { tableHeadersRows[i]=0; };
+        for(var i = 0; i < table.tHead.rows.length; i++) { tableHeadersRows[i]=0; };
 
-				$tableHeaders = $("thead th",table);
+        $tableHeaders = $("thead th",table);
 
-				$tableHeaders.each(function(index) {
+        $tableHeaders.each(function(index) {
 
-					this.count = 0;
-					this.column = index;
-					this.order = formatSortingOrder(table.config.sortInitialOrder);
+          this.count = 0;
+          this.column = index;
+          this.order = formatSortingOrder(table.config.sortInitialOrder);
 
-					if(checkHeaderMetadata(this) || checkHeaderOptions(table,index)) this.sortDisabled = true;
+          if(checkHeaderMetadata(this) || checkHeaderOptions(table,index)) this.sortDisabled = true;
 
-					if(!this.sortDisabled) {
-						$(this).addClass(table.config.cssHeader);
-					}
+          if(!this.sortDisabled) {
+            $(this).addClass(table.config.cssHeader);
+          }
 
-					// add cell to headerList
-					table.config.headerList[index]= this;
-				});
+          // add cell to headerList
+          table.config.headerList[index]= this;
+        });
 
-				if(table.config.debug) { benchmark("Built headers:", time); log($tableHeaders); }
+        if(table.config.debug) { benchmark("Built headers:", time); log($tableHeaders); }
 
-				return $tableHeaders;
+        return $tableHeaders;
 
-			};
+      };
 
-		   	function checkCellColSpan(table, rows, row) {
+        function checkCellColSpan(table, rows, row) {
                 var arr = [], r = table.tHead.rows, c = r[row].cells;
 
 				for(var i=0; i < c.length; i++) {
