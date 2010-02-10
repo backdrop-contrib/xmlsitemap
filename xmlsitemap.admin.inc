@@ -469,8 +469,27 @@ function xmlsitemap_bundle_settings_dialog($entity, $bundle, $ajax = FALSE) {
  *
  * @todo Add changefreq overridability.
  */
-function xmlsitemap_add_form_link_options(&$form, $link) {
-  $info = xmlsitemap_get_link_info($link['type']);
+function xmlsitemap_add_form_link_options(&$form, $entity, $bundle, $id) {
+  $info = xmlsitemap_get_link_info($entity);
+
+  if (!$info || empty($info['bundles'][$bundle])) {
+    return;
+  }
+
+  if (!$link = xmlsitemap_link_load($entity, $id)) {
+    $link = array();
+  }
+
+  $settings = xmlsitemap_link_bundle_load($entity, $bundle);
+  $link += array(
+    'access' => 1,
+    'status' => $settings['status'],
+    'status_default' => $settings['status'],
+    'status_override' => 0,
+    'priority' => $settings['priority'],
+    'priority_default' => $settings['priority'],
+    'priority_override' => 0,
+  );
 
   $form['xmlsitemap'] = array(
     '#type' => 'fieldset',
@@ -478,7 +497,7 @@ function xmlsitemap_add_form_link_options(&$form, $link) {
     '#title' => t('XML sitemap'),
     '#collapsible' => TRUE,
     '#collapsed' => !$link['status_override'] && !$link['priority_override'],
-    '#access' => user_access('administer xmlsitemap'),
+    '#access' => user_access('administer xmlsitemap') || xmlsitemap_can_admin_bundle($entity, $bundle),
     '#group' => 'additional_settings',
     '#attached' => array(
       'js' => array(
@@ -492,8 +511,8 @@ function xmlsitemap_add_form_link_options(&$form, $link) {
     unset($form['xmlsitemap']['#attached']['js']['vertical-tabs']);
   }
 
-  $bundle_info = $info['bundles'][$link['subtype']];
-  if (xmlsitemap_can_admin_bundle($link['type'], $link['subtype']) && $path = xmlsitemap_get_bundle_path($link['type'], $link['subtype'])) {
+  $bundle_info = $info['bundles'][$bundle];
+  if (xmlsitemap_can_admin_bundle($entity, $bundle) && $path = xmlsitemap_get_bundle_path($entity, $bundle)) {
     $form['xmlsitemap']['description'] = array(
       '#prefix' => '<div class="description">',
       '#suffix' => '</div>',
@@ -503,7 +522,7 @@ function xmlsitemap_add_form_link_options(&$form, $link) {
 
   // Show a warning if the link is not accessible and will not be included in
   // the sitemap.
-  if (!$link['access']) {
+  if ($id && !$link['access']) {
     $form['xmlsitemap']['warning'] = array(
       '#type' => 'markup',
       '#prefix' => '<p><strong>',

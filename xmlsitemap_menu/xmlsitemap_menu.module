@@ -102,6 +102,16 @@ function xmlsitemap_menu_form_menu_edit_menu_alter(&$form, $form_state) {
 //  xmlsitemap_menu_xmlsitemap_process_menu_links($mlids);
 //}
 
+function xmlsitemap_menu_form_menu_edit_item_alter(&$form, $form_state) {
+  $menu_name = $form['parent']['#default_value'];
+  $menu_name = substr($menu_name, 0, strpos($menu_name, ':'));
+
+  // Add the link options.
+  module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
+  xmlsitemap_add_form_link_options($form, 'menu', $menu_name, $form['mlid']['#value']);
+  $form['xmlsitemap']['#weight'] = 30;
+}
+
 /**
  * Implements hook_menu_insert().
  */
@@ -175,6 +185,12 @@ function xmlsitemap_menu_create_link(array $menu_item) {
     'priority_default' => $settings['priority'],
     'priority_override' => 0,
   );
+
+  //if (!isset($menu_item['access'])) {
+  //  xmlsitemap_switch_user(0);
+  //  $menu_item = menu_link_load($menu_item['mlid']);
+  //  xmlsitemap_restore_user();
+  //}
 
   // The following values must always be checked because they are volatile.
   $menu_item['xmlsitemap']['subtype'] = $menu_item['menu_name'];

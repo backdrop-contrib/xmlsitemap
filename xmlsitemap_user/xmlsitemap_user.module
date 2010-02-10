@@ -5,7 +5,7 @@
  * Implements hook_entity_info_alter().
  */
 function xmlsitemap_user_entity_info_alter(&$entity_info) {
-  $entity_info['user']['bundle label'] = t('Users');
+  $entity_info['user']['bundle label'] = t('User');
   $entity_info['user']['xmlsitemap'] = array(
     'process callback' => 'xmlsitemap_user_xmlsitemap_process_user_links',
   );
@@ -43,23 +43,33 @@ function xmlsitemap_user_xmlsitemap_process_user_links(array $uids) {
 }
 
 /**
- * Implements hook_user_insert().
+ * Implements hook_user_presave().
  */
-function xmlsitemap_user_user_insert(&$edit, $account, $category) {
+function xmlsitemap_user_user_presave(&$edit, $account, $category) {
   $link = xmlsitemap_user_create_link($account);
+  if (isset($edit['xmlsitemap'])) {
+    $link = $edit['xmlsitemap'] + $link;
+    unset($edit['xmlsitemap']);
+  }
   xmlsitemap_save_link($link);
 }
 
 /**
- * Implements hook_user_insert().
+ * Implements hook_user_cancel().
  */
-function xmlsitemap_user_user_update(&$edit, $account, $category) {
-  $link = xmlsitemap_user_create_link($account);
-  xmlsitemap_save_link($link);
-}
-
 function xmlsitemap_user_user_cancel($edit, $account, $method) {
   xmlsitemap_link_delete('user', $account->uid);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see user_admin_settings()
+ * @see xmlsitemap_add_link_bundle_settings()
+ */
+function xmlsitemap_user_form_user_profile_form_alter(&$form, $form_state) {
+  module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
+  xmlsitemap_add_form_link_options($form, 'user', 'user', $form['#user']->uid);
 }
 
 /**
@@ -79,7 +89,7 @@ function xmlsitemap_user_form_user_admin_settings_alter(&$form, $form_state) {
 function xmlsitemap_user_user_admin_settings_submit($form, &$form_state) {
   xmlsitemap_link_bundle_settings_save('user', 'user', $form_state['values']['xmlsitemap']);
 
-  // Do not allow node_type_form_submit() to run variable_set() on this.
+  // Do not allow system_settings_form_submit() to run variable_set() on this.
   unset($form_state['values']['xmlsitemap']);
 }
 
@@ -106,7 +116,7 @@ function xmlsitemap_user_create_link(stdClass &$account) {
     'subtype' => 'user',
     'id' => $account->uid,
     'loc' => 'user/' . $account->uid,
-    'status' => 1, // @todo $settings['status'] defaults to 0 so fix this
+    'status' => $settings['status'],
     'status_default' => $settings['status'],
     'status_override' => 0,
     'priority' => $settings['priority'],
@@ -115,7 +125,7 @@ function xmlsitemap_user_create_link(stdClass &$account) {
   );
 
   // The following values must always be checked because they are volatile.
-  $account->xmlsitemap['access'] = $account->uid && $account->status && $account->access;
+  $account->xmlsitemap['access'] = $account->uid && $account->status && $account->login && $account->access;
   $account->xmlsitemap['language'] = !empty($account->language) ? $account->language : LANGUAGE_NONE;
 
   return $account->xmlsitemap;
