@@ -11,6 +11,42 @@ function xmlsitemap_i18n_xmlsitemap_context() {
   return $context;
 }
 
+function xmlsitemap_i18n_xmlsitemap_context_url_options(array $context) {
+  $options = array();
+  if (isset($context['language'])) {
+    $options['language'] = xmlsitemap_language_load($context['language']);
+  }
+  return $options;
+}
+
+/**
+ * Implements hook_xmlsitemap_context().
+ */
+function xmlsitemap_i18n_xmlsitemap_context_fallback() {
+  $context['language'] = language_default('language');
+  return $context;
+}
+
+function xmlsitemap_i18n_xmlsitemap_context_info() {
+  $context['language'] = array(
+    'label' => t('Language'),
+    'summary callback' => 'locale_language_name',
+    'settings callback' => 'xmlsitemap_i18n_xmlsitemap_language_context_settings',
+  );
+  return $context;
+}
+
+function xmlsitemap_i18n_xmlsitemap_language_context_settings(stdClass $sitemap) {
+  $form['language'] = array(
+    '#type' => 'select',
+    '#title' => t('Language'),
+    '#options' => locale_language_list(),
+    '#default_value' => issset($sitemap->context['language']) ? $sitemap->context['language'] : '',
+    '#description' => t("Each language's sitemap will respect the <a href=\"@i18n-settings\">multilingual content selection mode</a>.", array('@i18n-settings' => url('admin/settings/language/i18n'))),
+  );
+  return $form;
+}
+
 /**
  * Implements hook_form_FORM_ID_alter().
  *
@@ -36,9 +72,15 @@ function xmlsitemap_i18n_form_xmlsitemap_settings_form_alter(&$form, $form_state
  * @see i18n_db_rewrite_where()
  */
 function xmlsitemap_i18n_query_xmlsitemap_alter(QueryAlterableInterface $query) {
-  // Get languages to simplify query building.
   $mode = variable_get('i18n_selection_mode', 'simple');
-  $current = $query->getMetaData('language')->language;
+  $context = $query->getMetaData('context');
+
+  if (!isset($context['language']) || $mode == 'off') {
+    return;
+  }
+
+  // Get languages to simplify query building.
+  $current = $context['language'];
   $default = i18n_default_language();
 
   if ($mode == 'mixed' && $current == $default) {
