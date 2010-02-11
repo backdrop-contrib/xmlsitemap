@@ -303,7 +303,7 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, array $context) {
   xmlsitemap_generate_chunk_header('urlset', $handle, $status, $context);
 
   while ($link = $links->fetchAssoc()) {
-    $link['language'] = $link['language'] ? xmlsitemap_language_load($link['language']) : $url_options['language'];
+    $link['language'] = $link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $url_options['language'];
     $link['alias'] = xmlsitemap_get_path_alias($link['loc'], $link['language']->language);
     $link_url = url($link['alias'], array('language' => $link['language']) + $url_options);
 
