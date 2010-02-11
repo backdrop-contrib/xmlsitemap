@@ -202,7 +202,7 @@ function xmlsitemap_node_get_timestamps($node) {
  * @param $node
  *   A node object.
  */
-function xmlsitemap_node_create_link(&$node) {
+function xmlsitemap_node_create_link(stdClass &$node) {
   if (!isset($node->xmlsitemap) || !is_array($node->xmlsitemap)) {
     $node->xmlsitemap = array();
     if ($node->nid && $link = xmlsitemap_link_load('node', $node->nid)) {

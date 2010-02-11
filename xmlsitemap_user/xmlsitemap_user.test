@@ -28,9 +28,7 @@ class XMLSitemapUserFunctionalTest extends XMLSitemapTestHelper {
 
   function testBlockedUser() {
     $this->drupalLogin($this->admin_user);
-
-    $account = $this->drupalCreateUser();
-    $this->assertSitemapLinkVisible('user', $account->uid);
+    $this->assertSitemapLinkVisible('user', $this->normal_user->uid);
 
     // Mark the user as blocked.
     $edit = array(
@@ -38,8 +36,8 @@ class XMLSitemapUserFunctionalTest extends XMLSitemapTestHelper {
     );
 
     // This will pass when http://drupal.org/node/360925 is fixed.
-    $this->drupalPost('user/' . $account->uid . '/edit', $edit, t('Save'));
-    $this->assertText(t('The changes have been saved.'));
-    $this->assertSitemapLinkNotVisible('user', $account->uid);
+    $this->drupalPost('user/' . $this->normal_user->uid . '/edit', $edit, t('Save'));
+    $this->assertText('The changes have been saved.');
+    $this->assertSitemapLinkNotVisible('user', $this->normal_user->uid);
   }
 }
