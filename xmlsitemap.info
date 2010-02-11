@@ -13,5 +13,4 @@ files[] = xmlsitemap.install
 files[] = xmlsitemap.test
 recommends[] = dialog
 recommends[] = robotstxt
-recommends[] = vertical_tabs
 configure = admin/config/search/xmlsitemap
