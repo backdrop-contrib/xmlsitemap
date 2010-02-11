@@ -21,6 +21,12 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     parent::setUp('xmlsitemap_engines', 'xmlsitemap_engines_test');
     $this->admin_user = $this->drupalCreateUser(array('access content', 'administer xmlsitemap'));
     $this->drupalLogin($this->admin_user);
+
+    // @todo For some reason the test client does not have clean URLs while
+    // the test runner does, so it causes mismatches in watchdog assertions
+    // later.
+    variable_set('clean_url', 0);
+
     $this->submit_url = url('ping', array('absolute' => TRUE, 'query' => array('sitemap' => ''))) . '[sitemap]';
   }
 

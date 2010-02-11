@@ -85,7 +85,6 @@ function xmlsitemap_menu_form_menu_edit_menu_alter(&$form, $form_state) {
 
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
   xmlsitemap_add_link_bundle_settings($form, $form_state, 'menu', $menu);
-  $form['#submit'][] = 'xmlsitemap_menu_menu_edit_menu_submit';
 }
 
 //function xmlsitemap_menu_form_menu_overview_form_alter(&$form, $form_state) {

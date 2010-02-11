@@ -1,0 +1,45 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Unit tests for the xmlsitemap_user module.
+ */
+
+class XMLSitemapUserFunctionalTest extends XMLSitemapTestHelper {
+  protected $normal_user;
+  protected $accounts = array();
+
+  public static function getInfo() {
+    return array(
+      'name' => 'XML sitemap user',
+      'description' => 'Functional tests for the XML sitemap user module.',
+      'group' => 'XML sitemap',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('xmlsitemap_user');
+
+    $this->admin_user = $this->drupalCreateUser(array('administer users', 'administer permissions', 'administer xmlsitemap'));
+    $this->normal_user = $this->drupalCreateUser(array('access content'));
+    xmlsitemap_link_bundle_settings_save('user', 'user', array('status' => 1, 'priority' => 0.5));
+  }
+
+  function testBlockedUser() {
+    $this->drupalLogin($this->admin_user);
+
+    $account = $this->drupalCreateUser();
+    $this->assertSitemapLinkVisible('user', $account->uid);
+
+    // Mark the user as blocked.
+    $edit = array(
+      'status' => 0,
+    );
+
+    // This will pass when http://drupal.org/node/360925 is fixed.
+    $this->drupalPost('user/' . $account->uid . '/edit', $edit, t('Save'));
+    $this->assertText(t('The changes have been saved.'));
+    $this->assertSitemapLinkNotVisible('user', $account->uid);
+  }
+}
