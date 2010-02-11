@@ -259,7 +259,7 @@ function xmlsitemap_generate_chunk_header($type, $handle, &$status, $language) {
 function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
   $last_url = '';
   $url_options = xmlsitemap_get_url_options(array('alias' => TRUE));
-  $lastmod_format = variable_get('xmlsitemap_lastmod_format', DATE_W3C);
+  $lastmod_format = variable_get('xmlsitemap_lastmod_format', 'Y-m-d\TH:i\Z');
 
   $query = db_select('xmlsitemap', 'x');
   $query->fields('x', array('loc', 'lastmod', 'changefreq', 'changecount', 'priority', 'language', 'access', 'status'));
@@ -334,7 +334,7 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, $language) {
 function xmlsitemap_generate_index($handle, &$status, $language) {
   $url_options = xmlsitemap_get_url_options(array('language' => $language, 'alias' => TRUE));
   $chunk_count = xmlsitemap_get_chunk_count(TRUE);
-  $lastmod_format = variable_get('xmlsitemap_lastmod_format', DATE_W3C);
+  $lastmod_format = variable_get('xmlsitemap_lastmod_format', 'Y-m-d\TH:i\Z');
 
   // Add the XML header and XSL if desired.
   xmlsitemap_generate_chunk_header('sitemapindex', $handle, $status, $language);

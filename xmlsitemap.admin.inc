@@ -96,10 +96,11 @@ function xmlsitemap_settings_form() {
     '#type' => 'select',
     '#title' => t('Last modification date format'),
     '#options' => array(
-    	'Y-m-d' => t('Short'),
-    	DATE_W3C => t('Long'),
+      'Y-m-d' => t('Short'),
+      'Y-m-d\TH:i\Z' => t('Medium'),
+      'c' => t('Long'),
     ),
-    '#default_value' => DATE_W3C,
+    '#default_value' => 'Y-m-d\TH:i\Z',
   );
   foreach ($form['advanced']['xmlsitemap_lastmod_format']['#options'] as $key => &$label) {
     $label .= ' (' . gmdate($key, REQUEST_TIME) . ')';
@@ -356,7 +357,7 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
  * Caller is responsible for ensuring xmlsitemap_link_bundle_settings_save()
  * is called during submission.
  */
-function xmlsitemap_add_link_bundle_settings(array &$form, array $form_state, $entity, $bundle) {
+function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $entity, $bundle) {
   xmlsitemap_link_bundle_settings_form($form, $form_state, $entity, $bundle, FALSE);
 
   // Manually call drupal_alter() on the $options form since it was not called
