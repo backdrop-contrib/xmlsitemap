@@ -752,7 +752,7 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
   if (!isset($link_info)) {
     $link_info = entity_get_info();
     foreach ($link_info as $key => $info) {
-      if (empty($info['path callback']) || !isset($info['xmlsitemap'])) {
+      if (empty($info['uri callback']) || !isset($info['xmlsitemap'])) {
         // Remove any non URL-able or XML sitemap un-supported entites.
         unset($link_info[$key]);
       }
