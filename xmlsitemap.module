@@ -564,21 +564,6 @@ function xmlsitemap_link_delete_multiple(array $conditions) {
 }
 
 /**
- * Implements hook_form_alter().
- *
- * Set the regeneration needed flag if settings are changed.
- */
-function xmlsitemap_form_alter(&$form, $form_state, $form_id) {
-  $forms = array(
-    'locale_languages_overview_form', // Language settings
-    'xmlsitemap_settings_form', // XML sitemap settings
-  );
-  if (in_array($form_id, $forms)) {
-    array_unshift($form['#submit'], 'xmlsitemap_form_submit_flag_regenerate');
-  }
-}
-
-/**
  * Submit handler; Set the regenerate needed flag if variables have changed.
  *
  * This function needs to be called before system_settings_form_submit() or any

@@ -143,6 +143,7 @@ function xmlsitemap_settings_form() {
 
   $form['#validate'][] = 'xmlsitemap_settings_form_validate';
   $form['#submit'][] = 'xmlsitemap_settings_form_submit';
+  array_unshift($form['#submit'], 'xmlsitemap_form_submit_flag_regenerate');
   $form['array_filter'] = array('#type' => 'value', '#value' => TRUE);
 
   $form = system_settings_form($form);
