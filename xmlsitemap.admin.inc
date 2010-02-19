@@ -422,6 +422,8 @@ function xmlsitemap_link_bundle_settings_form(array &$form, array $form_state, $
   if ($buttons) {
     $form['actions'] = array(
       '#type' => 'container',
+      '#attributes' => array('class' => array('form-actions')),
+      '#weight' => 100,
     );
     $form['actions']['save'] = array(
       '#type' => 'submit',

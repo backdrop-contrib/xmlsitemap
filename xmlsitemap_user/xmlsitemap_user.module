@@ -84,6 +84,7 @@ function xmlsitemap_user_user_cancel($edit, $account, $method) {
  * @see xmlsitemap_add_link_bundle_settings()
  */
 function xmlsitemap_user_form_user_profile_form_alter(&$form, $form_state) {
+  // Add the link options.
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
   xmlsitemap_add_form_link_options($form, 'user', 'user', $form['#user']->uid);
 }
