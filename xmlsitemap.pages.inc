@@ -150,11 +150,12 @@ function xmlsitemap_file_transfer($uri, $headers) {
     drupal_add_http_header($name, $value);
   }
   drupal_send_headers();
+
   $scheme = $scheme = variable_get('file_default_scheme', 'public');
-  // Transfer file in 1024 byte chunks to save memory usage.
+  // Transfer file in 16 KB chunks to save memory usage.
   if ($scheme && file_stream_wrapper_valid_scheme($scheme) && $fd = fopen($uri, 'rb')) {
     while (!feof($fd)) {
-      print fread($fd, 1024);
+      print fread($fd, 1024*16);
     }
     fclose($fd);
   }
