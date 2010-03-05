@@ -460,6 +460,10 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
 
   if (!isset($context['sandbox']['max'])) {
     $context['sandbox']['max'] = $query->countQuery()->execute()->fetchField();
+    if (!$context['sandbox']['max']) {
+      // If there are no items to process, skip everything else.
+      return;
+    }
   }
 
   // PostgreSQL cannot have the ORDERED BY in the count query.
