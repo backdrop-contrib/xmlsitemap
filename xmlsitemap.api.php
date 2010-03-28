@@ -24,7 +24,7 @@ function hook_xmlsitemap_link_info() {
     'mymodule' => array(
       'label' => 'My module',
       'base table' => 'mymodule',
-      'object keys' => array(
+      'entity keys' => array(
         // Primary ID key on {base table}
         'id' => 'myid',
         // Subtype key on {base table}

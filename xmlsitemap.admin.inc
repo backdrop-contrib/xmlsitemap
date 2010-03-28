@@ -393,7 +393,7 @@ function xmlsitemap_rebuild_form() {
       // If the entity is missing a rebuild callback, skip.
       continue;
     }
-    if (!empty($info['object keys']['bundle']) && !xmlsitemap_get_link_type_enabled_bundles($entity)) {
+    if (!empty($info['entity keys']['bundle']) && !xmlsitemap_get_link_type_enabled_bundles($entity)) {
       // If the entity has bundles, but no enabled bundles, skip since
       // rebuilding wouldn't get any links.
       continue;

@@ -16,7 +16,7 @@ function xmlsitemap_taxonomy_entity_info_alter(&$entity_info) {
  */
 function xmlsitemap_taxonomy_xmlsitemap_link_info_alter(&$link_info) {
   // Change taxonomy term bundle type from machine name to vid.
-  $link_info['taxonomy_term']['object keys']['bundle'] = 'vid';
+  $link_info['taxonomy_term']['entity keys']['bundle'] = 'vid';
   foreach (taxonomy_vocabulary_get_names() as $machine_name => $vocabulary) {
     // Adjust the edit path to the *real* edit path.
     $link_info['taxonomy_term']['bundles'][$machine_name]['admin']['path'] .= '/edit';

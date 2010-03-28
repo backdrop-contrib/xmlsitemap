@@ -448,11 +448,11 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   $info = $context['sandbox']['info'];
 
   $query = db_select($info['base table']);
-  $query->addField($info['base table'], $info['object keys']['id']);
-  $query->condition($info['object keys']['id'], $context['sandbox']['last_id'], '>');
-  if (!empty($info['object keys']['bundle'])) {
+  $query->addField($info['base table'], $info['entity keys']['id']);
+  $query->condition($info['entity keys']['id'], $context['sandbox']['last_id'], '>');
+  if (!empty($info['entity keys']['bundle'])) {
     $bundles = xmlsitemap_get_link_type_enabled_bundles($entity);
-    $query->condition($info['object keys']['bundle'], $bundles);
+    $query->condition($info['entity keys']['bundle'], $bundles);
   }
   $query->addTag('xmlsitemap_rebuild');
   $query->addMetaData('entity', $entity);
@@ -467,7 +467,7 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   }
 
   // PostgreSQL cannot have the ORDERED BY in the count query.
-  $query->orderBy($info['object keys']['id']);
+  $query->orderBy($info['entity keys']['id']);
 
   $query->range(0, variable_get('xmlsitemap_batch_limit', 100));
 
