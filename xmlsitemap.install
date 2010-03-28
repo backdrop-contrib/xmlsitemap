@@ -385,7 +385,7 @@ function xmlsitemap_update_5() {
 }
 
 function xmlsitemap_update_6() {
-  if (db_column_exists('xmlsitemap', 'language')) {
+  if (db_field_exists('xmlsitemap', 'language')) {
     db_drop_index('xmlsitemap', 'language');
     db_drop_field('xmlsitemap', 'language');
   }
@@ -486,7 +486,7 @@ function xmlsitemap_update_14() {
   db_add_field('xmlsitemap', 'subtype', array('type' => 'varchar', 'length' => 32, 'default' => NULL));
   $fields = array('node' => 'node_type', 'menu' => 'menu_name', 'taxonomy' => 'term_vid');
   foreach ($fields as $type => $field) {
-    if (db_column_exists('xmlsitemap', $field)) {
+    if (db_field_exists('xmlsitemap', $field)) {
       db_update('xmlsitemap')
         ->fields(array('subtype', $field))
         ->condition('type', $type)
