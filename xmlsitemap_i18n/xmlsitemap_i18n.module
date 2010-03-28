@@ -11,6 +11,9 @@ function xmlsitemap_i18n_xmlsitemap_context() {
   return $context;
 }
 
+/**
+ * Implements xmlsitemap_context_url_options().
+ */
 function xmlsitemap_i18n_xmlsitemap_context_url_options(array $context) {
   $options = array();
   if (isset($context['language'])) {
@@ -20,13 +23,16 @@ function xmlsitemap_i18n_xmlsitemap_context_url_options(array $context) {
 }
 
 /**
- * Implements hook_xmlsitemap_context().
+ * Implements hook_xmlsitemap_context_fallback().
  */
 function xmlsitemap_i18n_xmlsitemap_context_fallback() {
   $context['language'] = language_default('language');
   return $context;
 }
 
+/**
+ * Implements hook_xmlsitemap_context_info().
+ */
 function xmlsitemap_i18n_xmlsitemap_context_info() {
   $context['language'] = array(
     'label' => t('Language'),

@@ -8,6 +8,204 @@
  * @ingroup xmlsitemap
  */
 
+function xmlsitemap_sitemap_list_form() {
+  // Build the 'Update options' form.
+  $operations = array();
+  foreach (module_invoke_all('xmlsitemap_sitemap_operations') as $operation => $operation_info) {
+    $operations[$operation] = $operation_info['label'];
+  }
+  asort($operations);
+
+  $form['options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Update options'),
+    '#prefix' => '<div class="container-inline">',
+    '#suffix' => '</div>',
+  );
+  $form['options']['operation'] = array(
+    '#type' => 'select',
+    '#options' => $operations,
+    '#default_value' => 'update',
+  );
+  $form['options']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update'),
+    '#validate' => array('xmlsitemap_sitemap_list_validate'),
+    '#submit' => array('xmlsitemap_sitemap_list_submit'),
+  );
+
+  $query = db_select('xmlsitemap_sitemap');
+  $query->fields('xmlsitemap_sitemap', array('smid'));
+  $smids = $query->execute()->fetchCol();
+
+  $contexts = xmlsitemap_get_context_info();
+
+  $header = array();
+  $header['url'] = array('data' => t('URL'), 'field' => 'url');
+  foreach ($contexts as $context_key => $context_info) {
+    if (!empty($context_info['summary callback'])) {
+      $header['context_' . $context_key] = $context_info['label'];
+    }
+  }
+  $header['updated'] = array('data' => t('Last updated'), 'field' => 'updated');
+  $header['links'] = array('data' => t('Links'), 'field' => 'links');
+  $header['chunks'] = array('data' => t('Pages'), 'field' => 'chunks');
+  $header['operations'] = array('data' => t('Operations'));
+
+  $options = array();
+  $destination = drupal_get_destination();
+  foreach ($smids as $smid) {
+    $sitemap = xmlsitemap_sitemap_load($smid);
+    $sitemap['uri'] = xmlsitemap_sitemap_uri($sitemap);
+
+    $options[$smid]['url'] = array(
+      'data' => array(
+        '#type' => 'link',
+        '#title' => url($sitemap['uri']['path'], $sitemap['uri']['options']),
+        '#href' =>  $sitemap['uri']['path'],
+        '#options' =>  $sitemap['uri']['options'],
+      ),
+    );
+
+    foreach ($contexts as $context_key => $context_info) {
+      $options[$smid]['context_' . $context_key] = _xmlsitemap_sitemap_context_summary($sitemap, $context_key, $context_info);
+    }
+
+    $options[$smid]['updated'] = $sitemap['updated'] ? format_date($sitemap['updated'], 'short') : t('Never');
+    $options[$smid]['links'] = $sitemap['updated'] ? $sitemap['links'] : '-';
+    $options[$smid]['chunks'] = $sitemap['updated'] ? $sitemap['chunks'] : '-';
+
+    $operations = array();
+    //if (!empty($sitemap['context'])) {
+      $operations['edit'] = array(
+        'title' => t('Edit'),
+        'href' => 'admin/config/search/xmlsitemap/edit/' . $smid,
+        'query' => $destination,
+      );
+    //}
+    $operations['delete'] = array(
+      'title' => t('Delete'),
+      'href' => 'admin/config/search/xmlsitemap/delete/' . $smid,
+      'query' => $destination,
+    );
+    if ($operations) {
+      $options[$smid]['operations'] = array(
+        'data' => array(
+          '#theme' => 'links',
+          '#links' => $operations,
+          '#attributes' => array('class' => array('links', 'inline')),
+        ),
+      );
+    }
+    else {
+      $options[$smid]['operations'] = t('None (sitemap locked)');
+    }
+  }
+
+  $form['sitemaps'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $options,
+    '#empty' => t('No XML sitemaps available.') . ' ' . l('Add a new XML sitemap', 'admin/config/search/xmlsitemap/add'),
+  );
+  return $form;
+}
+
+function xmlsitemap_sitemap_edit_form(&$form, $form_state, array $sitemap = array()) {
+  $sitemap += array(
+    'smid' => NULL,
+    'context' => array(),
+  );
+
+  $form['#sitemap'] = $sitemap;
+
+  $form['smid'] = array(
+    '#type' => 'value',
+    '#value' => $sitemap['smid'],
+  );
+  // The context settings should be form_alter'ed by the context modules.
+  $form['context'] = array(
+    '#tree' => TRUE,
+  );
+
+  $form['actions'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('form-actions')),
+    '#weight' => 100,
+  );
+  $form['actions']['save'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+  $form['actions']['cancel'] = array(
+    '#type' => 'link',
+    '#href' => isset($_GET['destination']) ? $_GET['destination'] : 'admin/config/search/xmlsitemap',
+    '#title' => t('Cancel'),
+  );
+
+  // Let other modules alter this form with their context settings.
+  $form['#pre_render'][] = 'xmlsitemap_sitemap_edit_form_pre_render';
+
+  return $form;
+}
+
+function xmlsitemap_sitemap_edit_form_pre_render($form) {
+  $visible_children = element_get_visible_children($form['context']);
+  if (empty($visible_children)) {
+    $form['context']['empty'] = array(
+      '#type' => 'markup',
+      '#markup' => '<p>' . t('There are currently no XML sitemap contexts available.') . '</p>',
+    );
+  }
+  return $form;
+}
+
+function xmlsitemap_sitemap_edit_form_validate($form, &$form_state) {
+  // If there are no context options, the $form_state['values']['context']
+  // disappears.
+  $form_state['values'] += array('context' => array());
+  $existing = xmlsitemap_sitemap_load_by_context($form_state['values']['context']);
+  if ($existing && $existing['smid'] != $form_state['values']['smid']) {
+    form_set_error('context', t('A sitemap with the same context already exists.'));
+  }
+}
+
+function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
+  form_state_values_clean($form_state);
+  xmlsitemap_sitemap_save($form_state['values']);
+  $uri = xmlsitemap_sitemap_uri($form_state['values']);
+  drupal_set_message(t('The sitemap %sitemap was saved.', array('%sitemap' => url($uri['path'], $uri['options']))));
+  $form_state['redirect'] = 'admin/config/search/xmlsitemap';
+}
+
+function xmlsitemap_sitemap_delete_form(&$form, $form_state, array $sitemap) {
+  $count = (int) db_query("SELECT COUNT(smid) FROM {xmlsitemap_sitemap}")->fetchField();
+  if ($count === 1 && empty($_POST)) {
+    drupal_set_message('It is not recommended to delete the only XML sitemap.', 'error');
+  }
+
+  $form['#sitemap'] = $sitemap;
+  $form['smid'] = array(
+    '#type' => 'value',
+    '#value' => $sitemap['smid'],
+  );
+  return confirm_form(
+    $form,
+    t('Are you sure you want to delete the sitemap?'),
+    'admin/config/search/xmlsitemap',
+    '',
+    t('Delete'),
+    t('Cancel')
+  );
+}
+
+function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
+  xmlsitemap_sitemap_delete($form_state['values']['smid']);
+  $uri = xmlsitemap_sitemap_uri($form['#sitemap']);
+  drupal_set_message(t('The sitemap %sitemap was deleted.', array('%sitemap' => url($uri['path'], $uri['options']))));
+  $form_state['redirect'] = 'admin/config/search/xmlsitemap';
+}
+
 /**
  * Form builder; Administration settings form.
  *
@@ -32,14 +230,6 @@ function xmlsitemap_settings_form() {
     '#title' => t('Include a stylesheet in the sitemaps for humans.'),
     '#default_value' => xmlsitemap_var('xsl'),
     '#description' => t('Using the stylesheet will add formatting and tables with sorting to make it easier to view the XML sitemap data instead of viewing raw XML output. Search engines will ignore any formatting.')
-  );
-  $form['xmlsitemap']['xmlsitemap_languages'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Generate sitemaps for the following languages'),
-    '#options' => array(language_default('language') => language_default('name')),
-    '#default_value' => xmlsitemap_var('languages'),
-    '#process' => array('form_process_checkboxes', '_xmlsitemap_process_language_checkboxes'),
-    '#description' => !module_exists('xmlsitemap_i18n') ? t('To enable multilingual features, enable the XML sitemap internationalization module.') : '',
   );
 
   $form['advanced'] = array(
@@ -86,10 +276,10 @@ function xmlsitemap_settings_form() {
   );
   $form['advanced']['xmlsitemap_base_url'] = array(
     '#type' => 'textfield',
-    '#title' => t('Base URL'),
+    '#title' => t('Default base URL'),
     '#default_value' => xmlsitemap_var('base_url'),
     '#size' => 30,
-    '#description' => t('This is the base URL for links generated in the sitemap.'),
+    '#description' => t('This is the default base URL used for sitemaps and sitemap links.'),
     '#required' => TRUE,
   );
   $form['advanced']['xmlsitemap_lastmod_format'] = array(
@@ -148,23 +338,6 @@ function xmlsitemap_settings_form() {
 
   $form = system_settings_form($form);
   return $form;
-}
-
-/**
- * Show a link to each languages' sitemap and disable the default language
- * checkbox.
- */
-function _xmlsitemap_process_language_checkboxes($element) {
-  foreach (element_children($element) as $key) {
-    if ($key == language_default('language')) {
-      $element[$key]['#disabled'] = TRUE;
-      $element[$key]['#default_value'] = TRUE;
-      $element[$key]['#weight'] = -1;
-    }
-    $link = url('sitemap.xml', array('absolute' => TRUE, 'language' => xmlsitemap_language_load($key)));
-    $element[$key]['#description'] = l($link, $link);
-  }
-  return $element;
 }
 
 /**

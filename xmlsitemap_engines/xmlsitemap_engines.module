@@ -208,3 +208,15 @@ function xmlsitemap_engines_variables() {
   );
   return $variables;
 }
+
+function xmlsitemap_engines_xmlsitemap_sitemap_operations() {
+  $operations['xmlsitemap_engines_submit'] = array(
+    'label' => t('Submit to search engines'),
+    'callback' => 'xmlsitemap_engines_sitemap_multiple_submit',
+  );
+  return $operations;
+}
+
+function xmlsitemap_engines_sitemap_multiple_submit(array $sitemaps) {
+
+}

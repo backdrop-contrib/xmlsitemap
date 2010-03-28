@@ -198,6 +198,7 @@ function xmlsitemap_uninstall() {
  * Implements hook_schema().
  */
 function xmlsitemap_schema() {
+  // @todo Rename to xmlsitemap_link
   $schema['xmlsitemap'] = array(
     'description' => 'The base table for xmlsitemap links.',
     'fields' => array(
@@ -300,6 +301,52 @@ function xmlsitemap_schema() {
       'access_status_loc' => array('access', 'status', 'loc'),
       'type_subtype' => array('type', 'subtype'),
       'language' => array('language'),
+    ),
+  );
+
+  $schema['xmlsitemap_sitemap'] = array(
+    'fields' => array(
+      'smid' => array(
+        'description' => 'Sitemap ID',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'context_hash' => array(
+        'description' => 'The MD5 hash of the context field.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'context' => array(
+        'description' => 'Serialized array with the sitemaps context',
+        'type' => 'text',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+      ),
+      'updated' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'links' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'chunks' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('smid'),
+    'unique keys' => array(
+      'context_hash' => array('context_hash'),
     ),
   );
 
@@ -510,7 +557,6 @@ function xmlsitemap_update_18() {
  * Empty update.
  */
 function xmlsitemap_update_6200() {
-  return array();
 }
 
 /**
@@ -521,4 +567,58 @@ function xmlsitemap_update_7200() {
     ->fields(array('language' => LANGUAGE_NONE))
     ->condition('language', '')
     ->execute();
+}
+
+/**
+ * Create the {xmlsitemap_sitemap} table.
+ */
+function xmlsitemap_update_7201() {
+  if (db_table_exists('xmlsitemap_sitemap')) {
+    return;
+  }
+
+  $schema['xmlsitemap_sitemap'] = array(
+    'fields' => array(
+      'smid' => array(
+        'description' => 'Sitemap ID',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'context_hash' => array(
+        'description' => 'The MD5 hash of the context field.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'context' => array(
+        'description' => 'Serialized array with the sitemaps context',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'updated' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'links' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'chunks' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('smid'),
+    'unique keys' => array(
+      'context_hash' => array('context_hash'),
+    ),
+  );
+  db_create_table('xmlsitemap_sitemap', $schema['xmlsitemap_sitemap']);
 }
