@@ -10,8 +10,9 @@
 
 function xmlsitemap_sitemap_list_form() {
   // Build the 'Update options' form.
+  $form['#operations'] = module_invoke_all('xmlsitemap_sitemap_operations');
   $operations = array();
-  foreach (module_invoke_all('xmlsitemap_sitemap_operations') as $operation => $operation_info) {
+  foreach ($form['#operations'] as $operation => $operation_info) {
     $operations[$operation] = $operation_info['label'];
   }
   asort($operations);
@@ -21,6 +22,7 @@ function xmlsitemap_sitemap_list_form() {
     '#title' => t('Update options'),
     '#prefix' => '<div class="container-inline">',
     '#suffix' => '</div>',
+    '#access' => FALSE, // @todo Remove this when operations works.
   );
   $form['options']['operation'] = array(
     '#type' => 'select',
@@ -109,6 +111,53 @@ function xmlsitemap_sitemap_list_form() {
     '#empty' => t('No XML sitemaps available.') . ' ' . l('Add a new XML sitemap', 'admin/config/search/xmlsitemap/add'),
   );
   return $form;
+}
+
+/**
+ * Validate xmlsitemap_sitemap_list_form form submissions.
+ */
+function xmlsitemap_sitemap_list_validate($form, &$form_state) {
+  $form_state['values']['sitemaps'] = array_filter($form_state['values']['sitemaps']);
+
+  // Error if there are no items to select.
+  if (!count($form_state['values']['sitemaps'])) {
+    form_set_error('', t('No sitemaps selected.'));
+  }
+}
+
+/**
+ * Process xmlsitemap_sitemap_list_form form submissions.
+ *
+ * Execute the chosen 'Update option' on the selected sitemaps.
+ */
+function xmlsitemap_sitemap_list_submit($form, &$form_state) {
+  $operation = $form['#operations'][$form_state['values']['operation']];
+
+  // Filter out unchecked sitemaps.
+  $sitemaps = array_filter($form_state['values']['sitemaps']);
+
+  if (!empty($operation['confirm']) && empty($form_state['values']['confirm'])) {
+    // We need to rebuild the form to go to a second step. For example, to
+    // show the confirmation form for the deletion of redirects.
+    $form_state['rebuild'] = TRUE;
+  }
+  else {
+    $function = $operation['callback'];
+
+    // Add in callback arguments if present.
+    if (isset($operation['callback arguments'])) {
+      $args = array_merge(array($sitemaps), $operation['callback arguments']);
+    }
+    else {
+      $args = array($sitemaps);
+    }
+    call_user_func_array($function, $args);
+
+    $count = count($form_state['values']['sitemaps']);
+    watchdog('xmlsitemap', '@action @count XML sitemaps.', array('@action' => $operation['action_past'], '@count' => $count));
+    drupal_set_message(format_plural(count($rids), '@action @count XML sitemap.', '@action @count XML sitemaps.', array('@action' => $operation['action_past'], '@count' => $count)));
+    //$form_state['redirect'] = 'admin/config/search/xmlsitemap';
+  }
 }
 
 function xmlsitemap_sitemap_edit_form(&$form, $form_state, array $sitemap = array()) {
