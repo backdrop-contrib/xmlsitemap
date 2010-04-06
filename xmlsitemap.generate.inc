@@ -278,8 +278,8 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, array $context) {
   $url_options += array(
     'absolute' => TRUE,
     'base_url' => xmlsitemap_var('base_url'),
-    'alias' => TRUE,
     'language' => language_default(),
+    'alias' => variable_get('xmlsitemap_prefetch_aliases', TRUE),
   );
 
   $last_url = '';
@@ -304,8 +304,10 @@ function xmlsitemap_generate_chunk($handle, &$status, $chunk, array $context) {
 
   while ($link = $links->fetchAssoc()) {
     $link['language'] = $link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $url_options['language'];
-    $link['alias'] = xmlsitemap_get_path_alias($link['loc'], $link['language']->language);
-    $link_url = url($link['alias'], array('language' => $link['language']) + $url_options);
+    if ($url_options['alias']) {
+      $link['loc'] = xmlsitemap_get_path_alias($link['loc'], $link['language']->language);
+    }
+    $link_url = url($link['loc'], array('language' => $link['language']) + $url_options);
 
     // Skip this link if it was a duplicate of the last one.
     // @todo Figure out a way to do this before generation so we can report
