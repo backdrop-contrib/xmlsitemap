@@ -77,9 +77,14 @@ function xmlsitemap_taxonomy_form_taxonomy_form_vocabulary_alter(&$form, $form_s
  * Implements hook_form_FORM_ID_alter().
  */
 function xmlsitemap_taxonomy_form_taxonomy_form_term_alter(&$form, $form_state) {
+  if ($form['name']['#type'] == 'value') {
+    // If this is the delete form, do not add our form elements.
+    return;
+  }
+
   // Add the link options.
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
-  xmlsitemap_add_form_link_options($form, 'taxonomy_term', $form['vid']['#value'], $form['#term']['tid']);
+  xmlsitemap_add_form_link_options($form, 'taxonomy_term', $form['vid']['#value'], $form['tid']['#value']);
 }
 
 /**
