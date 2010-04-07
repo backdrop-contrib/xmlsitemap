@@ -119,12 +119,17 @@ function xmlsitemap_permission() {
   );
 }
 
-function xmlsitemap_sitemap_load($smid) {
-  $sitemap = db_query_range("SELECT * FROM {xmlsitemap_sitemap} WHERE smid = :smid", 0, 1, array(':smid' => $smid))->fetchAssoc();
-  if ($sitemap) {
-    $sitemap['context'] = unserialize($sitemap['context']);
+function xmlsitemap_sitemap_load_multiple(array $smids) {
+  $sitemaps = db_query("SELECT * FROM {xmlsitemap_sitemap} WHERE smid IN (:smids)", array(':smids' => $smids))->fetchAllAssoc('smid', PDO::FETCH_ASSOC);
+  foreach ($sitemaps as $smid => $sitemap) {
+    $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
   }
-  return $sitemap;
+  return $sitemaps;
+}
+
+function xmlsitemap_sitemap_load($smid) {
+  $sitemap = xmlsitemap_sitemap_load_multiple(array($smid));
+  return $sitemap ? reset($sitemap) : FALSE;
 }
 
 function xmlsitemap_sitemap_load_by_context(array $context = NULL) {

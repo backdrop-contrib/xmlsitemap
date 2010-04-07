@@ -360,6 +360,10 @@ function xmlsitemap_generate_index(array $sitemap, $handle, &$status) {
 
 /**
  * Batch information callback for regenerating the sitemap files.
+ *
+ * @param $smids
+ *   An optional array of XML sitemap IDs. If not provided, it will load all
+ *   existing XML sitemaps.
  */
 function xmlsitemap_regenerate_batch(array $smids = array()) {
   if (empty($smids)) {

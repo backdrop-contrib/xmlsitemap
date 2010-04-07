@@ -2,6 +2,19 @@
 // $Id$
 
 /**
+ * Implements hook_hook_info().
+ */
+function xmlsitemap_engines_hook_info() {
+  $hooks['xmlsitemap_engine_info'] = array(
+    'group' => 'xmlsitemap',
+  );
+  $hooks['xmlsitemap_engine_info_alter'] = array(
+    'group' => 'xmlsitemap',
+  );
+  return $hooks;
+}
+
+/**
  * Implements hook_help().
  */
 function xmlsitemap_engines_help($path, $arg) {
@@ -47,10 +60,22 @@ function xmlsitemap_engines_cron() {
   }
 }
 
-function xmlsitemap_engines_submit_access() {
+function xmlsitemap_engines_can_submit() {
   // Skip if the site is offline since search engines will not be able to
   // access the site's content.
   if (variable_get('site_offline', 0)) {
+    return FALSE;
+  }
+
+  if (!variable_get('xmlsitemap_engines_engines', array()) && !variable_get('xmlsitemap_engines_custom_urls', '')) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+function xmlsitemap_engines_submit_access() {
+  if (!xmlsitemap_engines_can_submit()) {
     return FALSE;
   }
 
@@ -78,9 +103,17 @@ function xmlsitemap_engines_submit_access() {
 
 /**
  * Submit the sitemaps to all the specified search engines.
+ *
+ * @param $smids
+ *   An optional array of XML sitemap IDs. If not provided, it will load all
+ *   existing XML sitemaps.
  */
-function xmlsitemap_engines_submit_engines() {
-  $sitemaps = xmlsitemap_get_sitemaps();
+function xmlsitemap_engines_submit_engines(array $smids = array()) {
+  if (empty($smids)) {
+    $smids = db_query("SELECT smid FROM {xmlsitemap_sitemap}")->fetchCol();
+  }
+
+  $sitemaps = xmlsitemap_sitemap_load_multiple($smids);
   $engines = variable_get('xmlsitemap_engines_engines', array());
   $engine_info = xmlsitemap_engines_get_engine_info();
 
@@ -105,7 +138,7 @@ function xmlsitemap_engines_submit_engines() {
  * @param $sitemaps
  *   An array of URLs of the sitemaps to submit.
  */
-function xmlsitemap_engines_submit_sitemaps($url, $sitemaps = array()) {
+function xmlsitemap_engines_submit_sitemaps($url, array $sitemaps = array()) {
   foreach ($sitemaps as $sitemap) {
     $submit_url = xmlsitemap_engines_prepare_url($url, $sitemap);
     $request = drupal_http_request($submit_url);
@@ -209,14 +242,16 @@ function xmlsitemap_engines_variables() {
   return $variables;
 }
 
+/**
+ * Implements hook_xmlsitemap_sitemap_operations().
+ */
 function xmlsitemap_engines_xmlsitemap_sitemap_operations() {
-  $operations['xmlsitemap_engines_submit'] = array(
-    'label' => t('Submit to search engines'),
-    'callback' => 'xmlsitemap_engines_sitemap_multiple_submit',
-  );
-  return $operations;
-}
-
-function xmlsitemap_engines_sitemap_multiple_submit(array $sitemaps) {
-
+  if (xmlsitemap_engines_can_submit()) {
+    $operations['xmlsitemap_engines_submit'] = array(
+      'label' => t('Submit to search engines'),
+      'action past' => t('Submitted'),
+      'callback' => 'xmlsitemap_engines_submit_engines',
+    );
+    return $operations;
+  }
 }
