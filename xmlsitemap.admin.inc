@@ -35,23 +35,24 @@ function xmlsitemap_sitemap_list_form() {
     '#submit' => array('xmlsitemap_sitemap_list_submit'),
   );
 
-  $query = db_select('xmlsitemap_sitemap');
-  $query->fields('xmlsitemap_sitemap', array('smid'));
-  $smids = $query->execute()->fetchCol();
-
   $contexts = xmlsitemap_get_context_info();
 
   $header = array();
-  $header['url'] = array('data' => t('URL'), 'field' => 'url');
+  $header['url'] = array('data' => t('URL'));
   foreach ($contexts as $context_key => $context_info) {
     if (!empty($context_info['summary callback'])) {
       $header['context_' . $context_key] = $context_info['label'];
     }
   }
-  $header['updated'] = array('data' => t('Last updated'), 'field' => 'updated');
+  $header['updated'] = array('data' => t('Last updated'), 'field' => 'updated', 'sort' => 'asc');
   $header['links'] = array('data' => t('Links'), 'field' => 'links');
   $header['chunks'] = array('data' => t('Pages'), 'field' => 'chunks');
   $header['operations'] = array('data' => t('Operations'));
+
+  $query = db_select('xmlsitemap_sitemap');
+  $query->fields('xmlsitemap_sitemap', array('smid'));
+  $query->extend('TableSort')->orderByHeader($header);
+  $smids = $query->execute()->fetchCol();
 
   $options = array();
   $destination = drupal_get_destination();
@@ -62,7 +63,7 @@ function xmlsitemap_sitemap_list_form() {
     $options[$smid]['url'] = array(
       'data' => array(
         '#type' => 'link',
-        '#title' => url($sitemap['uri']['path'], $sitemap['uri']['options']),
+        '#title' => $sitemap['uri']['url'],
         '#href' =>  $sitemap['uri']['path'],
         '#options' =>  $sitemap['uri']['options'],
       ),
@@ -77,13 +78,11 @@ function xmlsitemap_sitemap_list_form() {
     $options[$smid]['chunks'] = $sitemap['updated'] ? $sitemap['chunks'] : '-';
 
     $operations = array();
-    //if (!empty($sitemap['context'])) {
-      $operations['edit'] = array(
-        'title' => t('Edit'),
-        'href' => 'admin/config/search/xmlsitemap/edit/' . $smid,
-        'query' => $destination,
-      );
-    //}
+    $operations['edit'] = array(
+      'title' => t('Edit'),
+      'href' => 'admin/settings/xmlsitemap/edit/' . $smid,
+      'query' => $destination,
+    );
     $operations['delete'] = array(
       'title' => t('Delete'),
       'href' => 'admin/config/search/xmlsitemap/delete/' . $smid,
@@ -153,7 +152,7 @@ function xmlsitemap_sitemap_list_submit($form, &$form_state) {
     call_user_func_array($function, $args);
 
     $count = count($form_state['values']['sitemaps']);
-    watchdog('xmlsitemap', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count));
+    //watchdog('xmlsitemap', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count));
     drupal_set_message(format_plural(count($sitemaps), '@action @count XML sitemap.', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count)));
     //$form_state['redirect'] = 'admin/config/search/xmlsitemap';
   }
@@ -222,7 +221,7 @@ function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   form_state_values_clean($form_state);
   xmlsitemap_sitemap_save($form_state['values']);
   $uri = xmlsitemap_sitemap_uri($form_state['values']);
-  drupal_set_message(t('The sitemap %sitemap was saved.', array('%sitemap' => url($uri['path'], $uri['options']))));
+  drupal_set_message(t('The sitemap %sitemap was saved.', array('%sitemap' => $uri['url'])));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 
@@ -250,7 +249,7 @@ function xmlsitemap_sitemap_delete_form(&$form, $form_state, array $sitemap) {
 function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
   xmlsitemap_sitemap_delete($form_state['values']['smid']);
   $uri = xmlsitemap_sitemap_uri($form['#sitemap']);
-  drupal_set_message(t('The sitemap %sitemap was deleted.', array('%sitemap' => url($uri['path'], $uri['options']))));
+  drupal_set_message(t('The sitemap %sitemap was deleted.', array('%sitemap' => $uri['url'])));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 

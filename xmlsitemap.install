@@ -353,226 +353,17 @@ function xmlsitemap_schema() {
   return $schema;
 }
 
-// @todo Remove these update functions before alpha.
-function xmlsitemap_update_1() {
-  db_drop_unique_key('xmlsitemap', 'loc');
-}
-
-function xmlsitemap_update_2() {
-  if (!variable_get('xmlsitemap_base_url', '')) {
-    variable_set('xmlsitemap_base_url', $GLOBALS['base_url']);
-  }
-}
-
-function xmlsitemap_update_3() {
-  db_add_index('xmlsitemap', 'loc', array('loc'));
-}
-
-function xmlsitemap_update_4() {
-  $field = array(
-    'type' => 'int',
-    'size' => 'tiny',
-    'default' => 1,
-    'unsigned' => TRUE,
-  );
-  db_change_field('xmlsitemap', 'status', 'status', $field);
-  db_add_index('xmlsitemap', 'status', array('status'));
-}
-
-function xmlsitemap_update_5() {
-  db_drop_primary_key('xmlsitemap');
-  db_add_primary_key('xmlsitemap', array('id', 'type'));
-}
-
-function xmlsitemap_update_6() {
-  if (db_field_exists('xmlsitemap', 'language')) {
-    db_drop_index('xmlsitemap', 'language');
-    db_drop_field('xmlsitemap', 'language');
-  }
-  variable_set('xmlsitemap_generated_last', variable_get('xmlsitemap_regenerate_last', 0));
-  variable_del('xmlsitemap_regenerate_last');
-}
-
-function xmlsitemap_update_7() {
-  if (db_query_range("SELECT 1 FROM {xmlsitemap} WHERE type = 'custom'", 0, 1)->fetchField()) {
-    drupal_install_modules(array('xmlsitemap_custom'));
-  }
-  variable_del('xmlsitemap_custom_links');
-}
-
-function xmlsitemap_update_8() {
-  $field = array(
-    'type' => 'float',
-    'default' => NULL,
-  );
-  db_add_field('xmlsitemap', 'priority_override', $field);
-}
-
-function xmlsitemap_update_9() {
-  $field = array(
-    'type' => 'int',
-    'default' => 0,
-    'unsigned' => TRUE,
-    'not null' => TRUE,
-  );
-  db_change_field('xmlsitemap', 'lastmod', 'lastmod', $field);
-}
-
-function xmlsitemap_update_10() {
-  db_update('system')
-    ->fields(array('weight' => 1))
-    ->condition('type', 'module')
-    ->condition('name', 'xmlsitemap')
-    ->execute();
-}
-
-function xmlsitemap_update_11() {
-  // Delete any items with NULL status and drop the status index.
-  db_delete('xmlsitemap')
-    ->isNull('status')
-    ->execute();
-  db_drop_index('xmlsitemap', 'status');
-
-  // Rename status to access.
-  $field = array(
-    'type' => 'int',
-    'size' => 'tiny',
-    'default' => 1,
-    'unsigned' => TRUE,
-    'not null' => TRUE,
-  );
-  db_change_field('xmlsitemap', 'status', 'access', $field);
-
-  // Add a status field.
-  $field = array(
-    'type' => 'int',
-    'size' => 'tiny',
-    'default' => 1,
-  );
-  db_add_field('xmlsitemap', 'status', $field);
-
-  db_add_index('xmlsitemap', 'access_status', array('access', 'status'));
-}
-
-function xmlsitemap_update_12() {
-  db_drop_index('xmlsitemap', 'access_status');
-  db_add_index('xmlsitemap', 'access_status_loc', array('access', 'status', 'loc'));
-}
-
-function xmlsitemap_update_13() {
-  db_change_field('xmlsitemap', 'priority_override', 'priority_override_value', array('type' => 'float', 'default' => NULL));
-  $override_field = array(
-    'type' => 'int',
-    'size' => 'tiny',
-    'default' => 0,
-    'not null' => TRUE,
-  );
-  db_add_field('xmlsitemap', 'status_override', $override_field);
-  db_add_field('xmlsitemap', 'priority_override', $override_field);
-
-  db_update('xmlsitemap')
-    ->fields(array('priority_override' => 1))
-    ->expression('priority', 'priority_override_value')
-    ->isNotNull('priority_override_value')
-    ->execute();
-  db_update('xmlsitemap')
-    ->fields(array('priority' => 0.5))
-    ->isNull('priority_override_value')
-    ->execute();
-  db_drop_field('xmlsitemap', 'priority_override_value');
-}
-
-function xmlsitemap_update_14() {
-  db_add_field('xmlsitemap', 'subtype', array('type' => 'varchar', 'length' => 32, 'default' => NULL));
-  $fields = array('node' => 'node_type', 'menu' => 'menu_name', 'taxonomy' => 'term_vid');
-  foreach ($fields as $type => $field) {
-    if (db_field_exists('xmlsitemap', $field)) {
-      db_update('xmlsitemap')
-        ->fields(array('subtype', $field))
-        ->condition('type', $type)
-        ->execute();
-      db_drop_index('xmlsitemap', $field);
-      db_drop_field('xmlsitemap', $field);
-    }
-  }
-  db_add_index('xmlsitemap', 'type_subtype', array('type', 'subtype'));
-}
-
-function xmlsitemap_update_15() {
-  $or = db_or();
-  $or->isNull('status');
-  $or->isNull('access');
-  db_delete('xmlsitemap')
-    ->condition($or)
-    ->execute();
-  $field = array(
-    'type' => 'int',
-    'size' => 'tiny',
-    'default' => 1,
-    'not null' => TRUE,
-  );
-  db_change_field('xmlsitemap', 'access', 'access', $field);
-  db_change_field('xmlsitemap', 'status', 'status', $field);
-}
-
-function xmlsitemap_update_16() {
-  $field = array(
-    'type' => 'varchar',
-    'length' => 12,
-    'not null' => TRUE,
-    'default' => '',
-  );
-  db_add_field('xmlsitemap', 'language', $field);
-  db_add_index('xmlsitemap', 'language', array('language'));
-}
-
-function xmlsitemap_update_17() {
-  db_update('xmlsitemap')
-    ->fields(array('access' => 1))
-    ->condition('access', 1, '>')
-    ->execute();
-  db_update('xmlsitemap')
-    ->fields(array('status' => 1))
-    ->condition('status', 1, '>')
-    ->execute();
-}
-
-function xmlsitemap_update_18() {
-  db_update('xmlsitemap')
-    ->fields(array('subtype' => ''))
-    ->isNull('subtype')
-    ->execute();
-  $field = array(
-    'type' => 'varchar',
-    'length' => 32,
-    'not null' => TRUE,
-    'default' => '',
-  );
-  db_change_field('xmlsitemap', 'type', 'type', $field);
-  $field['length'] = 128;
-  db_change_field('xmlsitemap', 'subtype', 'subtype', $field);
-}
-
 /**
- * Empty update.
+ * Implements hook_update_last_removed().
  */
-function xmlsitemap_update_6200() {
-}
-
-/**
- * Update empty string languages to LANGUAGE_NONE.
- */
-function xmlsitemap_update_7200() {
-  db_update('xmlsitemap')
-    ->fields(array('language' => LANGUAGE_NONE))
-    ->condition('language', '')
-    ->execute();
+function xmlsitemap_update_last_removed() {
+  return 6201;
 }
 
 /**
  * Create the {xmlsitemap_sitemap} table.
  */
-function xmlsitemap_update_7201() {
+function xmlsitemap_update_6202() {
   if (db_table_exists('xmlsitemap_sitemap')) {
     return;
   }
@@ -621,4 +412,14 @@ function xmlsitemap_update_7201() {
     ),
   );
   db_create_table('xmlsitemap_sitemap', $schema['xmlsitemap_sitemap']);
+}
+
+/**
+ * Update empty string languages to LANGUAGE_NONE.
+ */
+function xmlsitemap_update_7200() {
+  db_update('xmlsitemap')
+    ->fields(array('language' => LANGUAGE_NONE))
+    ->condition('language', '')
+    ->execute();
 }

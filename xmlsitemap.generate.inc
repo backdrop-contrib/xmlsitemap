@@ -190,7 +190,6 @@ function xmlsitemap_generate(array $sitemap, $chunk) {
   return $status;
 }
 
-
 /**
  * Write the proper XML sitemap header.
  *
@@ -308,7 +307,6 @@ function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
     }
     $link_output .= '</url>' . PHP_EOL;
     $status &= (bool) fwrite($handle, $link_output);
-
   }
 
   // Close the XML file.

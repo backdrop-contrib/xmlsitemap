@@ -19,7 +19,7 @@ function xmlsitemap_xmlsitemap_link_info() {
  * XML sitemap link type settings callback for frontpage link entity.
  */
 function xmlsitemap_link_frontpage_settings(&$form) {
-  module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
+  module_load_include('admin.inc', 'xmlsitemap');
   if (user_access('administer site configuration')) {
     $form['#description'] = t('The front page path can be changed at <a href="@url-frontpage">@url-frontpage</a>.', array('@url-frontpage' => url('admin/settings/site-information')));
   }

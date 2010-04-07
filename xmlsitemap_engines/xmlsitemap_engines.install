@@ -31,45 +31,8 @@ function xmlsitemap_engines_uninstall() {
 }
 
 /**
- * Filter the xmlsitemap_engines_submit variable.
+ * Implements hook_update_last_removed().
  */
-function xmlsitemap_engines_update_1() {
-  variable_set('xmlsitemap_engines_submit', array_filter(variable_get('xmlsitemap_engines_submit', array())));
-}
-
-/**
- * Rename the xmlsitemap_engines_engines variable to xmlsitemap_engines_submit.
- */
-function xmlsitemap_engines_update_2() {
-  variable_set('xmlsitemap_engines_engines', variable_get('xmlsitemap_engines_submit', array()));
-  variable_del('xmlsitemap_engines_submit');
-}
-
-/**
- * Increase the module weight so it always runs after sitemap generation.
- */
-function xmlsitemap_engines_update_3() {
-  db_update('system')
-    ->fields(array('weight' => 2))
-    ->condition('type', 'module')
-    ->condition('name', 'xmlsitemap_engines')
-    ->execute();
-}
-
-/**
- * Update Windows Live search to Bing.
- */
-function xmlsitemap_engines_update_4() {
-  $engines = variable_get('xmlsitemap_engines_engines', array());
-  $index = array_search('windows_live', $engines);
-  if ($index !== FALSE) {
-    $engines[$index] = 'bing';
-  }
-  variable_set('xmlsitemap_engines_engines', $engines);
-}
-
-/**
- * Empty update.
- */
-function xmlsitemap_engines_update_6200() {
+function xmlsitemap_engines_update_last_removed() {
+  return 6201;
 }

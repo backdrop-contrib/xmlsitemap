@@ -151,6 +151,7 @@ function xmlsitemap_sitemap_uri(array $sitemap) {
     'absolute' => TRUE,
     'base_url' => xmlsitemap_var('base_url'),
   );
+  $uri['url'] = url($uri['path'], $uri['options']);
   return $uri;
 }
 
@@ -170,6 +171,7 @@ function xmlsitemap_sitemap_delete($smid) {
   db_delete('xmlsitemap_sitemap')
     ->condition('smid', $smid)
     ->execute();
+  // @todo Delete context files.
 }
 
 /**
@@ -286,7 +288,7 @@ function xmlsitemap_robotstxt() {
   $context = xmlsitemap_get_current_context();
   if ($sitemap = xmlsitemap_sitemap_load_by_context($context)) {
     $uri = xmlsitemap_sitemap_uri($sitemap);
-    $robotstxt[] = 'Sitemap: ' . url($uri['path'], $uri['options']);
+    $robotstxt[] = 'Sitemap: ' . $uri['url'];
     return $robotstxt;
   }
 }
