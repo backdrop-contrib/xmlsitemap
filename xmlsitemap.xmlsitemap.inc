@@ -65,9 +65,16 @@ function xmlsitemap_xmlsitemap_links() {
 function xmlsitemap_xmlsitemap_sitemap_operations() {
   $operations['update'] = array(
     'label' => t('Update cached files'),
+    'action past' => t('Updated'),
     'callback' => 'xmlsitemap_sitemap_multiple_update',
   );
   return $operations;
+}
+
+function xmlsitemap_sitemap_multiple_update(array $smids) {
+  module_load_include('generate.inc', 'xmlsitemap');
+  $batch = xmlsitemap_regenerate_batch($smids);
+  batch_set($batch);
 }
 
 /**

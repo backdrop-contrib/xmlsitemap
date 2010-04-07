@@ -28,6 +28,21 @@ define('XMLSITEMAP_FREQUENCY_HOURLY', 3600); // 60 * 60
 define('XMLSITEMAP_FREQUENCY_ALWAYS', 60);
 
 /**
+ * Short lastmod timestamp format.
+ */
+define('XMLSITEMAP_LASTMOD_SHORT', 'Y-m-d');
+
+/**
+ * Medium lastmod timestamp format.
+ */
+define('XMLSITEMAP_LASTMOD_MEDIUM', 'Y-m-d\TH:i\Z');
+
+/**
+ * Long lastmod timestamp format.
+ */
+define('XMLSITEMAP_LASTMOD_LONG', 'c');
+
+/**
  * Implements hook_hook_info().
  */
 function xmlsitemap_hook_info() {
@@ -254,8 +269,8 @@ function xmlsitemap_cron() {
   }
 
   // Regenerate the sitemap XML files.
-  module_load_include('inc', 'xmlsitemap', 'xmlsitemap.generate');
-  xmlsitemap_regenerate();
+  module_load_include('generate.inc', 'xmlsitemap');
+  xmlsitemap_run_progressive_batch('xmlsitemap_regenerate_batch');
 }
 
 /**
@@ -639,26 +654,26 @@ function xmlsitemap_variables() {
   return array(
     'xmlsitemap_rebuild_needed' => FALSE,
     'xmlsitemap_regenerate_needed' => FALSE,
-    'xmlsitemap_generated_last' => 0,
     'xmlsitemap_minimum_lifetime' => 0,
-    'xmlsitemap_xsl' => TRUE,
-    'xmlsitemap_languages' => array(language_default('language')),
+    'xmlsitemap_generated_last' => 0,
+    'xmlsitemap_xsl' => 1,
+    'xmlsitemap_prefetch_aliases' => 1,
     'xmlsitemap_chunk_size' => 'auto',
     'xmlsitemap_batch_limit' => 100,
     'xmlsitemap_path' => 'xmlsitemap',
     'xmlsitemap_base_url' => $GLOBALS['base_url'],
-    'xmlsitemap_developer_mode' => FALSE,
+    'xmlsitemap_developer_mode' => 0,
     'xmlsitemap_frontpage_priority' => 1.0,
     'xmlsitemap_frontpage_changefreq' => XMLSITEMAP_FREQUENCY_DAILY,
     'xmlsitemap_max_chunks' => 0,
     'xmlsitemap_max_filesize' => 0,
-    'xmlsitemap_lastmod_format' => 'Y-m-d\TH:i\Z',
-    'xmlsitemap_prefetch_aliases' => TRUE,
+    'xmlsitemap_lastmod_format' => XMLSITEMAP_LASTMOD_MEDIUM,
     // Removed variables are set to NULL so they can still be deleted.
     'xmlsitemap_gz' => FALSE,
     'xmlsitemap_regenerate_last' => NULL,
     'xmlsitemap_custom_links' => NULL,
     'xmlsitemap_priority_default' => NULL,
+    'xmlsitemap_languages' => NULL,
   );
 }
 
@@ -1111,4 +1126,24 @@ function xmlsitemap_context_check(array $context) {
     trigger_error("Could not find fallback XML sitemap context. Context $hash: " . print_r($context, TRUE) . ". Default context $default_hash: " . print_r($default, TRUE), E_USER_ERROR);
     return array();
   }
+}
+
+/**
+ * Run a progressive batch operation.
+ */
+function xmlsitemap_run_progressive_batch() {
+  $args = func_get_args();
+  $batch_callback = array_shift();
+
+  // Build the batch array.
+  $batch = call_user_func_array($batch_callback, $args);
+  batch_set($batch);
+
+  // We need to manually set the progressive variable again.
+  // @todo Remove when http://drupal.org/node/638712 is fixed.
+  $batch =& batch_get();
+  $batch['progressive'] = FALSE;
+
+  // Run the batch process.
+  batch_process();
 }
