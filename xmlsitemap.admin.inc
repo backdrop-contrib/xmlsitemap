@@ -17,22 +17,22 @@ function xmlsitemap_sitemap_list_form() {
   }
   asort($operations);
 
-  $form['options'] = array(
+  $form['operations'] = array(
     '#type' => 'fieldset',
     '#title' => t('Update options'),
     '#prefix' => '<div class="container-inline">',
     '#suffix' => '</div>',
   );
-  $form['options']['operation'] = array(
+  $form['operations']['operation'] = array(
     '#type' => 'select',
     '#options' => $operations,
     '#default_value' => 'update',
   );
-  $form['options']['submit'] = array(
+  $form['operations']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Update'),
-    '#validate' => array('xmlsitemap_sitemap_list_validate'),
-    '#submit' => array('xmlsitemap_sitemap_list_submit'),
+    //'#validate' => array('xmlsitemap_sitemap_list_form_validate'),
+    //'#submit' => array('xmlsitemap_sitemap_list_form_submit'),
   );
 
   $contexts = xmlsitemap_get_context_info();
