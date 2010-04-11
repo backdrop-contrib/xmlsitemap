@@ -343,7 +343,7 @@ function xmlsitemap_settings_form() {
   $form['advanced']['xmlsitemap_base_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Default base URL'),
-    '#default_value' => xmlsitemap_var('base_url'),
+    '#default_value' => $GLOBALS['base_url'],
     '#size' => 30,
     '#description' => t('This is the default base URL used for sitemaps and sitemap links.'),
     '#required' => TRUE,

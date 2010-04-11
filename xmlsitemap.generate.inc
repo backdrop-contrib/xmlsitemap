@@ -243,7 +243,7 @@ function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
   $url_options = xmlsitemap_get_url_options_from_context($sitemap['context']);
   $url_options += array(
     'absolute' => TRUE,
-    'base_url' => xmlsitemap_var('base_url'),
+    'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
     'language' => language_default(),
     'alias' => variable_get('xmlsitemap_prefetch_aliases', TRUE),
   );
@@ -330,7 +330,7 @@ function xmlsitemap_generate_index(array $sitemap, $handle, &$status) {
   $url_options = xmlsitemap_get_url_options_from_context($sitemap['context']);
   $url_options += array(
     'absolute' => TRUE,
-    'base_url' => xmlsitemap_var('base_url'),
+    'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
     'language' => language_default(),
     'alias' => TRUE,
   );

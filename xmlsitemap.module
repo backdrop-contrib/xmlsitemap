@@ -160,7 +160,7 @@ function xmlsitemap_sitemap_uri(array $sitemap) {
   $uri['options'] = module_invoke_all('xmlsitemap_context_url_options', $sitemap['context']);
   $uri['options'] += array(
     'absolute' => TRUE,
-    'base_url' => xmlsitemap_var('base_url'),
+    'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
   );
   return $uri;
 }
