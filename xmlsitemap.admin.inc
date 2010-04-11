@@ -58,11 +58,13 @@ function xmlsitemap_sitemap_list_form() {
   $options = array();
   $destination = drupal_get_destination();
   foreach ($sitemaps as $smid => $sitemap) {
+    $sitemap['url'] = url($sitemap['uri']['path'], $sitemap['uri']['options']);
+
     $options[$smid]['url'] = array(
       'data' => array(
         '#type' => 'link',
         '#title' => $sitemap['url'],
-        '#href' =>  $sitemap['url'],
+        '#href' => $sitemap['url'],
       ),
     );
 

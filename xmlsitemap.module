@@ -124,7 +124,6 @@ function xmlsitemap_sitemap_load_multiple(array $smids) {
   foreach ($sitemaps as $smid => $sitemap) {
     $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
     $sitemaps[$smid]['uri'] = xmlsitemap_sitemap_uri($sitemaps[$smid]);
-    $sitemaps[$smid]['url'] = url($sitemaps[$smid]['uri']['path'], $sitemaps[$smid]['uri']['options']);
   }
   return $sitemaps;
 }
@@ -165,6 +164,7 @@ function xmlsitemap_sitemap_uri(array $sitemap) {
   return $uri;
 }
 
+// @todo Save $sitemap['url']?
 function xmlsitemap_sitemap_save(array $sitemap) {
   asort($sitemap['context']);
   $sitemap['context_hash'] = md5(serialize($sitemap['context']));
@@ -295,7 +295,7 @@ function xmlsitemap_cron() {
  */
 function xmlsitemap_robotstxt() {
   if ($sitemap = xmlsitemap_sitemap_load_by_context()) {
-    $robotstxt[] = 'Sitemap: ' . $sitemap['url'];
+    $robotstxt[] = 'Sitemap: ' . url($sitemap['uri']['path'], $sitemap['uri']['options']);
     return $robotstxt;
   }
 }
@@ -874,8 +874,16 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
   return $link_info;
 }
 
-function xmlsitemap_get_file_from_context(array $context, $chunk = 'index') {
-  return xmlsitemap_get_directory() . '/' . md5(serialize($context)) . "-{$chunk}.xml";
+/**
+ * Return the expected file path for a specific sitemap chunk.
+ *
+ * @param $sitemap
+ *   An XML sitemap array.
+ * @param $chunk
+ *   An optional specific chunk in the sitemap. Defaults to the index page.
+ */
+function xmlsitemap_get_sitemap_file(array $sitemap, $chunk = 'index') {
+  return xmlsitemap_get_directory() . '/' . $sitemap['context_hash'] . "-{$chunk}.xml";
 }
 
 function xmlsitemap_get_directory() {

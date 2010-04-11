@@ -154,7 +154,7 @@ function xmlsitemap_generate(array $sitemap, $chunk) {
     return FALSE;
   }
 
-  $file = xmlsitemap_get_file_from_context($sitemap['context'], $chunk);
+  $file = xmlsitemap_get_sitemap_file($sitemap, $chunk);
 
   if (!$handle = fopen($file, 'wb')) {
     trigger_error(t('Could not open file @file for writing.', array('@file' => $file)));
