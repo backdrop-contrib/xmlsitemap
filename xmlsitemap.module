@@ -123,6 +123,8 @@ function xmlsitemap_sitemap_load_multiple(array $smids) {
   $sitemaps = db_query("SELECT * FROM {xmlsitemap_sitemap} WHERE smid IN (:smids)", array(':smids' => $smids))->fetchAllAssoc('smid', PDO::FETCH_ASSOC);
   foreach ($sitemaps as $smid => $sitemap) {
     $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
+    $sitemaps[$smid]['uri'] = xmlsitemap_sitemap_uri($sitemaps[$smid]);
+    $sitemaps[$smid]['url'] = url($sitemaps[$smid]['uri']['path'], $sitemaps[$smid]['uri']['options']);
   }
   return $sitemaps;
 }
@@ -141,17 +143,25 @@ function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
   return xmlsitemap_sitemap_load($smid);
 }
 
+/**
+ * Returns the uri elements of an XML sitemap.
+ *
+ * @param $sitemap
+ *   An unserialized data array for an XML sitemap.
+ * @return
+ *   An array containing the 'path' and 'options' keys used to build the uri of
+ *   the XML sitemap, and matching the signature of url().
+ */
 function xmlsitemap_sitemap_uri(array $sitemap) {
   // @todo Why aren't all modules invoked sometimes? Why is this include needed?
   module_load_all_includes('xmlsitemap.inc');
-  $uri = array();
+
   $uri['path'] = 'sitemap.xml';
   $uri['options'] = module_invoke_all('xmlsitemap_context_url_options', $sitemap['context']);
   $uri['options'] += array(
     'absolute' => TRUE,
     'base_url' => xmlsitemap_var('base_url'),
   );
-  $uri['url'] = url($uri['path'], $uri['options']);
   return $uri;
 }
 
@@ -284,11 +294,8 @@ function xmlsitemap_cron() {
  * Implements hook_robotstxt().
  */
 function xmlsitemap_robotstxt() {
-  // @todo Simplify this down to one function somehow?
-  $context = xmlsitemap_get_current_context();
-  if ($sitemap = xmlsitemap_sitemap_load_by_context($context)) {
-    $uri = xmlsitemap_sitemap_uri($sitemap);
-    $robotstxt[] = 'Sitemap: ' . $uri['url'];
+  if ($sitemap = xmlsitemap_sitemap_load_by_context()) {
+    $robotstxt[] = 'Sitemap: ' . $sitemap['url'];
     return $robotstxt;
   }
 }
@@ -1063,6 +1070,8 @@ function xmlsitemap_get_bundle_path($entity, $bundle) {
 function xmlsitemap_get_context_info($context = NULL, $reset = FALSE) {
   global $language;
   $info = &drupal_static(__FUNCTION__);
+
+  // @todo Why aren't all modules invoked sometimes? Why is this include needed?
   module_load_all_includes('xmlsitemap.inc');
 
   if ($reset) {
@@ -1093,6 +1102,9 @@ function xmlsitemap_get_context_info($context = NULL, $reset = FALSE) {
 function xmlsitemap_get_current_context() {
   $context = &drupal_static(__FUNCTION__);
 
+  // @todo Why aren't all modules invoked sometimes? Why is this include needed?
+  module_load_all_includes('xmlsitemap.inc');
+
   if (!isset($context)) {
     $context = module_invoke_all('xmlsitemap_context');
     drupal_alter('xmlsitemap_context', $context);
@@ -1104,6 +1116,9 @@ function xmlsitemap_get_current_context() {
 
 function xmlsitemap_get_default_context() {
   $context = &drupal_static(__FUNCTION__);
+
+  // @todo Why aren't all modules invoked sometimes? Why is this include needed?
+  module_load_all_includes('xmlsitemap.inc');
 
   if (!isset($context)) {
     $context = module_invoke_all('xmlsitemap_context_fallback');

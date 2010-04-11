@@ -53,19 +53,16 @@ function xmlsitemap_sitemap_list_form() {
   $query->fields('xmlsitemap_sitemap', array('smid'));
   $query->extend('TableSort')->orderByHeader($header);
   $smids = $query->execute()->fetchCol();
+  $sitemaps = xmlsitemap_sitemap_load_multiple($smids);
 
   $options = array();
   $destination = drupal_get_destination();
-  foreach ($smids as $smid) {
-    $sitemap = xmlsitemap_sitemap_load($smid);
-    $sitemap['uri'] = xmlsitemap_sitemap_uri($sitemap);
-
+  foreach ($sitemaps as $smid => $sitemap) {
     $options[$smid]['url'] = array(
       'data' => array(
         '#type' => 'link',
-        '#title' => $sitemap['uri']['url'],
-        '#href' =>  $sitemap['uri']['path'],
-        '#options' =>  $sitemap['uri']['options'],
+        '#title' => $sitemap['url'],
+        '#href' =>  $sitemap['url'],
       ),
     );
 
@@ -240,8 +237,7 @@ function xmlsitemap_sitemap_edit_form_validate($form, &$form_state) {
 function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   form_state_values_clean($form_state);
   xmlsitemap_sitemap_save($form_state['values']);
-  $uri = xmlsitemap_sitemap_uri($form_state['values']);
-  drupal_set_message(t('The sitemap %sitemap was saved.', array('%sitemap' => $uri['url'])));
+  drupal_set_message(t('The sitemap has been saved.'));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 
@@ -271,8 +267,7 @@ function xmlsitemap_sitemap_delete_form(&$form, $form_state, array $sitemap) {
 
 function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
   xmlsitemap_sitemap_delete($form_state['values']['smid']);
-  $uri = xmlsitemap_sitemap_uri($form['#sitemap']);
-  drupal_set_message(t('The sitemap %sitemap was deleted.', array('%sitemap' => $uri['url'])));
+  drupal_set_message(t('The sitemap %sitemap has been deleted.', array('%sitemap' => $form['#sitemap']['url'])));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 

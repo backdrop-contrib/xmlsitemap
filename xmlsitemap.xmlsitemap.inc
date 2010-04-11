@@ -62,6 +62,9 @@ function xmlsitemap_xmlsitemap_links() {
   return $links;
 }
 
+/**
+ * Implements hook_xmlsitemap_sitemap_operations().
+ */
 function xmlsitemap_xmlsitemap_sitemap_operations() {
   $operations['update'] = array(
     'label' => t('Update cached files'),
@@ -71,18 +74,18 @@ function xmlsitemap_xmlsitemap_sitemap_operations() {
   return $operations;
 }
 
+/**
+ * Sitemap operation callback; regenerate sitemap files using the batch API.
+ *
+ * @param $smids
+ *   An array of XML sitemap IDs.
+ *
+ * @see xmlsitemap_regenerate_batch()
+ */
 function xmlsitemap_sitemap_multiple_update(array $smids) {
   module_load_include('generate.inc', 'xmlsitemap');
   $batch = xmlsitemap_regenerate_batch($smids);
   batch_set($batch);
-}
-
-/**
- * Implements hook_xmlsitemap_context_url_options().
- */
-function xmlsitemap_xmlsitemap_context_url_options(array $context) {
-  $options['absolute'] = TRUE;
-  return $options;
 }
 
 function _xmlsitemap_sitemap_context_summary(array $sitemap, $context_key, array $context_info) {

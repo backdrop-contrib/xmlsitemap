@@ -401,7 +401,7 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
 
   $sitemap = &$context['sandbox']['sitemap'];
   $links = xmlsitemap_generate($sitemap, $sitemap['chunks']);
-  $context['message'] = t('Now generating sitemap page @chunk.', array('@chunk' => $sitemap['chunks']));
+  $context['message'] = t('Now generating %sitemap-url.', array('%sitemap-url' => url('sitemap.xml', $sitemap['uri']['options'] + array('query' => array('page' => $sitemap['chunks'])))));
 
   if ($links) {
     $sitemap['links'] += $links;
@@ -429,7 +429,7 @@ function xmlsitemap_regenerate_batch_generate_index($smid, array &$context) {
   $sitemap = xmlsitemap_sitemap_load($smid);
   if ($sitemap['chunks'] > 1) {
     xmlsitemap_generate($sitemap, 'index');
-    $context['message'] = t('Now generating sitemap index for @count pages.', array('@count' => $sitemap['chunks']));
+    $context['message'] = t('Now generating sitemap index %sitemap-url.', array('%sitemap-url' => url('sitemap.xml', $sitemap['uri']['options'])));
   }
 }
 
