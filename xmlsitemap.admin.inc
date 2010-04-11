@@ -76,6 +76,9 @@ function xmlsitemap_sitemap_list_form() {
     $options[$smid]['links'] = $sitemap['updated'] ? $sitemap['links'] : '-';
     $options[$smid]['chunks'] = $sitemap['updated'] ? $sitemap['chunks'] : '-';
 
+    // @todo Highlight sitemaps that need updating.
+    //$options[$smid]['#attributes']['class'][] = 'warning';
+
     $operations = array();
     $operations['edit'] = array(
       'title' => t('Edit'),
@@ -241,6 +244,7 @@ function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   xmlsitemap_sitemap_save($form_state['values']);
   drupal_set_message(t('The sitemap has been saved.'));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
+  // @todo If context was changed, needs to be regenerated.
 }
 
 function xmlsitemap_sitemap_delete_form(&$form, $form_state, array $sitemap) {
@@ -268,8 +272,8 @@ function xmlsitemap_sitemap_delete_form(&$form, $form_state, array $sitemap) {
 }
 
 function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
-  xmlsitemap_sitemap_delete($form_state['values']['smid']);
-  drupal_set_message(t('The sitemap %sitemap has been deleted.', array('%sitemap' => $form['#sitemap']['url'])));
+  xmlsitemap_sitemap_delete($form['#sitemap']);
+  drupal_set_message(t('The sitemap has been deleted.'));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 

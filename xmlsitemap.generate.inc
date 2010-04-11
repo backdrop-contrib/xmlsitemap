@@ -67,10 +67,6 @@ function _xmlsitemap_regenerate_before() {
   // Get the current memory usage so we can track how much memory is used.
   _xmlsitemap_get_memory_usage(TRUE);
 
-  // Clear all cached sitemap files.
-  xmlsitemap_clear_directory();
-  xmlsitemap_check_directory();
-
   // Clear the maximum chunk and file size variables.
   variable_set('xmlsitemap_max_chunks', 0);
   variable_set('xmlsitemap_max_filesize', 0);
@@ -154,7 +150,7 @@ function xmlsitemap_generate(array $sitemap, $chunk) {
     return FALSE;
   }
 
-  $file = xmlsitemap_get_sitemap_file($sitemap, $chunk);
+  $file = xmlsitemap_sitemap_get_file($sitemap, $chunk);
 
   if (!$handle = fopen($file, 'wb')) {
     trigger_error(t('Could not open file @file for writing.', array('@file' => $file)));
@@ -397,6 +393,10 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
     $context['sandbox']['sitemap']['chunks'] = 1;
     $context['sandbox']['sitemap']['links'] = 0;
     $context['sandbox']['max'] = XMLSITEMAP_MAX_SITEMAP_LINKS;
+
+    // Clear the cache directory for this sitemap before generating any files.
+    xmlsitemap_check_directory($context['sandbox']['sitemap']);
+    xmlsitemap_clear_directory($context['sandbox']['sitemap']);
   }
 
   $sitemap = &$context['sandbox']['sitemap'];
@@ -408,9 +408,11 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
     $sitemap['chunks']++;
   }
   else {
-    // Account for the 'extra' chunk here.
-    // @todo Delete the extra file?
+    // Cleanup the 'extra' empty file.
+    $file = xmlsitemap_sitemap_get_file($sitemap, $sitemap['chunks']);
+    file_unmanaged_delete($file);
     $sitemap['chunks']--;
+
     // Save the updated chunks and links values.
     $context['sandbox']['max'] = $sitemap['chunks'];
     $sitemap['updated'] = REQUEST_TIME;

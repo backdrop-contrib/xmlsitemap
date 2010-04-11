@@ -120,7 +120,7 @@ function xmlsitemap_permission() {
 }
 
 function xmlsitemap_sitemap_load_multiple(array $smids) {
-  $sitemaps = db_query("SELECT * FROM {xmlsitemap_sitemap} WHERE smid IN (:smids)", array(':smids' => $smids))->fetchAllAssoc('smid', PDO::FETCH_ASSOC);
+  $sitemaps = !empty($smids) ? db_query("SELECT * FROM {xmlsitemap_sitemap} WHERE smid IN (:smids)", array(':smids' => $smids))->fetchAllAssoc('smid', PDO::FETCH_ASSOC) : array();
   foreach ($sitemaps as $smid => $sitemap) {
     $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
     $sitemaps[$smid]['uri'] = xmlsitemap_sitemap_uri($sitemaps[$smid]);
@@ -140,6 +140,18 @@ function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
   $hash = md5(serialize($context));
   $smid = db_query_range("SELECT smid FROM {xmlsitemap_sitemap} WHERE context_hash = :hash", 0, 1, array(':hash' => $hash))->fetchField();
   return xmlsitemap_sitemap_load($smid);
+}
+
+/**
+ * Return the expected file path for a specific sitemap chunk.
+ *
+ * @param $sitemap
+ *   An XML sitemap array.
+ * @param $chunk
+ *   An optional specific chunk in the sitemap. Defaults to the index page.
+ */
+function xmlsitemap_sitemap_get_file(array $sitemap, $chunk = 'index') {
+  return xmlsitemap_get_directory($sitemap) . "/{$chunk}.xml";
 }
 
 /**
@@ -177,11 +189,11 @@ function xmlsitemap_sitemap_save(array $sitemap) {
   }
 }
 
-function xmlsitemap_sitemap_delete($smid) {
+function xmlsitemap_sitemap_delete(array $sitemap) {
   db_delete('xmlsitemap_sitemap')
-    ->condition('smid', $smid)
+    ->condition('smid', $sitemap['smid'])
     ->execute();
-  // @todo Delete context files.
+  xmlsitemap_clear_directory($sitemap, TRUE);
 }
 
 /**
@@ -272,6 +284,9 @@ function xmlsitemap_menu() {
 
 /**
  * Implements hook_cron().
+ *
+ * @todo Use new Queue system. Need to add {sitemap}.queued.
+ * @todo Regenerate one at a time?
  */
 function xmlsitemap_cron() {
   // If there were no new or changed links, skip.
@@ -874,33 +889,21 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
   return $link_info;
 }
 
-/**
- * Return the expected file path for a specific sitemap chunk.
- *
- * @param $sitemap
- *   An XML sitemap array.
- * @param $chunk
- *   An optional specific chunk in the sitemap. Defaults to the index page.
- */
-function xmlsitemap_get_sitemap_file(array $sitemap, $chunk = 'index') {
-  return xmlsitemap_get_directory() . '/' . $sitemap['context_hash'] . "-{$chunk}.xml";
-}
-
-function xmlsitemap_get_directory() {
+function xmlsitemap_get_directory(array $sitemap = NULL) {
   $directory = &drupal_static(__FUNCTION__);
 
   if (!isset($directory)) {
     $directory = file_directory_path() . '/' . variable_get('xmlsitemap_path', 'xmlsitemap');
   }
 
-  return $directory;
+  return $directory . (!empty($sitemap) ? '/' . $sitemap['context_hash'] : '');
 }
 
 /**
  * Check that the sitemap files directory exists and is writable.
  */
-function xmlsitemap_check_directory() {
-  $directory = xmlsitemap_get_directory();
+function xmlsitemap_check_directory(array $sitemap = NULL) {
+  $directory = xmlsitemap_get_directory($sitemap);
   $result = file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   if (!$result) {
     watchdog('file system', 'The directory %directory does not exist or is not writable.', array('%directory' => $directory), WATCHDOG_ERROR);
@@ -908,8 +911,8 @@ function xmlsitemap_check_directory() {
   return $result;
 }
 
-function xmlsitemap_clear_directory($delete = FALSE) {
-  $directory = xmlsitemap_get_directory();
+function xmlsitemap_clear_directory(array $sitemap = NULL, $delete = FALSE) {
+  $directory = xmlsitemap_get_directory($sitemap);
   return _xmlsitemap_delete_recursive($directory, $delete);
 }
 

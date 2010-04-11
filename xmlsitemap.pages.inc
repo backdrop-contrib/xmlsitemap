@@ -31,7 +31,7 @@ function xmlsitemap_get_current_chunk(array $sitemap) {
  *
  * @see xmlsitemap_sitemap_load_by_context()
  * @see xmlsitemap_get_current_chunk()
- * @see xmlsitemap_get_sitemap_file()
+ * @see xmlsitemap_sitemap_get_file()
  * @see xmlsitemap_output_file()
  */
 function xmlsitemap_output_chunk() {
@@ -41,7 +41,7 @@ function xmlsitemap_output_chunk() {
   }
 
   $chunk = xmlsitemap_get_current_chunk($sitemap);
-  $file = xmlsitemap_get_sitemap_file($sitemap, $chunk);
+  $file = xmlsitemap_sitemap_get_file($sitemap, $chunk);
 
   // Provide debugging information if enabled.
   if (variable_get('xmlsitemap_developer_mode', 0) || isset($_GET['debug'])) {
