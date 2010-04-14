@@ -252,6 +252,13 @@ function xmlsitemap_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      //'queued' => array(
+      //  'type' => 'int',
+      //  'unsigned' => TRUE,
+      //  'not null' => TRUE,
+      //  'default' => 0,
+      //  'description' => 'Time when this sitemap was queued for regeneration, 0 if not queued.',
+      //),
     ),
     'primary key' => array('smid'),
     'unique keys' => array(
@@ -322,7 +329,7 @@ function xmlsitemap_uninstall() {
   }
 
   // Remove the file cache directory.
-  xmlsitemap_clear_directory(TRUE);
+  xmlsitemap_clear_directory(NULL, TRUE);
 }
 
 /**
