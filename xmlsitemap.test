@@ -252,7 +252,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     $verbose = array();
 
     foreach ($messages as $message) {
-      if (in_array($message->severity, array(WATCHDOG_EMERG, WATCHDOG_ALERT, WATCHDOG_CRITICAL, WATCHDOG_ERROR, WATCHDOG_WARNING))) {
+      if (in_array($message->severity, array(WATCHDOG_EMERGENCY, WATCHDOG_ALERT, WATCHDOG_CRITICAL, WATCHDOG_ERROR, WATCHDOG_WARNING))) {
         $this->fail($message->text);
       }
       $verbose[] = $message->text;
