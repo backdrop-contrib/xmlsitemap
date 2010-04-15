@@ -46,6 +46,6 @@ class XMLSitemapTaxonomyFunctionalTest extends XMLSitemapTestHelper {
       'xmlsitemap[status]' => 'default',
       'xmlsitemap[priority]' => 'default',
     );
-    $this->drupalPost("admin/structure/taxonomy/$vid/add", $edit, 'Save');
+    $this->drupalPost("admin/structure/taxonomy/{$vocabulary->machine_name}/add", $edit, 'Save');
   }
 }
