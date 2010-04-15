@@ -237,8 +237,133 @@ function xmlsitemap_node_create_link(stdClass &$node) {
 
   // The following values must always be checked because they are volatile.
   $node->xmlsitemap['lastmod'] = isset($node->changed) ? $node->changed : REQUEST_TIME;
-  $node->xmlsitemap['access'] = $node->nid ? (bool) node_access('view', $node, drupal_anonymous_user()) : 1;
+  $node->xmlsitemap['access'] = $node->nid ? xmlsitemap_node_view_access($node, drupal_anonymous_user()) : 1;
   $node->xmlsitemap['language'] = isset($node->language) ? $node->language : LANGUAGE_NONE;
 
   return $node->xmlsitemap;
+}
+
+/**
+ * Determine whether a user may view the specified node.
+ *
+ * @param $node
+ *   The node object on which the operation is to be performed, or node type
+ *   (e.g. 'forum') for "create" operation.
+ * @param $account
+ *   Optional, a user object representing the user for whom the operation is to
+ *   be performed. Determines access for a user other than the current user.
+ * @return
+ *   TRUE if the operation may be performed, FALSE otherwise.
+ *
+ * This is for all intesive purposes a copy of Drupal 7's node_access() function.
+ * It invokes a backport of Drupal 7's hook_node_grants_alter() specifically
+ * for use with XML sitemap.
+ */
+function xmlsitemap_node_view_access($node, $account = NULL) {
+  global $user;
+
+  $op = 'view';
+  $rights = &drupal_static(__FUNCTION__, array());
+
+  if (!$node || !in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
+    // If there was no node to check against, or the $op was not one of the
+    // supported ones, we return access denied.
+    return FALSE;
+  }
+  // If no user object is supplied, the access check is for the current user.
+  if (empty($account)) {
+    $account = $user;
+  }
+
+  // $node may be either an object or a node type. Since node types cannot be
+  // an integer, use either nid or type as the static cache id.
+  //$cid = is_object($node) ? $node->nid : $node;
+
+  // If we've already checked access for this node, user and op, return from
+  // cache.
+  if (isset($rights[$account->uid][$node->nid])) {
+    return $rights[$account->uid][$node->nid];
+  }
+
+  if (user_access('bypass node access', $account)) {
+    $rights[$account->uid][$node->nid] = TRUE;
+    return TRUE;
+  }
+
+  if (!user_access('access content', $account)) {
+    $rights[$account->uid][$node->nid] = FALSE;
+    return FALSE;
+  }
+
+  // We grant access to the node if both of the following conditions are met:
+  // - No modules say to deny access.
+  // - At least one module says to grant access.
+  // If no module specified either allow or deny, we fall back to the
+  // node_access table.
+  $access = module_invoke_all('node_access', $node, $op, $account);
+  if (in_array(NODE_ACCESS_DENY, $access, TRUE)) {
+    $rights[$account->uid][$node->nid] = FALSE;
+    return FALSE;
+  }
+  elseif (in_array(NODE_ACCESS_ALLOW, $access, TRUE)) {
+    $rights[$account->uid][$node->nid] = TRUE;
+    return TRUE;
+  }
+
+  // Check if authors can view their own unpublished nodes.
+  if ($op == 'view' && !$node->status && user_access('view own unpublished content', $account) && $account->uid == $node->uid && $account->uid != 0) {
+    $rights[$account->uid][$node->nid] = TRUE;
+    return TRUE;
+  }
+
+  // If the module did not override the access rights, use those set in the
+  // node_access table.
+  if ($op != 'create' && $node->nid) {
+    if (module_implements('node_grants')) {
+      $query = db_select('node_access');
+      $query->addExpression('1');
+      $query->condition('grant_' . $op, 1, '>=');
+      $nids = db_or()->condition('nid', $node->nid);
+      if ($node->status) {
+        $nids->condition('nid', 0);
+      }
+      $query->condition($nids);
+      $query->range(0, 1);
+
+      // Fetch the node grants and allow other modules to alter them (D7 backport).
+      $grants = &drupal_static(__FUNCTION__ . ':grants', array());
+      if (!isset($grants[$account->uid][$op])) {
+        // Indicate that this is our special function in the grants.
+        $account->xmlsitemap_node_access = TRUE;
+        $grants[$account->uid][$op] = node_access_grants($op, $account);
+        // Remove the special indicator.
+        unset($account->xmlsitemap_node_access);
+      }
+
+      $grant_condition = db_or();
+      foreach ($grants[$account->uid][$op] as $realm => $gids) {
+        foreach ($gids as $gid) {
+          $grant_condition->condition(db_and()
+            ->condition('gid', $gid)
+            ->condition('realm', $realm)
+          );
+        }
+      }
+      if (count($grant_condition) > 0) {
+        $query->condition($grant_condition);
+      }
+
+      $result = (bool) $query->execute()->fetchField();
+      $rights[$account->uid][$node->nid] = $result;
+      return $result;
+    }
+    elseif (is_object($node) && $op == 'view' && $node->status) {
+      // If no modules implement hook_node_grants(), the default behaviour is to
+      // allow all users to view published nodes, so reflect that here.
+      $rights[$account->uid][$node->nid] = TRUE;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
