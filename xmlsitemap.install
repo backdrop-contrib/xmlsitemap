@@ -281,27 +281,31 @@ function xmlsitemap_install() {
     ->condition('name', 'xmlsitemap')
     ->execute();
 
-  // Load the module and clear the schema cache.
+  // Load the module.
   drupal_load('module', 'xmlsitemap');
-  drupal_get_schema(NULL, TRUE);
 
   // Insert the homepage link into the {xmlsitemap} table so we do not show an
   // empty sitemap after install.
-  // @todo Use xmlsitemap_save_link()?
   db_insert('xmlsitemap')
     ->fields(array(
       'type' => 'frontpage',
       'id' => 0,
       'loc' => '',
       'priority' => variable_get('xmlsitemap_frontpage_priority', 1.0),
-      'changefreq' => XMLSITEMAP_FREQUENCY_DAILY,
+      'changefreq' => variable_get('xmlsitemap_frontpage_changefreq', XMLSITEMAP_FREQUENCY_DAILY),
       'language' => LANGUAGE_NONE,
     ))
     ->execute();
 
   // Insert the default context sitemap.
-  $sitemap = array('context' => array());
-  xmlsitemap_sitemap_save($sitemap);
+  $context = serialize(array());
+  db_insert('xmlsitemap_sitemap')
+    ->fields(array(
+      'context' => $context,
+      'context_hash' => md5($context),
+      //'queued' => REQUEST_TIME,
+    ))
+    ->execute();
 
   // @todo Does the sitemap show up on first install or is it a 404 page?
 }
@@ -310,8 +314,7 @@ function xmlsitemap_install() {
  * Implements hook_enable().
  */
 function xmlsitemap_enable() {
-  // Load the module and ensure the file cache directory is available and ready.
-  drupal_load('module', 'xmlsitemap');
+  // Ensure the file cache directory is available and ready.
   xmlsitemap_check_directory();
 
   variable_set('xmlsitemap_regenerate_needed', TRUE);

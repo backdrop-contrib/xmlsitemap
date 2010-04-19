@@ -1165,8 +1165,18 @@ function xmlsitemap_context_check(array $context) {
  * Run a progressive batch operation.
  */
 function xmlsitemap_run_progressive_batch() {
+  $batch = batch_get();
+  if (!empty($batch)) {
+    // If there is already something in the batch, don't run.
+    return FALSE;
+  }
+
   $args = func_get_args();
   $batch_callback = array_shift($args);
+
+  if (!lock_acquire($batch_callback)) {
+    return FALSE;
+  }
 
   // Build the batch array.
   $batch = call_user_func_array($batch_callback, $args);
@@ -1179,4 +1189,7 @@ function xmlsitemap_run_progressive_batch() {
 
   // Run the batch process.
   batch_process();
+
+  lock_release($batch_callback);
+  return TRUE;
 }

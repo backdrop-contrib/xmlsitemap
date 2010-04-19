@@ -231,8 +231,8 @@ function xmlsitemap_node_create_link(stdClass &$node) {
   $node->xmlsitemap['changecount'] = $node->nid ? count($timestamps) - 1 : 0;
 
   // Node access must be reset since it a user may have changed published status, etc.
-  $access = &drupal_static('node_access');
-  unset($access[0][$node->nid]);
+  //$access = &drupal_static('node_access');
+  //unset($access[0][$node->nid]);
   //node_access_acquire_grants($node);
 
   // The following values must always be checked because they are volatile.
@@ -256,8 +256,6 @@ function xmlsitemap_node_create_link(stdClass &$node) {
  *   TRUE if the operation may be performed, FALSE otherwise.
  *
  * This is for all intesive purposes a copy of Drupal 7's node_access() function.
- * It invokes a backport of Drupal 7's hook_node_grants_alter() specifically
- * for use with XML sitemap.
  */
 function xmlsitemap_node_view_access($node, $account = NULL) {
   global $user;

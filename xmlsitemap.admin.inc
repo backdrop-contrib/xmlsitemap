@@ -9,6 +9,8 @@
  */
 
 function xmlsitemap_sitemap_list_form() {
+  $destination = drupal_get_destination();
+
   // Build the 'Update options' form.
   $form['#operations'] = module_invoke_all('xmlsitemap_sitemap_operations');
   $operations = array();
@@ -56,7 +58,6 @@ function xmlsitemap_sitemap_list_form() {
   $sitemaps = xmlsitemap_sitemap_load_multiple($smids);
 
   $options = array();
-  $destination = drupal_get_destination();
   foreach ($sitemaps as $smid => $sitemap) {
     $sitemap['url'] = url($sitemap['uri']['path'], $sitemap['uri']['options']);
 

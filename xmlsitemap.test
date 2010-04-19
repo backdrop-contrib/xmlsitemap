@@ -18,8 +18,8 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   function setUp() {
     // Call parent::setUp() allowing test cases to pass further modules.
     $modules = func_get_args();
-    $modules = array_merge(array('xmlsitemap'), $modules);
-    call_user_func_array(array('parent', 'setUp'), $modules);
+    $modules[] = 'xmlsitemap';
+    call_user_func_array(array($this, 'parent::setUp'), $modules);
 
     // Ensure the files directory is created and writable during testing.
     // @todo This can be removed when http://drupal.org/node/654752 is fixed.
