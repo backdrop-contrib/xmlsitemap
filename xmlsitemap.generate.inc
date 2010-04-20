@@ -410,7 +410,9 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
   else {
     // Cleanup the 'extra' empty file.
     $file = xmlsitemap_sitemap_get_file($sitemap, $sitemap['chunks']);
-    file_unmanaged_delete($file);
+    if (file_exists($file)) {
+      file_unmanaged_delete($file);
+    }
     $sitemap['chunks']--;
 
     // Save the updated chunks and links values.
