@@ -4,7 +4,7 @@
 
 Drupal.behaviors.xmlsitemapFieldsetSummaries = {
   attach: function (context) {
-    $('fieldset#edit-xmlsitemap', context).setSummary(function (context) {
+    $('fieldset#edit-xmlsitemap', context).drupalSetSummary(function (context) {
       var vals = [];
 
       // Inclusion select field.
