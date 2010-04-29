@@ -43,3 +43,48 @@ function _xmlsitemap_get_version() {
   }
   return $version;
 }
+
+/**
+ * Check the status of all hook_requirements() from any xmlsitemap modules.
+ */
+function xmlsitemap_check_status() {
+  $messages = &drupal_static(__FUNCTION__);
+
+  if (!isset($messages)) {
+    // Cache the list of modules that are checked.
+    if ($cache = cache_get('xmlsitemap:registry:requirements')) {
+      $modules = $cache->data;
+    }
+    else {
+      $modules = array();
+      module_load_all_includes('install');
+      foreach (module_implements('requirements') as $module) {
+        if (strpos($module, 'xmlsitemap') !== FALSE) {
+          $modules[] = $module;
+        }
+      }
+      cache_set('xmlsitemap:registry:requirements', $modules);
+    }
+
+    $messages = array();
+    foreach ($modules as $module) {
+      module_load_install($module);
+      $requirements = module_invoke($module, 'requirements', 'runtime');
+      foreach ($requirements as $requirement) {
+        if (isset($requirement['severity']) && max(REQUIREMENT_OK, $requirement['severity'])) {
+          $messages[] = $requirement['description'];
+        }
+      }
+    }
+
+    if ($messages) {
+      $message = t('One or more problems were detected with your XML sitemap configuration: !messages', array('!messages' => theme('item_list', array('items' => $messages))));
+      if (user_access('access site reports')) {
+        $message .= t('Check the <a href="@status-report">status report</a> for more information.', array('@status-report' => url('admin/reports/status')));
+      }
+      drupal_set_message($message, 'warning', FALSE);
+    }
+  }
+
+  return !empty($messages);
+}

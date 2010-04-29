@@ -18,59 +18,17 @@ function xmlsitemap_node_uninstall() {
   }
 }
 
-// @todo Remove these update functions before alpha.
-function xmlsitemap_node_update_1() {
-  $field = array(
-    'description' => "The {node_type}.type of this link's node.",
-    'type' => 'varchar',
-    'length' => 32,
-  );
-  db_add_field('xmlsitemap', 'node_type', $field);
-  db_add_index('xmlsitemap', 'node_type', array('node_type'));
-  db_query("UPDATE {xmlsitemap} SET node_type = (SELECT type FROM {node} WHERE nid = {xmlsitemap}.id) WHERE type = 'node'");
-}
-
-function xmlsitemap_node_update_2() {
-  $node_types = array_keys(node_type_get_names());
-  foreach ($node_types as $node_type) {
-    if (variable_get('xmlsitemap_node_priority_' . $node_type, 'default') === 'default') {
-      variable_set('xmlsitemap_node_priority_' . $node_type, 0.5);
-    }
-  }
-}
-
-function xmlsitemap_node_update_3() {
-  db_update('system')
-    ->fields(array('weight' => 0))
-    ->condition('type', 'module')
-    ->condition('name', 'xmlsitemap_node')
-    ->execute();
-}
-
-function xmlsitemap_node_update_4() {
-  return array();
-}
-
-/**
- * Update node languages.
- *
- * @after xmlsitemap_update_16()
- *   Must run after the {xmlsitemap}.language field has been added.
- */
-function xmlsitemap_node_update_5() {
-  db_query("UPDATE {xmlsitemap} SET language = (SELECT {node}.language FROM {node} WHERE {node}.nid = {xmlsitemap}.id) WHERE {xmlsitemap}.type = 'node'");
-}
-
 /**
  * Cleanup variables.
  */
 function xmlsitemap_node_update_6200() {
   drupal_load('module', 'node');
+  drupal_load('module', 'xmlsitemap');
   $node_types = array_keys(node_type_get_names());
   foreach ($node_types as $node_type) {
     $settings = array(
-      'status' => variable_get('xmlsitemap_node_status_' . $node_type, 0),
-      'priority' => variable_get('xmlsitemap_node_priority_' . $node_type, 0.5),
+      'status' => variable_get('xmlsitemap_node_status_' . $node_type, XMLSITEMAP_STATUS_DEFAULT),
+      'priority' => variable_get('xmlsitemap_node_priority_' . $node_type, XMLSITEMAP_PRIORITY_DEFAULT),
     );
     variable_set('xmlsitemap_settings_node_' . $node_type, $settings);
     variable_del('xmlsitemap_node_status_' . $node_type);
@@ -78,4 +36,10 @@ function xmlsitemap_node_update_6200() {
     variable_del('xmlsitemap_node_update_' . $node_type);
   }
   return array();
+}
+
+/**
+ * Empty update.
+ */
+function xmlsitemap_node_update_6201() {
 }

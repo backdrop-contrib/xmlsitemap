@@ -43,6 +43,16 @@ define('XMLSITEMAP_LASTMOD_MEDIUM', 'Y-m-d\TH:i\Z');
 define('XMLSITEMAP_LASTMOD_LONG', 'c');
 
 /**
+ * The default inclusion status for link types in the sitemaps.
+ */
+define('XMLSITEMAP_STATUS_DEFAULT', 0);
+
+/**
+ * The default priority for link types in the sitemaps.
+ */
+define('XMLSITEMAP_PRIORITY_DEFAULT', 0.5);
+
+/**
  * Implements hook_hook_info().
  */
 function xmlsitemap_hook_info() {
@@ -73,6 +83,9 @@ function xmlsitemap_hook_info() {
   $hooks['xmlsitemap_sitemap_operations'] = array(
     'group' => 'xmlsitemap',
   );
+  $hooks['xmlsitemap_sitemap_delete'] = array(
+    'group' => 'xmlsitemap',
+  );
   return $hooks;
 }
 
@@ -94,15 +107,13 @@ function xmlsitemap_help($path, $arg) {
       $output .= '<p>' . t("This action rebuilds your site's XML sitemap and regenerates the cached files, and may be a lengthy process. If you just installed XML sitemap, this can be helpful to import all your site's content into the sitemap. Otherwise, this should only be used in emergencies.") . '</p>';
   }
 
-  if (arg(0) == 'admin' && strpos($path, 'xmlsitemap') !== FALSE) {
-    if ($arg[1] == 'config' && user_access('administer xmlsitemap')) {
-      module_load_install('xmlsitemap');
+  if (arg(0) == 'admin' && strpos($path, 'xmlsitemap') !== FALSE && user_access('administer xmlsitemap')) {
+    module_load_include('inc', 'xmlsitemap');
+    if ($arg[1] == 'config') {
+      // Alert the user to any potential problems detected by hook_requirements.
       xmlsitemap_check_status();
     }
-    module_load_include('inc', 'xmlsitemap');
-    if ($blurb = _xmlsitemap_get_blurb()) {
-      $output .= $blurb;
-    }
+    $output .= _xmlsitemap_get_blurb();
   }
 
   return $output;
@@ -112,27 +123,50 @@ function xmlsitemap_help($path, $arg) {
  * Implements hook_perm().
  */
 function xmlsitemap_permission() {
-  return array(
-    'administer xmlsitemap' => array(
-      'title' => t('Administer XML sitemap settings.'),
-    ),
+  $permissions['administer xmlsitemap'] = array(
+    'title' => t('Administer XML sitemap settings.'),
   );
+  return $permissions;
 }
 
-function xmlsitemap_sitemap_load_multiple(array $smids) {
-  $sitemaps = !empty($smids) ? db_query("SELECT * FROM {xmlsitemap_sitemap} WHERE smid IN (:smids)", array(':smids' => $smids))->fetchAllAssoc('smid', PDO::FETCH_ASSOC) : array();
-  foreach ($sitemaps as $smid => $sitemap) {
-    $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
-    $sitemaps[$smid]['uri'] = xmlsitemap_sitemap_uri($sitemaps[$smid]);
-  }
-  return $sitemaps;
-}
-
+/**
+ * Load an XML sitemap array from the database.
+ *
+ * @param $smid
+ *   An XML sitemap ID.
+ */
 function xmlsitemap_sitemap_load($smid) {
   $sitemap = xmlsitemap_sitemap_load_multiple(array($smid));
   return $sitemap ? reset($sitemap) : FALSE;
 }
 
+/**
+ * Load multiple XML sitemaps from the database.
+ *
+ * @param $smids
+ *   An array of XML sitemap IDs.
+ */
+function xmlsitemap_sitemap_load_multiple(array $smids) {
+  $sitemaps = array();
+  if ($smids) {
+    $sitemaps = db_query("SELECT * FROM {xmlsitemap_sitemap} WHERE smid IN (:smids)", array(':smids' => $smids))->fetchAllAssoc('smid', PDO::FETCH_ASSOC);
+    foreach ($sitemaps as $smid => $sitemap) {
+      $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
+      $sitemaps[$smid]['uri'] = xmlsitemap_sitemap_uri($sitemaps[$smid]);
+    }
+  }
+  return $sitemaps;
+}
+
+/**
+ * Load an XML sitemap array from the database based on its context.
+ *
+ * @param $context
+ *   An optional XML sitemap context array to use to find the correct XML
+ *   siteamp. If not provided, the current site's context will be used.
+ *
+ * @see xmlsitemap_get_current_context()
+ */
 function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
   if (!isset($context)) {
     $context = xmlsitemap_get_current_context();
@@ -140,6 +174,58 @@ function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
   $hash = md5(serialize($context));
   $smid = db_query_range("SELECT smid FROM {xmlsitemap_sitemap} WHERE context_hash = :hash", 0, 1, array(':hash' => $hash))->fetchField();
   return xmlsitemap_sitemap_load($smid);
+}
+
+/**
+ * Save changes to an XML sitemap or add a new XML sitemap.
+ *
+ * @param $sitemap
+ *   The XML sitemap array to be saved. If $sitemap['smid'] is omitted, a new
+ *   XML sitemap will be added.
+ *
+ * @todo Save the sitemap's URL as a column?
+ */
+function xmlsitemap_sitemap_save(array $sitemap) {
+  // Make sure context is sorted before saving the hash.
+  asort($sitemap['context']);
+  $sitemap['context_hash'] = md5(serialize($sitemap['context']));
+
+  if (!empty($sitemap['smid'])) {
+    drupal_write_record('xmlsitemap_sitemap', $sitemap, array('smid'));
+  }
+  else {
+    drupal_write_record('xmlsitemap_sitemap', $sitemap);
+  }
+}
+
+/**
+ * Delete an XML sitemap.
+ *
+ * @param $smid
+ *   An XML sitemap ID.
+ */
+function xmlsitemap_sitemap_delete($smid) {
+  xmlsitemap_sitemap_delete_multiple(array($smid));
+}
+
+/**
+ * Delete multiple XML sitemaps.
+ *
+ * @param $smids
+ *   An array of XML sitemap IDs.
+ */
+function xmlsitemap_sitemap_delete_multiple(array $smids) {
+  if (!empty($smids)) {
+    $sitemaps = xmlsitemap_sitemap_load_multiple($smids);
+    db_delete('xmlsitemap_sitemap')
+        ->condition('smid', $smids)
+        ->execute();
+
+    foreach ($sitemaps as $sitemap) {
+      xmlsitemap_clear_directory($sitemap, TRUE);
+      module_invoke_all('xmlsitemap_sitemap_delete', $sitemap);
+    }
+  }
 }
 
 /**
@@ -164,36 +250,14 @@ function xmlsitemap_sitemap_get_file(array $sitemap, $chunk = 'index') {
  *   the XML sitemap, and matching the signature of url().
  */
 function xmlsitemap_sitemap_uri(array $sitemap) {
-  // @todo Why aren't all modules invoked sometimes? Why is this include needed?
-  module_load_all_includes('xmlsitemap.inc');
-
   $uri['path'] = 'sitemap.xml';
   $uri['options'] = module_invoke_all('xmlsitemap_context_url_options', $sitemap['context']);
+  drupal_alter('xmlsitemap_context_url_options', $uri['options'], $sitemap['context']);
   $uri['options'] += array(
     'absolute' => TRUE,
     'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
   );
   return $uri;
-}
-
-// @todo Save $sitemap['url']?
-function xmlsitemap_sitemap_save(array $sitemap) {
-  asort($sitemap['context']);
-  $sitemap['context_hash'] = md5(serialize($sitemap['context']));
-
-  if (!empty($sitemap['smid'])) {
-    drupal_write_record('xmlsitemap_sitemap', $sitemap, array('smid'));
-  }
-  else {
-    drupal_write_record('xmlsitemap_sitemap', $sitemap);
-  }
-}
-
-function xmlsitemap_sitemap_delete(array $sitemap) {
-  db_delete('xmlsitemap_sitemap')
-    ->condition('smid', $sitemap['smid'])
-    ->execute();
-  xmlsitemap_clear_directory($sitemap, TRUE);
 }
 
 /**
@@ -303,6 +367,20 @@ function xmlsitemap_cron() {
   // Regenerate the sitemap XML files.
   module_load_include('generate.inc', 'xmlsitemap');
   xmlsitemap_run_progressive_batch('xmlsitemap_regenerate_batch');
+}
+
+/**
+ * Implements hook_modules_enabled().
+ */
+function xmlsitemap_modules_enabled(array $modules) {
+  cache_clear_all('xmlsitemap:', 'cache', TRUE);
+}
+
+/**
+ * Implements hook_modules_disabled().
+ */
+function xmlsitemap_modules_disabled(array $modules) {
+  cache_clear_all('xmlsitemap:', 'cache', TRUE);
 }
 
 /**
@@ -541,10 +619,10 @@ function xmlsitemap_link_load_multiple(array $conditions = array()) {
 function xmlsitemap_save_link(array $link) {
   $link += array(
     'access' => 1,
-    'status' => 1,
+    'status' => XMLSITEMAP_STATUS_DEFAULT,
     'status_override' => 0,
     'lastmod' => 0,
-    'priority' => 0.5,
+    'priority' => XMLSITEMAP_PRIORITY_DEFAULT,
     'priority_override' => 0,
     'changefreq' => 0,
     'changecount' => 0,
@@ -790,7 +868,7 @@ function xmlsitemap_restore_user() {
 
 function xmlsitemap_process_form_link_options($form, &$form_state) {
   $link = &$form_state['values']['xmlsitemap'];
-  $fields = array('status' => 0, 'priority' => 0.5);
+  $fields = array('status' => XMLSITEMAP_STATUS_DEFAULT, 'priority' => XMLSITEMAP_PRIORITY_DEFAULT);
 
   foreach ($fields as $field => $default) {
     if ($link[$field] === 'default') {
@@ -834,7 +912,6 @@ function xmlsitemap_get_changefreq_options() {
 function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
   global $language;
   $link_info = &drupal_static(__FUNCTION__);
-  module_load_all_includes('xmlsitemap.inc');
 
   if ($reset) {
     $link_info = NULL;
@@ -1032,7 +1109,7 @@ function xmlsitemap_link_bundle_rename($entity, $bundle_old, $bundle_new) {
 
 function xmlsitemap_link_bundle_load($entity, $bundle) {
   $settings = variable_get("xmlsitemap_settings_{$entity}_{$bundle}", array());
-  $settings += array('status' => 0, 'priority' => 0.5);
+  $settings += array('status' => XMLSITEMAP_STATUS_DEFAULT, 'priority' => XMLSITEMAP_PRIORITY_DEFAULT);
   return $settings;
 }
 
@@ -1082,9 +1159,6 @@ function xmlsitemap_get_context_info($context = NULL, $reset = FALSE) {
   global $language;
   $info = &drupal_static(__FUNCTION__);
 
-  // @todo Why aren't all modules invoked sometimes? Why is this include needed?
-  module_load_all_includes('xmlsitemap.inc');
-
   if ($reset) {
     $info = NULL;
   }
@@ -1113,9 +1187,6 @@ function xmlsitemap_get_context_info($context = NULL, $reset = FALSE) {
 function xmlsitemap_get_current_context() {
   $context = &drupal_static(__FUNCTION__);
 
-  // @todo Why aren't all modules invoked sometimes? Why is this include needed?
-  module_load_all_includes('xmlsitemap.inc');
-
   if (!isset($context)) {
     $context = module_invoke_all('xmlsitemap_context');
     drupal_alter('xmlsitemap_context', $context);
@@ -1123,42 +1194,6 @@ function xmlsitemap_get_current_context() {
   }
 
   return $context;
-}
-
-function xmlsitemap_get_default_context() {
-  $context = &drupal_static(__FUNCTION__);
-
-  // @todo Why aren't all modules invoked sometimes? Why is this include needed?
-  module_load_all_includes('xmlsitemap.inc');
-
-  if (!isset($context)) {
-    $context = module_invoke_all('xmlsitemap_context_fallback');
-    drupal_alter('xmlsitemap_context_fallback', $context);
-    asort($context);
-  }
-
-  return $context;
-}
-
-/**
- * Validate the context and use the default context if it fails validation.
- *
- * @todo Merge into xmlsitemap_get_current_context()?
- * @todo Use real default context variable instead of hard-coded default.
- */
-function xmlsitemap_context_check(array $context) {
-  $default = xmlsitemap_get_default_context();
-
-  if (xmlsitemap_sitemap_load_by_context($context)) {
-    return $context;
-  }
-  elseif (xmlsitemap_sitemap_load_by_context($default)) {
-    return $default;
-  }
-  else {
-    trigger_error("Could not find fallback XML sitemap context. Context $hash: " . print_r($context, TRUE) . ". Default context $default_hash: " . print_r($default, TRUE), E_USER_ERROR);
-    return array();
-  }
 }
 
 /**
@@ -1192,4 +1227,35 @@ function xmlsitemap_run_progressive_batch() {
 
   lock_release($batch_callback);
   return TRUE;
+}
+
+function _xmlsitemap_sitemap_context_summary(array $sitemap, $context_key, array $context_info) {
+  $context_value = isset($sitemap['context'][$context_key]) ? $sitemap['context'][$context_key] : NULL;
+
+  if (!isset($context_value)) {
+    return t('Default');
+  }
+  elseif (!empty($context_info['summary callback'])) {
+    return $context_info['summary callback']($context_value);
+  }
+  else {
+    return $context_value;
+  }
+}
+
+/**
+ * Workaround for missing breadcrumbs on callback and action paths.
+ *
+ * @todo Remove when http://drupal.org/node/576290 is fixed.
+ */
+function _xmlsitemap_set_breadcrumb($path = 'admin/config/search/xmlsitemap') {
+  $breadcrumb = array();
+  $path = explode('/', $path);
+  do {
+    $menu_path = implode('/', $path);
+    $menu_item = menu_get_item($menu_path);
+    array_unshift($breadcrumb, l($menu_item['title'], $menu_path));
+  } while (array_pop($path) && !empty($path));
+  array_unshift($breadcrumb, l(t('Home'), NULL));
+  drupal_set_breadcrumb($breadcrumb);
 }

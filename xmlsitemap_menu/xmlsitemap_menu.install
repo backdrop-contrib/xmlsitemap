@@ -18,66 +18,17 @@ function xmlsitemap_menu_uninstall() {
   }
 }
 
-// @todo Remove these update functions before alpha.
-function xmlsitemap_menu_update_1() {
-  $value = xmlsitemap_menu_var('menus');
-  variable_set('xmlsitemap_menu_menus', array_filter($value));
-}
-
-function xmlsitemap_menu_update_2() {
-  $field = array(
-    'description' => 'The {menu_links}.menu_name of this menu link.',
-    'type' => 'varchar',
-    'length' => 32,
-    'default' => NULL,
-  );
-  db_add_field('xmlsitemap', 'menu_name', $field);
-  db_add_index('xmlsitemap', 'menu_name', array('menu_name'));
-  db_query("UPDATE {xmlsitemap} SET menu_name = (SELECT menu_name FROM {menu_links} WHERE mlid = {xmlsitemap}.id) WHERE type = 'menu'");
-}
-
-function xmlsitemap_menu_update_3() {
-  $menus = variable_get('xmlsitemap_menu_menus', array());
-  foreach ($menus as $menu) {
-    variable_set('xmlsitemap_menu_status_' . $menu, TRUE);
-  }
-  variable_del('xmlsitemap_menu_menus');
-}
-
-function xmlsitemap_menu_update_4() {
-}
-
-function xmlsitemap_menu_update_5() {
-}
-
-// Skip to 6 since I was stupid and had xmlsitemap_menu_update_5() in xmlsitemap_node.install
-function xmlsitemap_menu_update_6() {
-  db_update('system')
-    ->fields(array('weight' => 0))
-    ->condition('type', 'module')
-    ->condition('name', 'xmlsitemap_menu')
-    ->execute();
-}
-
-function xmlsitemap_menu_update_7() {
-  $menus = array_keys(menu_get_menus());
-  foreach ($menus as $menu) {
-    if (variable_get('xmlsitemap_menu_priority_' . $menu, 'default') === 'default') {
-      variable_set('xmlsitemap_menu_priority_' . $menu, 0.5);
-    }
-  }
-}
-
 /**
  * Cleanup variables.
  */
 function xmlsitemap_menu_update_6200() {
   drupal_load('module', 'menu');
+  drupal_load('module', 'xmlsitemap');
   $menus = array_keys(menu_get_menus());
   foreach ($menus as $menu) {
     $settings = array(
-      'status' => variable_get('xmlsitemap_menu_status_' . $menu, 0),
-      'priority' => variable_get('xmlsitemap_menu_priority_' . $menu, 0.5),
+      'status' => variable_get('xmlsitemap_menu_status_' . $menu, XMLSITEMAP_STATUS_DEFAULT),
+      'priority' => variable_get('xmlsitemap_menu_priority_' . $menu, XMLSITEMAP_PRIORITY_DEFAULT),
     );
     variable_set('xmlsitemap_settings_menu_' . $menu, $settings);
     variable_del('xmlsitemap_menu_status_' . $menu);

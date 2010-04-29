@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * XML sitemap integration functions for xmlsitemap.module.
+ */
+
+/**
  * Implements hook_xmlsitemap_link_info().
  */
 function xmlsitemap_xmlsitemap_link_info() {
@@ -44,8 +49,8 @@ function xmlsitemap_link_frontpage_settings(&$form) {
 function xmlsitemap_xmlsitemap_link_alter(&$link) {
   // Alter the frontpage priority.
   if ($link['type'] == 'frontpage' || $link['loc'] == '' || $link['loc'] == drupal_get_normal_path(variable_get('site_frontpage', 'node'))) {
-    $link['priority'] = xmlsitemap_var('frontpage_priority');
-    $link['changefreq'] = xmlsitemap_var('frontpage_changefreq');
+    $link['priority'] = variable_get('xmlsitemap_frontpage_priority', 1.0);
+    $link['changefreq'] = variable_get('xmlsitemap_frontpage_changefreq', XMLSITEMAP_FREQUENCY_DAILY);
   }
 }
 
@@ -75,7 +80,7 @@ function xmlsitemap_xmlsitemap_sitemap_operations() {
 }
 
 /**
- * Sitemap operation callback; regenerate sitemap files using the batch API.
+ * XML sitemap operation callback; regenerate sitemap files using the batch API.
  *
  * @param $smids
  *   An array of XML sitemap IDs.
@@ -86,18 +91,4 @@ function xmlsitemap_sitemap_multiple_update(array $smids) {
   module_load_include('generate.inc', 'xmlsitemap');
   $batch = xmlsitemap_regenerate_batch($smids);
   batch_set($batch);
-}
-
-function _xmlsitemap_sitemap_context_summary(array $sitemap, $context_key, array $context_info) {
-  $context_value = isset($sitemap['context'][$context_key]) ? $sitemap['context'][$context_key] : NULL;
-
-  if (!isset($context_value)) {
-    return t('Default');
-  }
-  elseif (!empty($context_info['summary callback'])) {
-    return $context_info['summary callback']($context_value);
-  }
-  else {
-    return $context_value;
-  }
 }

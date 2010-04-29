@@ -71,14 +71,12 @@ function xmlsitemap_custom_list_links() {
 
 function xmlsitemap_custom_edit_link_form($form, &$form_state, $link = array()) {
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
-
-  // @todo Remove when http://drupal.org/node/576290 is fixed.
   _xmlsitemap_set_breadcrumb('admin/config/search/xmlsitemap/custom');
 
   $link += array(
     'id' => db_query("SELECT MAX(id) FROM {xmlsitemap} WHERE type = 'custom'")->fetchField() + 1,
     'loc' => '',
-    'priority' => 0.5,
+    'priority' => XMLSITEMAP_PRIORITY_DEFAULT,
     'lastmod' => 0,
     'changefreq' => 0,
     'changecount' => 0,
@@ -178,7 +176,6 @@ function xmlsitemap_custom_edit_link_form_submit($form, &$form_state) {
 
 function xmlsitemap_custom_delete_link_form($form, &$form_state, array $link) {
   // @todo Remove when http://drupal.org/node/576290 is fixed.
-  module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
   _xmlsitemap_set_breadcrumb('admin/config/search/xmlsitemap/custom');
 
   $form['link'] = array(

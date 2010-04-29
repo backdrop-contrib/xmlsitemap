@@ -62,8 +62,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   protected function regenerateSitemap() {
     variable_set('xmlsitemap_regenerate_needed', TRUE);
     variable_set('xmlsitemap_generated_last', 0);
-    module_load_include('inc', 'xmlsitemap', 'xmlsitemap.generate');
-    xmlsitemap_regenerate();
+    $this->cronRun();
     $this->assertTrue(variable_get('xmlsitemap_generated_last', 0) && !variable_get('xmlsitemap_regenerate_needed', FALSE), t('XML sitemaps regenerated and flag cleared.'));
   }
 
@@ -161,12 +160,14 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     $link += array(
       'type' => 'testing',
       'id' => $last_id,
+      'access' => 1,
+      'status' => 1,
     );
 
     // Make the default path easier to read than a random string.
     $link += array('loc' => $link['type'] . '-' . $link['id']);
 
-    $last_id = $link['id'] + 1;
+    $last_id = max($last_id, $link['id']) + 1;
     xmlsitemap_save_link($link);
     return $link;
   }

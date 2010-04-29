@@ -8,6 +8,9 @@
  * @ingroup xmlsitemap
  */
 
+/**
+ * Render a tableselect list of XML sitemaps for the main admin page.
+ */
 function xmlsitemap_sitemap_list_form() {
   $destination = drupal_get_destination();
 
@@ -161,25 +164,7 @@ function xmlsitemap_sitemap_list_form_submit($form, &$form_state) {
   }
 }
 
-/**
- * Workaround for missing breadcrumbs on callback and action paths.
- *
- * @todo Remove when http://drupal.org/node/576290 is fixed.
- */
-function _xmlsitemap_set_breadcrumb($path = 'admin/config/search/xmlsitemap') {
-  $breadcrumb = array();
-  $path = explode('/', $path);
-  do {
-    $menu_path = implode('/', $path);
-    $menu_item = menu_get_item($menu_path);
-    array_unshift($breadcrumb, l($menu_item['title'], $menu_path));
-  } while (array_pop($path) && !empty($path));
-  array_unshift($breadcrumb, l(t('Home'), NULL));
-  drupal_set_breadcrumb($breadcrumb);
-}
-
 function xmlsitemap_sitemap_edit_form(&$form, $form_state, array $sitemap = array()) {
-  // @todo Remove when http://drupal.org/node/576290 is fixed.
   _xmlsitemap_set_breadcrumb();
 
   $sitemap += array(
@@ -249,7 +234,6 @@ function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
 }
 
 function xmlsitemap_sitemap_delete_form(&$form, $form_state, array $sitemap) {
-  // @todo Remove when http://drupal.org/node/576290 is fixed.
   _xmlsitemap_set_breadcrumb();
 
   $count = (int) db_query("SELECT COUNT(smid) FROM {xmlsitemap_sitemap}")->fetchField();

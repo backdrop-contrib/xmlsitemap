@@ -45,15 +45,6 @@ function xmlsitemap_get_path_alias($path, $language) {
 }
 
 /**
- * @todo Move to xmlsitemap.context.inc
- */
-function xmlsitemap_get_url_options_from_context(array $context) {
-  $options = module_invoke_all('xmlsitemap_context_url_options', $context);
-  drupal_alter('xmlsitemap_context_url_options', $options, $context);
-  return $options;
-}
-
-/**
  * Perform operations before rebuilding the sitemap.
  */
 function _xmlsitemap_regenerate_before() {
@@ -64,8 +55,13 @@ function _xmlsitemap_regenerate_before() {
   // Set a timer so we can track how long this takes.
   timer_start('xmlsitemap_regenerate');
 
-  // Get the current memory usage so we can track how much memory is used.
-  _xmlsitemap_get_memory_usage(TRUE);
+  if (variable_get('xmlsitemap_developer_mode', 0)) {
+    watchdog('xmlsitemap', 'Starting XML sitemap generation. Memory usage: @memory-peak.', array(
+        '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
+      ),
+      WATCHDOG_DEBUG
+    );
+  }
 
   // Clear the maximum chunk and file size variables.
   variable_set('xmlsitemap_max_chunks', 0);
@@ -81,8 +77,14 @@ function _xmlsitemap_get_memory_usage($start = FALSE) {
   return $current - $memory_start;
 }
 
+/**
+ * Calculate the optimal PHP memory limit for sitemap generation.
+ *
+ * This function just makes a guess. It does not take into account
+ * the currently loaded modules.
+ */
 function _xmlsitemap_get_optimal_memory_limit() {
-  static $optimal_limit;
+  $optimal_limit = &drupal_static(__FUNCTION__);
   if (!isset($optimal_limit)) {
     // Set the base memory amount from the provided core constant.
     $optimal_limit = parse_size(DRUPAL_MINIMUM_PHP_MEMORY_LIMIT);
@@ -91,21 +93,29 @@ function _xmlsitemap_get_optimal_memory_limit() {
     $optimal_limit += xmlsitemap_get_chunk_size() * 500;
 
     // Add memory for storing the url aliases.
-    $aliases = db_query("SELECT COUNT(pid) FROM {url_alias}")->fetchField();
-    $optimal_limit += $aliases * 250;
+    if (variable_get('xmlsitemap_prefetch_aliases', 1)) {
+      $aliases = db_query("SELECT COUNT(pid) FROM {url_alias}")->fetchField();
+      $optimal_limit += $aliases * 250;
+    }
   }
   return $optimal_limit;
 }
 
 /**
  * Calculate the optimal memory level for sitemap generation.
+ *
+ * @param $new_limit
+ *   An optional PHP memory limit in bytes. If not provided, the value of
+ *   _xmlsitemap_get_optimal_memory_limit() will be used.
  */
-function _xmlsitemap_set_memory_limit() {
-  $memory_limit = @ini_get('memory_limit');
-  if ($memory_limit && $memory_limit != -1) {
-    $optimal_limit = _xmlsitemap_get_optimal_memory_limit();
-    if (parse_size($memory_limit) < $optimal_limit) {
-      @ini_set('memory_limit', $optimal_limit);
+function _xmlsitemap_set_memory_limit($new_limit = NULL) {
+  $current_limit = @ini_get('memory_limit');
+  if ($current_limit && $current_limit != -1) {
+    if (!is_null($new_limit)) {
+      $new_limit = _xmlsitemap_get_optimal_memory_limit();
+    }
+    if (parse_size($current_limit) < $new_limit) {
+      return @ini_set('memory_limit', $new_limit);
     }
   }
 }
@@ -116,13 +126,12 @@ function _xmlsitemap_set_memory_limit() {
 function _xmlsitemap_regenerate_after() {
   // Show a watchdog message that the sitemap was regenerated.
   watchdog('xmlsitemap',
-    'XML sitemap files regenerated in @timer ms. Peak memory usage: @memory-peak.',
+    'Finished XML sitemap generation in @timer ms. Memory usage: @memory-peak.',
     array(
       '@timer' => timer_read('xmlsitemap_regenerate'),
       '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
     ),
-    WATCHDOG_NOTICE,
-    l(t('View sitemap'), 'sitemap.xml')
+    WATCHDOG_NOTICE
   );
 
   // Unset the regenerate flag.
@@ -201,9 +210,7 @@ function xmlsitemap_generate_chunk_header($type, array $sitemap, $handle, &$stat
 
   // Add the stylesheet link.
   if (variable_get('xmlsitemap_xsl', 1)) {
-    $url_options = xmlsitemap_get_url_options_from_context($sitemap['context']);
-    $url_options['alias'] = TRUE;
-    $xsl_url = url('sitemap.xsl', $url_options);
+    $xsl_url = url('sitemap.xsl', $sitemap['uri']['options'] + array('alias' => TRUE));
     $output .= '<?xml-stylesheet type="text/xsl" href="' . $xsl_url . '"?>' . PHP_EOL;
   }
 
@@ -236,7 +243,7 @@ function xmlsitemap_generate_chunk_header($type, array $sitemap, $handle, &$stat
 function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
-  $url_options = xmlsitemap_get_url_options_from_context($sitemap['context']);
+  $url_options = $sitemap['uri']['options'];
   $url_options += array(
     'absolute' => TRUE,
     'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
@@ -253,8 +260,8 @@ function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
   $query->condition('status', 1);
   $query->orderBy('language', 'DESC');
   $query->orderBy('loc');
-  $query->addTag('xmlsitemap');
-  $query->addMetaData('context', $sitemap['context']);
+  $query->addTag('xmlsitemap_generate');
+  $query->addMetaData('sitemap', $sitemap);
 
   $offset = max($chunk - 1, 0) * xmlsitemap_get_chunk_size();
   $limit = xmlsitemap_get_chunk_size();
@@ -323,7 +330,7 @@ function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
 function xmlsitemap_generate_index(array $sitemap, $handle, &$status) {
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
-  $url_options = xmlsitemap_get_url_options_from_context($sitemap['context']);
+  $url_options = $sitemap['uri']['options'];
   $url_options += array(
     'absolute' => TRUE,
     'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),

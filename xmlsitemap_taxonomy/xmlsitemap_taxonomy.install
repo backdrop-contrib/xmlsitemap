@@ -18,31 +18,11 @@ function xmlsitemap_taxonomy_uninstall() {
   }
 }
 
-// @todo Remove these update functions before alpha.
-function xmlsitemap_taxonomy_update_1() {
-  $vids = array_keys(taxonomy_get_vocabularies());
-  foreach ($vids as $vid) {
-    if (variable_get('xmlsitemap_taxonomy_priority_' . $vid, 'default') === 'default') {
-      variable_set('xmlsitemap_taxonomy_priority_' . $vid, 0.5);
-    }
-  }
-}
-
 /**
- * Change 'taxonomy' type to 'taxonomy_term'.
+ * Implements hook_update_last_removed().
  */
-function xmlsitemap_taxonomy_update_2() {
-  $field = array(
-    'type' => 'varchar',
-    'length' => 32,
-    'not null' => TRUE,
-    'default' => '',
-  );
-  db_change_field('xmlsitemap', 'type', 'type', $field);
-  db_update('xmlsitemap')
-    ->fields(array('type' => 'taxonomy_term'))
-    ->condition('type', 'taxonomy')
-    ->execute();
+function xmlsitemap_taxonomy_update_last_removed() {
+  return 6198;
 }
 
 /**
@@ -50,11 +30,12 @@ function xmlsitemap_taxonomy_update_2() {
  */
 function xmlsitemap_taxonomy_update_6200() {
   drupal_load('module', 'taxonomy');
+  drupal_load('module', 'xmlsitemap');
   $vids = array_keys(taxonomy_get_vocabularies());
   foreach ($vids as $vid) {
     $settings = array(
-      'status' => variable_get('xmlsitemap_taxonomy_status_' . $vid, 0),
-      'priority' => variable_get('xmlsitemap_taxonomy_priority_' . $vid, 0.5),
+      'status' => variable_get('xmlsitemap_taxonomy_status_' . $vid, XMLSITEMAP_STATUS_DEFAULT),
+      'priority' => variable_get('xmlsitemap_taxonomy_priority_' . $vid, XMLSITEMAP_PRIORITY_DEFAULT),
     );
     variable_set('xmlsitemap_settings_taxonomy_term_' . $vid, $settings);
     variable_del('xmlsitemap_taxonomy_status_' . $vid);
@@ -64,4 +45,10 @@ function xmlsitemap_taxonomy_update_6200() {
   }
   variable_del('xmlsitemap_taxonomy_include_empty_terms');
   variable_del('xmlsitemap_taxonomy_calculate_priority');
+}
+
+/**
+ * Empty update.
+ */
+function xmlsitemap_taxonomy_update_6201() {
 }

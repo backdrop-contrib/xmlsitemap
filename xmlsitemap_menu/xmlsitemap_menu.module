@@ -190,12 +190,6 @@ function xmlsitemap_menu_create_link(array $menu_item) {
     'priority_override' => 0,
   );
 
-  //if (!isset($menu_item['access'])) {
-  //  xmlsitemap_switch_user(0);
-  //  $menu_item = menu_link_load($menu_item['mlid']);
-  //  xmlsitemap_restore_user();
-  //}
-
   // The following values must always be checked because they are volatile.
   $menu_item['xmlsitemap']['subtype'] = $menu_item['menu_name'];
   $menu_item['xmlsitemap']['access'] = $menu_item['access'] && !$menu_item['external'] && !$menu_item['hidden'];
@@ -221,8 +215,8 @@ function xmlsitemap_menu_variables() {
   $menus = array_keys(menu_get_menus());
   foreach ($menus as $menu) {
     $defaults['xmlsitemap_settings_menu_' . $menu] = array(
-      'status' => 0,
-      'priority' => 0.5,
+      'status' => XMLSITEMAP_STATUS_DEFAULT,
+      'priority' => XMLSITEMAP_PRIORITY_DEFAULT,
     );
   }
   return $defaults;
