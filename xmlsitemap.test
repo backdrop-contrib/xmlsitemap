@@ -646,7 +646,7 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
   function testBaseURL() {
     $edit = array('xmlsitemap_base_url' => '');
     $this->drupalPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
-    $this->assertText(t('Base URL field is required.'));
+    $this->assertText(t('Default base URL field is required.'));
 
     $edit = array('xmlsitemap_base_url' => 'invalid');
     $this->drupalPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
