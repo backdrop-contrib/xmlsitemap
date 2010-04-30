@@ -26,7 +26,7 @@ function xmlsitemap_xmlsitemap_link_info() {
 function xmlsitemap_link_frontpage_settings(&$form) {
   module_load_include('admin.inc', 'xmlsitemap');
   if (user_access('administer site configuration')) {
-    $form['#description'] = t('The front page path can be changed at <a href="@url-frontpage">@url-frontpage</a>.', array('@url-frontpage' => url('admin/settings/site-information')));
+    $form['#description'] = t('The front page path can be changed in the <a href="@url-frontpage">site information configuration</a>.', array('@url-frontpage' => url('admin/config/system/site-information')));
   }
   $form['xmlsitemap_frontpage_priority'] = array(
     '#type' => 'select',
