@@ -85,7 +85,6 @@ function hook_xmlsitemap_context_info() {
   $info['vocabulary'] = array(
     'label' => t('Vocabulary'),
     'summary callback' => 'mymodule_xmlsitemap_vocabulary_context_summary',
-    'settings callback' => 'mymodule_xmlsitemap_vocabulary_context_settings',
     'default' => 0,
   );
   return $info;
