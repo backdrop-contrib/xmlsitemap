@@ -184,7 +184,7 @@ function xmlsitemap_menu() {
     'description' => 'Rebuild the site map.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_rebuild_form'),
-    'access arguments' => array('administer xmlsitemap'),
+    'access callback' => '_xmlsitemap_rebuild_form_access',
     'type' => MENU_LOCAL_TASK,
     'file' => 'xmlsitemap.admin.inc',
     'weight' => 20,
@@ -215,6 +215,15 @@ function xmlsitemap_menu() {
   }
 
   return $items;
+}
+
+/**
+ * Menu access callback; determines if the user can use the rebuild links page.
+ */
+function _xmlsitemap_rebuild_form_access() {
+  module_load_include('generate.inc', 'xmlsitemap');
+  $rebuild_types = xmlsitemap_get_rebuildable_link_types();
+  return !empty($rebuild_types) && user_access('administer xmlsitemap');
 }
 
 /**
