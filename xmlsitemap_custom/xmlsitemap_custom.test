@@ -37,7 +37,7 @@ class XMLSitemapCustomFunctionalTest extends XMLSitemapTestHelper {
     $this->assertNoSitemapLink(array('type' => 'custom', 'loc' => $edit['loc']));
 
     // Test a path not accessible to anonymous user.
-    $edit['loc'] = 'admin/config/people/accounts';
+    $edit['loc'] = 'admin/people/people';
     $this->drupalPost(NULL, $edit, t('Save'));
     $this->assertText(t('The custom link @link is either invalid or it cannot be accessed by anonymous users.', array('@link' => $edit['loc'])));
     $this->assertNoSitemapLink(array('type' => 'custom', 'loc' => $edit['loc']));
