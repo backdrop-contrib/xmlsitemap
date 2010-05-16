@@ -24,8 +24,6 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   function tearDown() {
     // Capture any (remaining) watchdog errors.
     $this->assertNoWatchdogErrors();
-    // Reset the watchdog seen IDs for the next test run.
-    $this->getWatchdogMessages(array(), TRUE);
 
     parent::tearDown();
   }
@@ -246,7 +244,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     $query->orderBy('timestamp');
     $messages = $query->execute()->fetchAllAssoc('wid');
 
-    $seen_ids = array_merge($this->seen_ids, array_keys($messages));
+    $seen_ids = array_merge($seen_ids, array_keys($messages));
     return $messages;
   }
 
@@ -284,6 +282,9 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
       array_unshift($verbose, '<h2>Watchdog messages</h2>');
       $this->verbose(implode("<br />", $verbose));
     }
+
+    // Clear the seen watchdog messages since we've failed on any errors.
+    $this->getWatchdogMessages(array(), TRUE);
   }
 }
 
