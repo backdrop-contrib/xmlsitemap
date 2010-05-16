@@ -17,7 +17,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   function setUp() {
     // Call parent::setUp() allowing test cases to pass further modules.
     $modules = func_get_args();
-    $modules[] = 'xmlsitemap';
+    array_unshift($modules, 'xmlsitemap');
     call_user_func_array(array($this, 'parent::setUp'), $modules);
   }
 
@@ -334,10 +334,6 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
       'description' => 'Unit tests for the XML sitemap module.',
       'group' => 'XML sitemap',
     );
-  }
-
-  function setUp() {
-    parent::setUp('xmlsitemap');
   }
 
   function testAssertFlag() {
