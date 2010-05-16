@@ -13,25 +13,19 @@
  */
 class XMLSitemapTestHelper extends DrupalWebTestCase {
   protected $admin_user;
-  protected $seen_ids = array();
 
   function setUp() {
     // Call parent::setUp() allowing test cases to pass further modules.
     $modules = func_get_args();
     $modules[] = 'xmlsitemap';
     call_user_func_array(array($this, 'parent::setUp'), $modules);
-
-    // Ensure the files directory is created and writable during testing.
-    // @todo This can be removed when http://drupal.org/node/654752 is fixed.
-    drupal_static_reset('xmlsitemap_get_directory');
-    $this->checkFilesDirectory();
   }
 
   function tearDown() {
     // Capture any (remaining) watchdog errors.
     $this->assertNoWatchdogErrors();
     // Reset the watchdog seen IDs for the next test run.
-    $this->seen_ids = array();
+    $this->getWatchdogMessages(array(), TRUE);
 
     parent::tearDown();
   }
@@ -231,39 +225,28 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    * @todo Add unit tests for this function.
    */
   protected function getWatchdogMessages(array $conditions = array(), $reset = FALSE) {
-    static $levels;
+    static $seen_ids = array();
 
     if (!module_exists('dblog') || $reset) {
-      $this->seen_ids = array();
-      return;
-    }
-    if (!isset($levels)) {
-      $levels = watchdog_severity_levels();
+      $seen_ids = array();
+      return array();
     }
 
     $query = db_select('watchdog');
     $query->fields('watchdog', array('wid', 'type', 'severity', 'message', 'variables', 'timestamp'));
     foreach ($conditions as $field => $value) {
-      if ($field == 'variables' && is_array($value)) {
+      if ($field == 'variables' && !is_string($value)) {
         $value = serialize($value);
       }
       $query->condition($field, $value);
     }
-    if ($this->seen_ids) {
-      $query->condition('wid', $this->seen_ids, 'NOT IN');
+    if ($seen_ids) {
+      $query->condition('wid', $seen_ids, 'NOT IN');
     }
     $query->orderBy('timestamp');
     $messages = $query->execute()->fetchAllAssoc('wid');
 
-    foreach ($messages as &$message) {
-      $message->variables = unserialize($message->variables);
-      if (!is_array($message->variables)) {
-        $message->variables = array();
-      }
-      $message->text = $message->timestamp . ' - ' . $levels[$message->severity] . ' - ' . $message->type . ' - ' . t($message->message, $message->variables);
-    }
-
-    $this->seen_ids = array_merge($this->seen_ids, array_keys($messages));
+    $seen_ids = array_merge($this->seen_ids, array_keys($messages));
     return $messages;
   }
 
@@ -279,18 +262,20 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    * Check that there were no watchdog errors or worse.
    */
   protected function assertNoWatchdogErrors() {
+    module_load_include('admin.inc', 'dblog');
+    static $levels;
+
+    if (!isset($levels)) {
+      $levels = watchdog_severity_levels();
+    }
+
     $messages = $this->getWatchdogMessages();
     $verbose = array();
 
     foreach ($messages as $message) {
+      $message->text = $message->timestamp . ' - ' . $levels[$message->severity] . ' - ' . $message->type . ' - ' . theme_dblog_message(array('event' => $message));
       if (in_array($message->severity, array(WATCHDOG_EMERGENCY, WATCHDOG_ALERT, WATCHDOG_CRITICAL, WATCHDOG_ERROR, WATCHDOG_WARNING))) {
-        // @todo Remove when http://drupal.org/node/775012 is fixed.
-        if ($message->type == 'theme' && $message->message == 'Theme key "@key" not found.' && $message->variables == array('@key' => 'node_form')) {
-          // Do not intentionally fail. It wasn't my fault.
-        }
-        else {
-          $this->fail($message->text);
-        }
+        $this->fail($message->text);
       }
       $verbose[] = $message->text;
     }
@@ -737,7 +722,7 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
 
     // Test anonymous users access to sitemap.xml.
     user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
-    $this->assertXMLSitemapProblems(t('In order to allow search engines to view the XML sitemap and content on your site, the anonymous user role must have the access content permission.'));
+    $this->assertXMLSitemapProblems(t('In order to allow search engines to view the XML sitemap and content on your site, the anonymous user role must have the View published content permission.'));
     user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
     $this->assertNoXMLSitemapProblems();
 
