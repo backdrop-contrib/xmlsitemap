@@ -171,7 +171,6 @@ function xmlsitemap_node_form_alter(&$form, $form_state, $form_id) {
     // Add the link options.
     module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
     xmlsitemap_add_form_link_options($form, 'node', $form['type']['#value'], $form['nid']['#value']);
-    $form['xmlsitemap']['#access'] |= user_access('administer nodes');
     $form['xmlsitemap']['#weight'] = 30;
   }
 }
