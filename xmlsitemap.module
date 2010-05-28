@@ -617,6 +617,14 @@ function xmlsitemap_link_delete($entity_type, $entity_id) {
  *   The number of links that were deleted.
  */
 function xmlsitemap_link_delete_multiple(array $conditions) {
+  // Because this function is called from sub-module uninstall hooks, we have
+  // to manually check if the table exists since it could have been removed
+  // in xmlsitemap_uninstall().
+  // @todo Remove this check when http://drupal.org/node/15145 is fixed.
+  if (!db_table_exists('xmlsitemap')) {
+    return FALSE;
+  }
+
   if (!variable_get('xmlsitemap_regenerate_needed', TRUE)) {
     _xmlsitemap_check_changed_links($conditions, array(), TRUE);
   }
