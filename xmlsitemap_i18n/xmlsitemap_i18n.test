@@ -19,7 +19,7 @@ class XMLSitemapI18nWebTestCase extends XMLSitemapTestHelper {
     // Call parent::setUp() allowing test cases to pass further modules.
     $modules = func_get_args();
     $modules = array_merge(array('locale', 'translation', 'i18n', 'xmlsitemap_i18n'), $modules);
-    call_user_func_array(array($this, 'parent::setUp'), $modules);
+    parent::setUp($modules);
 
     // Add predefined language and reset the locale cache.
     require_once DRUPAL_ROOT . '/includes/locale.inc';
