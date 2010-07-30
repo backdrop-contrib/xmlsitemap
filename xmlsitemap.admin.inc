@@ -164,7 +164,7 @@ function xmlsitemap_sitemap_list_form_submit($form, &$form_state) {
   }
 }
 
-function xmlsitemap_sitemap_edit_form(&$form, $form_state, array $sitemap = array()) {
+function xmlsitemap_sitemap_edit_form($form, &$form_state, array $sitemap = array()) {
   _xmlsitemap_set_breadcrumb();
 
   $sitemap += array(
@@ -233,7 +233,7 @@ function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   // @todo If context was changed, needs to be regenerated.
 }
 
-function xmlsitemap_sitemap_delete_form(&$form, $form_state, array $sitemap) {
+function xmlsitemap_sitemap_delete_form($form, &$form_state, array $sitemap) {
   _xmlsitemap_set_breadcrumb();
 
   $count = (int) db_query("SELECT COUNT(smid) FROM {xmlsitemap_sitemap}")->fetchField();
@@ -268,7 +268,7 @@ function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
  * @see system_settings_form()
  * @see xmlsitemap_settings_form_validate()
  */
-function xmlsitemap_settings_form() {
+function xmlsitemap_settings_form($form, &$form_state) {
   $form['xmlsitemap_minimum_lifetime'] = array(
     '#type' => 'select',
     '#title' => t('Minimum sitemap lifetime'),
