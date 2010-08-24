@@ -38,7 +38,7 @@ function xmlsitemap_requirements($phase) {
         'title' => $t('XML sitemap cache directory'),
         'value' => $t('Not found or not writable'),
         'severity' => REQUIREMENT_ERROR,
-        'description' => xmlsitemap_get_directory(),
+        'description' => $t('The directory %directory was not found or is not writable by the server. See <a href="@docpage">@docpage</a> for more information.', array('%directory' => xmlsitemap_get_directory(), '@docpage' => 'http://drupal.org/node/34025')),
       );
     }
     $max_links = XMLSITEMAP_MAX_SITEMAP_LINKS * XMLSITEMAP_MAX_SITEMAP_LINKS;
