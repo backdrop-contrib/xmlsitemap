@@ -168,12 +168,12 @@ function hook_xmlsitemap_sitemap_operations() {
  * Respond to XML sitemap deletion.
  *
  * This hook is invoked from xmlsitemap_sitemap_delete_multiple() after the XML
- * siteamp has been removed from the table in the database.
+ * sitemap has been removed from the table in the database.
  *
  * @param $sitemap
  *   The XML sitemap array that was deleted.
  */
-function hook_xmlsitemap_siteamp_delete(array $sitemap) {
+function hook_xmlsitemap_sitemap_delete(array $sitemap) {
   db_query("DELETE FROM {mytable} WHERE smid = '%s'", $sitemap['smid']);
 }
 
