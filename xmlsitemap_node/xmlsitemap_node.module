@@ -142,21 +142,8 @@ function xmlsitemap_node_field_extra_fields() {
  */
 function xmlsitemap_node_form_node_type_form_alter(&$form, $form_state) {
   $node_type = isset($form['#node_type']->type) ? $form['#node_type']->type : '';
-
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
   xmlsitemap_add_link_bundle_settings($form, $form_state, 'node', $node_type);
-
-  // Add our submit handler before node_type_form_submit() so we can compare
-  // the old and new values.
-  array_unshift($form['#submit'], 'xmlsitemap_node_type_form_submit');
-}
-
-function xmlsitemap_node_type_form_submit($form, &$form_state) {
-  $node_type = $form_state['values']['old_type'];
-  xmlsitemap_link_bundle_settings_save('node', $node_type, $form_state['values']['xmlsitemap']);
-
-  // Do not allow node_type_form_submit() to run variable_set() on this.
-  unset($form_state['values']['xmlsitemap']);
 }
 
 /**

@@ -21,7 +21,6 @@ function xmlsitemap_taxonomy_xmlsitemap_link_info_alter(&$link_info) {
     // Adjust the edit path to the *real* edit path.
     $link_info['taxonomy_term']['bundles'][$machine_name]['admin']['path'] .= '/edit';
     $link_info['taxonomy_term']['bundles'][$machine_name]['admin']['real path'] .= '/edit';
-    $link_info['taxonomy_term']['bundles'][$machine_name]['xmlsitemap'] = xmlsitemap_link_bundle_load('taxonomy_term', $vocabulary->vid);
     $link_info['taxonomy_term']['bundles'][$vocabulary->vid] = $link_info['taxonomy_term']['bundles'][$machine_name];
     unset($link_info['taxonomy_term']['bundles'][$machine_name]);
   }

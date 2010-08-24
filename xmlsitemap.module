@@ -56,36 +56,26 @@ define('XMLSITEMAP_PRIORITY_DEFAULT', 0.5);
  * Implements hook_hook_info().
  */
 function xmlsitemap_hook_info() {
-  $hooks['xmlsitemap_link_info'] = array(
-    'group' => 'xmlsitemap',
+  $hooks = array(
+    'xmlsitemap_link_info',
+    'xmlsitemap_link_info_alter',
+    'xmlsitemap_link_alter',
+    'xmlsitemap_index_links',
+    'xmlsitemap_context_info',
+    'xmlsitemap_context_info_alter',
+    'xmlsitemap_context',
+    'xmlsitemap_sitemap_operations',
+    'xmlsitemap_sitemap_delete',
+    'xmlsitemap_sitemap_uri_alter',
+    'xmlsitemap_sitemap_link_url_options_alter',
+    'query_xmlsitemap_generate_alter',
+    'form_xmlsitemap_sitemap_edit_form_alter',
   );
-  $hooks['xmlsitemap_link_info_alter'] = array(
-    'group' => 'xmlsitemap',
-  );
-  $hooks['xmlsitemap_link_alter'] = array(
-    'group' => 'xmlsitemap',
-  );
-  $hooks['xmlsitemap_index_links'] = array(
-    'group' => 'xmlsitemap',
-  );
-  $hooks['xmlsitemap_context_info'] = array(
-    'group' => 'xmlsitemap',
-  );
-  $hooks['xmlsitemap_context'] = array(
-    'group' => 'xmlsitemap',
-  );
-  $hooks['xmlsitemap_context_fallback'] = array(
-    'group' => 'xmlsitemap',
-  );
-  $hooks['xmlsitemap_context_url_options'] = array(
-    'group' => 'xmlsitemap',
-  );
-  $hooks['xmlsitemap_sitemap_operations'] = array(
-    'group' => 'xmlsitemap',
-  );
-  $hooks['xmlsitemap_sitemap_delete'] = array(
-    'group' => 'xmlsitemap',
-  );
+
+  $hooks = array_combine($hooks, $hooks);
+  foreach ($hooks as $hook => $info) {
+    $hooks[$hook] = array('group' => 'xmlsitemap');
+  }
   return $hooks;
 }
 
@@ -155,6 +145,7 @@ function xmlsitemap_menu() {
     'access arguments' => array('administer xmlsitemap'),
     'type' => MENU_LOCAL_ACTION,
     'file' => 'xmlsitemap.admin.inc',
+    'modal' => TRUE,
   );
   $items['admin/config/search/xmlsitemap/edit/%xmlsitemap_sitemap'] = array(
     'page callback' => 'drupal_get_form',
@@ -162,6 +153,7 @@ function xmlsitemap_menu() {
     'access arguments' => array('administer xmlsitemap'),
     'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap.admin.inc',
+    'modal' => TRUE,
   );
   $items['admin/config/search/xmlsitemap/delete/%xmlsitemap_sitemap'] = array(
     'page callback' => 'drupal_get_form',
@@ -169,7 +161,9 @@ function xmlsitemap_menu() {
     'access arguments' => array('administer xmlsitemap'),
     'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap.admin.inc',
+    'modal' => TRUE,
   );
+
   $items['admin/config/search/xmlsitemap/settings'] = array(
     'title' => 'Settings',
     'page callback' => 'drupal_get_form',
@@ -179,6 +173,16 @@ function xmlsitemap_menu() {
     'file' => 'xmlsitemap.admin.inc',
     'weight' => 10,
   );
+  $items['admin/config/search/xmlsitemap/settings/%xmlsitemap_link_bundle/%'] = array(
+    'load arguments' => array(6),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('xmlsitemap_link_bundle_settings_form', 5),
+    'access callback' => 'xmlsitemap_link_bundle_access',
+    'access arguments' => array(5),
+    'file' => 'xmlsitemap.admin.inc',
+    'modal' => TRUE,
+  );
+
   $items['admin/config/search/xmlsitemap/rebuild'] = array(
     'title' => 'Rebuild links',
     'description' => 'Rebuild the site map.',
@@ -202,17 +206,6 @@ function xmlsitemap_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap.pages.inc',
   );
-
-  // CTools/Dialog API callback for editing bundle settings.
-  if (module_exists('dialog')) {
-    $items['admin/config/search/xmlsitemap/settings/%/%/%dialog_js'] = array(
-      'page callback' => 'xmlsitemap_bundle_settings_dialog',
-      'page arguments' => array(5, 6, 7),
-      'access arguments' => array('administer xmlsitemap'),
-      'type' => MENU_CALLBACK,
-      'file' => 'xmlsitemap.admin.inc',
-    );
-  }
 
   return $items;
 }
@@ -361,7 +354,7 @@ function xmlsitemap_sitemap_load_multiple(array $smids) {
  *
  * @param $context
  *   An optional XML sitemap context array to use to find the correct XML
- *   siteamp. If not provided, the current site's context will be used.
+ *   sitemap. If not provided, the current site's context will be used.
  *
  * @see xmlsitemap_get_current_context()
  */
@@ -620,7 +613,7 @@ function xmlsitemap_link_delete_multiple(array $conditions) {
   // Because this function is called from sub-module uninstall hooks, we have
   // to manually check if the table exists since it could have been removed
   // in xmlsitemap_uninstall().
-  // @todo Remove this check when http://drupal.org/node/15145 is fixed.
+  // @todo Remove this check when http://drupal.org/node/151452 is fixed.
   if (!db_table_exists('xmlsitemap')) {
     return FALSE;
   }
@@ -829,7 +822,7 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
         $bundle_info += array(
           'xmlsitemap' => array(),
         );
-        $bundle_info['xmlsitemap'] += xmlsitemap_link_bundle_load($key, $bundle);
+        $bundle_info['xmlsitemap'] += xmlsitemap_link_bundle_load($key, $bundle, FALSE);
       }
     }
     drupal_alter('xmlsitemap_link_info', $link_info);
@@ -908,10 +901,21 @@ function xmlsitemap_link_bundle_rename($entity, $bundle_old, $bundle_new) {
   }
 }
 
-function xmlsitemap_link_bundle_load($entity, $bundle) {
-  $settings = variable_get("xmlsitemap_settings_{$entity}_{$bundle}", array());
-  $settings += array('status' => XMLSITEMAP_STATUS_DEFAULT, 'priority' => XMLSITEMAP_PRIORITY_DEFAULT);
-  return $settings;
+function xmlsitemap_link_bundle_load($entity, $bundle, $load_bundle_info = TRUE) {
+  $info = array(
+    'entity' => $entity,
+    'bundle' => $bundle,
+  );
+  if ($load_bundle_info) {
+    $entity_info = xmlsitemap_get_link_info($entity);
+    $info['info'] = $entity_info['bundles'][$bundle];
+  }
+  $info += variable_get("xmlsitemap_settings_{$entity}_{$bundle}", array());
+  $info += array(
+    'status' => XMLSITEMAP_STATUS_DEFAULT,
+    'priority' => XMLSITEMAP_PRIORITY_DEFAULT,
+  );
+  return $info;
 }
 
 function xmlsitemap_link_bundle_delete($entity, $bundle, $delete_links = TRUE) {
@@ -923,11 +927,16 @@ function xmlsitemap_link_bundle_delete($entity, $bundle, $delete_links = TRUE) {
   //xmlsitemap_get_link_info(NULL, TRUE);
 }
 
-function xmlsitemap_can_admin_bundle($entity, $bundle) {
-  $info = xmlsitemap_get_link_info($entity);
+function xmlsitemap_link_bundle_access($entity, $bundle = NULL) {
+  if (is_array($entity) && !isset($bundle)) {
+    $bundle = $entity;
+  }
+  else {
+    $bundle = xmlsitemap_link_bundle_load($entity, $bundle);
+  }
 
-  if (isset($info['bundles'][$bundle]['admin'])) {
-    $admin = $info['bundles'][$bundle]['admin'];
+  if (isset($bundle['info']['admin'])) {
+    $admin = $bundle['info']['admin'];
     $admin += array('access arguments' => array());
 
     if (!isset($admin['access callback']) && count($admin['access arguments']) == 1) {
@@ -1304,4 +1313,21 @@ function _xmlsitemap_set_breadcrumb($path = 'admin/config/search/xmlsitemap') {
   } while (array_pop($path) && !empty($path));
   array_unshift($breadcrumb, l(t('Home'), NULL));
   drupal_set_breadcrumb($breadcrumb);
+}
+
+function xmlsitemap_get_operation_link($url, $options = array()) {
+  static $destination;
+
+  if (!isset($destination)) {
+    $destination = drupal_get_destination();
+  }
+
+  $link = array('href' => $url) + $options;
+
+  // Fetch the item's menu router link info and title.
+  $item = menu_get_item($url);
+  $link += array('title' => $item['title'], 'router info' => $item, 'query' => $destination);
+
+  drupal_alter('xmlsitemap_operation_link', $link);
+  return $link;
 }

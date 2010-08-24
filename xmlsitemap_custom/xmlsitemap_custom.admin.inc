@@ -38,16 +38,8 @@ function xmlsitemap_custom_list_links() {
       $row['language'] = module_invoke('locale', 'language_name', $link->language);
     }
     $operations = array();
-    $operations['edit'] = array(
-      'title' => t('Edit'),
-      'href' => 'admin/config/search/xmlsitemap/custom/edit/' . $link->id,
-      'query' => $destination,
-    );
-    $operations['delete'] = array(
-      'title' => t('Delete'),
-      'href' => 'admin/config/search/xmlsitemap/custom/delete/' . $link->id,
-      'query' => $destination,
-    );
+    $operations['edit'] = xmlsitemap_get_operation_link('admin/config/search/xmlsitemap/custom/edit/' . $link->id, array('title' => t('Edit'), 'modal' => TRUE));
+    $operations['delete'] = xmlsitemap_get_operation_link('admin/config/search/xmlsitemap/custom/delete/' . $link->id, array('title' => t('Delete'), 'modal' => TRUE));
     $row['operations'] = array(
       'data' => array(
         '#theme' => 'links',
@@ -123,9 +115,7 @@ function xmlsitemap_custom_edit_link_form($form, &$form_state, $link = array()) 
   );
 
   $form['actions'] = array(
-    '#type' => 'container',
-    '#attributes' => array('class' => array('form-actions')),
-    '#weight' => 100,
+    '#type' => 'actions'
   );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -178,6 +168,11 @@ function xmlsitemap_custom_delete_link_form($form, &$form_state, array $link) {
   // @todo Remove when http://drupal.org/node/576290 is fixed.
   _xmlsitemap_set_breadcrumb('admin/config/search/xmlsitemap/custom');
 
+  $form['#link'] = $link;
+  $form['id'] = array(
+    '#type' => 'value',
+    '#value' => $link['id'],
+  );
   $form['link'] = array(
     '#type' => 'value',
     '#value' => $link,
