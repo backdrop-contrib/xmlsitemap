@@ -335,17 +335,26 @@ function xmlsitemap_sitemap_load($smid) {
  * Load multiple XML sitemaps from the database.
  *
  * @param $smids
- *   An array of XML sitemap IDs.
+ *   An array of XML sitemap IDs, or FALSE to load all XML sitemaps.
+ * @param $conditions
+ *   An array of conditions in the form 'field' => $value.
  */
-function xmlsitemap_sitemap_load_multiple(array $smids) {
-  $sitemaps = array();
-  if ($smids) {
-    $sitemaps = db_query("SELECT * FROM {xmlsitemap_sitemap} WHERE smid IN (:smids)", array(':smids' => $smids))->fetchAllAssoc('smid', PDO::FETCH_ASSOC);
-    foreach ($sitemaps as $smid => $sitemap) {
-      $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
-      $sitemaps[$smid]['uri'] = xmlsitemap_sitemap_uri($sitemaps[$smid]);
-    }
+function xmlsitemap_sitemap_load_multiple($smids = array(), array $conditions = array()) {
+  $query = db_select('xmlsitemap_sitemap');
+  $query->fields('xmlsitemap_sitemap');
+  if ($smids !== FALSE) {
+    $conditions['smid'] = $smids;
   }
+  foreach ($conditions as $field => $value) {
+    $query->condition($field, $value);
+  }
+
+  $sitemaps = $query->execute()->fetchAllAssoc('smid', PDO::FETCH_ASSOC);
+  foreach ($sitemaps as $smid => $sitemap) {
+    $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
+    $sitemaps[$smid]['uri'] = xmlsitemap_sitemap_uri($sitemaps[$smid]);
+  }
+
   return $sitemaps;
 }
 
@@ -733,6 +742,28 @@ function xmlsitemap_check_directory(array $sitemap = NULL) {
   return $result;
 }
 
+function xmlsitemap_check_all_directories() {
+  $directories = array();
+
+  $sitemaps = xmlsitemap_sitemap_load_multiple(FALSE);
+  foreach ($sitemaps as $smid => $sitemap) {
+    $directory = xmlsitemap_get_directory($sitemap);
+    $directories[$directory] = $directory;
+  }
+
+  foreach ($directories as $directory) {
+    $result = file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+    if ($result) {
+      $directories[$directory] = TRUE;
+    }
+    else {
+      $directories[$directory] = FALSE;
+    }
+  }
+
+  return $directories;
+}
+
 function xmlsitemap_clear_directory(array $sitemap = NULL, $delete = FALSE) {
   $directory = xmlsitemap_get_directory($sitemap);
   return _xmlsitemap_delete_recursive($directory, $delete);
@@ -868,21 +899,32 @@ function xmlsitemap_get_link_type_indexed_status($entity_type, $bundle = '') {
   $total = db_select($info['base table'], 'base');
   $total->addField('base', $info['entity keys']['id']);
   $total->condition($info['entity keys']['id'], 0, '>');
-
-  if (!empty($info['bundle keys']['bundle'])) {
-    $total->condition($info['bundle keys']['bundle'], $bundle);
-  }
-  elseif (!empty($info['entity keys']['bundle'])) {
-    $total->condition($info['entity keys']['bundle'], $bundle);
-  }
-
-  $total->addTag('xmlsitemap_link_index_count');
+  $total->addTag('xmlsitemap_link_bundle_access');
+  $total->addTag('xmlsitemap_link_indexed_status');
   $total->addMetaData('entity', $entity_type);
   $total->addMetaData('bundle', $bundle);
   $total->addMetaData('entity_info', $info);
   $status['total'] = $total->countQuery()->execute()->fetchField();
 
   return $status;
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function xmlsitemap_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInterface $query) {
+  if ($entity = $query->getMetaData('entity_info')) {
+    $bundle = $query->getMetaData('bundle');
+    if (empty($bundle)) {
+      $bundle = xmlsitemap_get_link_type_enabled_bundles($entity);
+    }
+    if (!empty($info['bundle keys']['bundle'])) {
+      $query->condition($info['bundle keys']['bundle'], $bundle);
+    }
+    if (!empty($info['entity keys']['bundle'])) {
+      $query->condition($info['entity keys']['bundle'], $bundles);
+    }
+  }
 }
 
 function xmlsitemap_link_bundle_settings_save($entity, $bundle, array $settings, $update_links = TRUE) {

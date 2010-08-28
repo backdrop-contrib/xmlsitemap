@@ -127,12 +127,12 @@ function xmlsitemap_user_create_link(stdClass &$account) {
   }
 
   $settings = xmlsitemap_link_bundle_load('user', 'user');
+  $uri = entity_uri('user', $account);
 
   $account->xmlsitemap += array(
     'type' => 'user',
-    'subtype' => 'user',
     'id' => $account->uid,
-    'loc' => 'user/' . $account->uid,
+    'subtype' => 'user',
     'status' => $settings['status'],
     'status_default' => $settings['status'],
     'status_override' => 0,
@@ -142,6 +142,7 @@ function xmlsitemap_user_create_link(stdClass &$account) {
   );
 
   // The following values must always be checked because they are volatile.
+  $account->xmlsitemap['loc'] = $uri['path'];
   $account->xmlsitemap['access'] = $account->uid && $account->status && $account->login && $account->access;
   $account->xmlsitemap['language'] = !empty($account->language) ? $account->language : LANGUAGE_NONE;
 

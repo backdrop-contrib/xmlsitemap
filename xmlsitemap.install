@@ -33,13 +33,27 @@ function xmlsitemap_requirements($phase) {
         'severity' => REQUIREMENT_ERROR,
       );
     }
+    $requirements['xmlsitemap_directory'] = array(
+      'title' => $t('XML sitemap cache directory'),
+      'value' => $t('Writable'),
+    );
     if (!xmlsitemap_check_directory()) {
-      $requirements['xmlsitemap_directory'] = array(
-        'title' => $t('XML sitemap cache directory'),
-        'value' => $t('Not found or not writable'),
-        'severity' => REQUIREMENT_ERROR,
-        'description' => $t('The directory %directory was not found or is not writable by the server. See <a href="@docpage">@docpage</a> for more information.', array('%directory' => xmlsitemap_get_directory(), '@docpage' => 'http://drupal.org/node/34025')),
-      );
+      $requirements['xmlsitemap_directory']['value'] = $t('Not found or not writable');
+      $requirements['xmlsitemap_directory']['severity'] = REQUIREMENT_ERROR;
+      $requirements['xmlsitemap_directory']['description'] = $t('The directory %directory was not found or is not writable by the server. See <a href="@docpage">@docpage</a> for more information.', array('%directory' => xmlsitemap_get_directory(), '@docpage' => 'http://drupal.org/node/34025'));
+    }
+    else {
+      $directories = xmlsitemap_check_all_directories();
+      foreach ($directories as $directory => $writable) {
+        if ($writable) {
+          unset($directories[$directory]);
+        }
+      }
+      if (!empty($directories)) {
+        $requirements['xmlsitemap_directory']['value'] = $t('Not found or not writable');
+        $requirements['xmlsitemap_directory']['severity'] = REQUIREMENT_ERROR;
+        $requirements['xmlsitemap_directory']['description'] = $t('The following directories were not found or are not writable by the server. See <a href="@docpage">@docpage</a> for more information. !directories', array('!directories' => theme('item_list', array('items' => array_keys($directories))), '@docpage' => 'http://drupal.org/node/34025'));
+      }
     }
     $max_links = XMLSITEMAP_MAX_SITEMAP_LINKS * XMLSITEMAP_MAX_SITEMAP_LINKS;
     if (xmlsitemap_get_link_count() > $max_links) {

@@ -169,12 +169,12 @@ function xmlsitemap_taxonomy_create_link(stdClass &$term) {
   }
 
   $settings = xmlsitemap_link_bundle_load('taxonomy_term', $term->vocabulary_machine_name);
+  $uri = entity_uri('taxonomy_term', $term);
 
   $term->xmlsitemap += array(
     'id' => $term->tid,
     'type' => 'taxonomy_term',
     'subtype' => $term->vocabulary_machine_name,
-    'loc' => 'taxonomy/term/' . $term->tid,
     'status' => $settings['status'],
     'status_default' => $settings['status'],
     'status_override' => 0,
@@ -185,6 +185,7 @@ function xmlsitemap_taxonomy_create_link(stdClass &$term) {
 
   // The following values must always be checked because they are volatile.
   // @todo How can/should we check taxonomy term access?
+  $term->xmlsitemap['loc'] = $uri['path'];
   $term->xmlsitemap['access'] = 1;
   $term->xmlsitemap['language'] = isset($term->language) ? $term->language : LANGUAGE_NONE;
 
@@ -245,7 +246,7 @@ function xmlsitemap_taxonomy_get_node_count(stdClass $term) {
 /**
  * Implements hook_query_TAG_alter().
  */
-function xmlsitemap_taxonomy_query_xmlsitemap_link_index_count_alter(QueryAlterableInterface $query) {
+function xmlsitemap_taxonomy_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInterface $query) {
   if ($query->getMetaData('entity') == 'taxonomy_term') {
     $query->innerJoin('taxonomy_vocabulary', 'v', 'base.vid = v.vid');
     $query->addField('v', 'machine_name', 'vocabulary_machine_name');

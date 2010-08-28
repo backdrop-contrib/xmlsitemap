@@ -197,12 +197,12 @@ function xmlsitemap_node_create_link(stdClass &$node) {
   }
 
   $settings = xmlsitemap_link_bundle_load('node', $node->type);
+  $uri = entity_uri('node', $node);
 
   $node->xmlsitemap += array(
     'type' => 'node',
     'id' => $node->nid,
     'subtype' => $node->type,
-    'loc' => 'node/'. $node->nid,
     'status' => $settings['status'],
     'status_default' => $settings['status'],
     'status_override' => 0,
@@ -222,6 +222,7 @@ function xmlsitemap_node_create_link(stdClass &$node) {
   //node_access_acquire_grants($node);
 
   // The following values must always be checked because they are volatile.
+  $node->xmlsitemap['loc'] = $uri['path'];
   $node->xmlsitemap['lastmod'] = count($timestamps) ? max($timestamps) : 0;
   $node->xmlsitemap['access'] = $node->nid ? xmlsitemap_node_view_access($node, drupal_anonymous_user()) : 1;
   $node->xmlsitemap['language'] = isset($node->language) ? $node->language : LANGUAGE_NONE;
