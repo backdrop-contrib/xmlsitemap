@@ -529,13 +529,10 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   }
   $info = $context['sandbox']['info'];
 
-  $query = db_select($info['base table']);
-  $query->addField($info['base table'], $info['entity keys']['id']);
+  $query = db_select($info['base table'], 'base');
+  $query->addField('base', $info['entity keys']['id']);
   $query->condition($info['entity keys']['id'], $context['sandbox']['last_id'], '>');
-  if (!empty($info['entity keys']['bundle'])) {
-    $bundles = xmlsitemap_get_link_type_enabled_bundles($entity);
-    $query->condition($info['entity keys']['bundle'], $bundles);
-  }
+  $query->addTag('xmlsitemap_link_bundle_access');
   $query->addTag('xmlsitemap_rebuild');
   $query->addMetaData('entity', $entity);
   $query->addMetaData('entity_info', $info);
