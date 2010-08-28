@@ -12,9 +12,9 @@
 function xmlsitemap_taxonomy_uninstall() {
   drupal_load('module', 'taxonomy');
   drupal_load('module', 'xmlsitemap');
-  $vids = array_keys(taxonomy_get_vocabularies());
-  foreach ($vids as $vid) {
-    xmlsitemap_link_bundle_delete('taxonomy_term', $vid);
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach ($vocabularies as $vid => $vocabulary) {
+    xmlsitemap_link_bundle_delete('taxonomy_term', $vocabulary->machine_name);
   }
 }
 
@@ -51,4 +51,17 @@ function xmlsitemap_taxonomy_update_6200() {
  * Empty update.
  */
 function xmlsitemap_taxonomy_update_6201() {
+}
+
+/**
+ * Change bundles on taxonomy terms from vid to $vocabulary->machine_name.
+ */
+function xmlsitemap_taxonomy_update_7200() {
+  drupal_load('module', 'taxonomy');
+  drupal_load('module', 'xmlsitemap');
+
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach ($vocabularies as $vid => $vocabulary) {
+    xmlsitemap_link_bundle_rename('taxonomy_term', $vid, $vocabulary->machine_name);
+  }
 }

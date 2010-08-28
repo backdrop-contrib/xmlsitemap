@@ -551,6 +551,17 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
  */
 function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $entity, $bundle) {
   $entity_info = xmlsitemap_get_link_info($entity);
+
+  //if (!isset($bundle) && isset($entity_info['bundle keys']['bundle'])) {
+  //  $bundle_key = $entity_info['bundle keys']['bundle'];
+  //  if (isset($form[$bundle_key]['#value'])) {
+  //    $bundle = $form[$bundle_key]['#value'];
+  //  }
+  //  elseif (isset($form[$bundle_key]['#default_value'])) {
+  //    $bundle = $form[$bundle_key]['#default_value'];
+  //  }
+  //}
+
   $bundle_info = xmlsitemap_link_bundle_load($entity, $bundle);
 
   $form['xmlsitemap'] = array(
@@ -642,22 +653,6 @@ function xmlsitemap_link_bundle_settings_form(array $form, array &$form_state, a
   );
 
   return $form;
-}
-
-function xmlsitemap_link_bundle_settings_form_submit($form, &$form_state) {
-  $entity = $form['xmlsitemap']['#entity'];
-  $bundle = $form['xmlsitemap']['#bundle'];
-  xmlsitemap_link_bundle_settings_save($entity, $bundle, $form_state['values']['xmlsitemap']);
-
-  $entity_info = $form['xmlsitemap']['#entity_info'];
-  if (!empty($form['xmlsitemap']['#show_message'])) {
-    drupal_set_message(t('XML sitemap settings for the @bundle-label %bundle have been saved.', array('@bundle-label' => drupal_strtolower($entity_info['bundle label']), '%bundle' => $entity_info['bundles'][$bundle]['label'])));
-  }
-
-  // Unset the form values since we have already saved the bundle settings and
-  // we don't want these values to get saved as variables in-case this form
-  // also uses system_settings_form().
-  unset($form_state['values']['xmlsitemap']);
 }
 
 /**

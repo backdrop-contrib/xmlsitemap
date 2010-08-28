@@ -865,12 +865,21 @@ function xmlsitemap_get_link_type_indexed_status($entity_type, $bundle = '') {
   $status['indexed'] = $indexed->countQuery()->execute()->fetchField();
   $status['visible'] = $visible->countQuery()->execute()->fetchField();
 
-  $total = db_select($info['base table']);
-  $total->addField($info['base table'], $info['entity keys']['id']);
+  $total = db_select($info['base table'], 'base');
+  $total->addField('base', $info['entity keys']['id']);
   $total->condition($info['entity keys']['id'], 0, '>');
-  if (!empty($info['entity keys']['bundle'])) {
+
+  if (!empty($info['bundle keys']['bundle'])) {
+    $total->condition($info['bundle keys']['bundle'], $bundle);
+  }
+  elseif (!empty($info['entity keys']['bundle'])) {
     $total->condition($info['entity keys']['bundle'], $bundle);
   }
+
+  $total->addTag('xmlsitemap_link_index_count');
+  $total->addMetaData('entity', $entity_type);
+  $total->addMetaData('bundle', $bundle);
+  $total->addMetaData('entity_info', $info);
   $status['total'] = $total->countQuery()->execute()->fetchField();
 
   return $status;
@@ -908,7 +917,9 @@ function xmlsitemap_link_bundle_load($entity, $bundle, $load_bundle_info = TRUE)
   );
   if ($load_bundle_info) {
     $entity_info = xmlsitemap_get_link_info($entity);
-    $info['info'] = $entity_info['bundles'][$bundle];
+    if (isset($entity_info['bundles'][$bundle])) {
+      $info['info'] = $entity_info['bundles'][$bundle];
+    }
   }
   $info += variable_get("xmlsitemap_settings_{$entity}_{$bundle}", array());
   $info += array(
@@ -1163,6 +1174,36 @@ function xmlsitemap_process_form_link_options($form, &$form_state) {
       $link[$field . '_override'] = 1;
     }
   }
+}
+
+function xmlsitemap_link_bundle_settings_form_submit($form, &$form_state) {
+  $entity = $form['xmlsitemap']['#entity'];
+  $bundle = $form['xmlsitemap']['#bundle'];
+
+  // Handle new bundles by fetching the proper bundle key value from the form
+  // state values.
+  if (empty($bundle)) {
+    $entity_info = $form['xmlsitemap']['#entity_info'];
+    if (isset($entity_info['bundle keys']['bundle'])) {
+      $bundle_key = $entity_info['bundle keys']['bundle'];
+      if (isset($form_state['values'][$bundle_key])) {
+        $bundle = $form_state['values'][$bundle_key];
+        $form['xmlsitemap']['#bundle'] = $bundle;
+      }
+    }
+  }
+
+  xmlsitemap_link_bundle_settings_save($entity, $bundle, $form_state['values']['xmlsitemap']);
+
+  $entity_info = $form['xmlsitemap']['#entity_info'];
+  if (!empty($form['xmlsitemap']['#show_message'])) {
+    drupal_set_message(t('XML sitemap settings for the @bundle-label %bundle have been saved.', array('@bundle-label' => drupal_strtolower($entity_info['bundle label']), '%bundle' => $entity_info['bundles'][$bundle]['label'])));
+  }
+
+  // Unset the form values since we have already saved the bundle settings and
+  // we don't want these values to get saved as variables in-case this form
+  // also uses system_settings_form().
+  unset($form_state['values']['xmlsitemap']);
 }
 
 /**

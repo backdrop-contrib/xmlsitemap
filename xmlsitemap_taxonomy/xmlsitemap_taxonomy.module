@@ -15,14 +15,10 @@ function xmlsitemap_taxonomy_entity_info_alter(&$entity_info) {
  * Implements hook_xmlsitemap_link_info_alter().
  */
 function xmlsitemap_taxonomy_xmlsitemap_link_info_alter(&$link_info) {
-  // Change taxonomy term bundle type from machine name to vid.
-  $link_info['taxonomy_term']['entity keys']['bundle'] = 'vid';
   foreach (taxonomy_vocabulary_get_names() as $machine_name => $vocabulary) {
     // Adjust the edit path to the *real* edit path.
     $link_info['taxonomy_term']['bundles'][$machine_name]['admin']['path'] .= '/edit';
     $link_info['taxonomy_term']['bundles'][$machine_name]['admin']['real path'] .= '/edit';
-    $link_info['taxonomy_term']['bundles'][$vocabulary->vid] = $link_info['taxonomy_term']['bundles'][$machine_name];
-    unset($link_info['taxonomy_term']['bundles'][$machine_name]);
   }
 }
 
@@ -39,8 +35,8 @@ function xmlsitemap_taxonomy_cron() {
  * Implements hook_xmlsitemap_index_links().
  */
 function xmlsitemap_taxonomy_xmlsitemap_index_links($limit) {
-  if ($vids = xmlsitemap_get_link_type_enabled_bundles('taxonomy_term')) {
-    $tids = db_query_range("SELECT t.tid FROM {taxonomy_term_data} t LEFT JOIN {xmlsitemap} x ON x.type = 'taxonomy_term' AND t.tid = x.id WHERE x.id IS NULL AND t.vid IN (:vids) ORDER BY t.tid DESC", 0, $limit, array(':vids' => $vids))->fetchCol();
+  if ($bundles = xmlsitemap_get_link_type_enabled_bundles('taxonomy_term')) {
+    $tids = db_query_range("SELECT t.tid FROM {taxonomy_term_data} t INNER JOIN {taxonomy_vocabulary} tv USING (vid) LEFT JOIN {xmlsitemap} x ON x.type = 'taxonomy_term' AND t.tid = x.id WHERE x.id IS NULL AND tv.machine_name IN (:bundles) ORDER BY t.tid DESC", 0, $limit, array(':bundles' => $bundles))->fetchCol();
     xmlsitemap_taxonomy_xmlsitemap_process_taxonomy_term_links($tids);
   }
 }
@@ -66,10 +62,13 @@ function xmlsitemap_taxonomy_xmlsitemap_process_taxonomy_term_links(array $tids)
  * @see xmlsitemap_add_link_bundle_settings()
  */
 function xmlsitemap_taxonomy_form_taxonomy_form_vocabulary_alter(&$form, $form_state) {
-  $vid = isset($form['vid']['#value']) ? $form['vid']['#value'] : 0;
+  if (in_array('taxonomy_vocabulary_confirm_delete_submit', $form['#submit'])) {
+    // If this is the delete form, do not add our form elements.
+    return;
+  }
 
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
-  xmlsitemap_add_link_bundle_settings($form, $form_state, 'taxonomy_term', $vid);
+  xmlsitemap_add_link_bundle_settings($form, $form_state, 'taxonomy_term', $form['#vocabulary']->machine_name);
 }
 
 /**
@@ -83,7 +82,7 @@ function xmlsitemap_taxonomy_form_taxonomy_form_term_alter(&$form, $form_state) 
 
   // Add the link options.
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
-  xmlsitemap_add_form_link_options($form, 'taxonomy_term', $form['vid']['#value'], $form['tid']['#value']);
+  xmlsitemap_add_form_link_options($form, 'taxonomy_term', $form['#term']['vocabulary_machine_name'], $form['tid']['#value']);
 }
 
 /**
@@ -91,7 +90,7 @@ function xmlsitemap_taxonomy_form_taxonomy_form_term_alter(&$form, $form_state) 
  */
 function xmlsitemap_taxonomy_vocabulary_insert(stdClass $vocabulary) {
   if (isset($vocabulary->xmlsitemap)) {
-    xmlsitemap_link_bundle_settings_save('taxonomy_term', $vocabulary->vid, $vocabulary->xmlsitemap);
+    xmlsitemap_link_bundle_settings_save('taxonomy_term', $vocabulary->machine_name, $vocabulary->xmlsitemap);
   }
 }
 
@@ -100,7 +99,7 @@ function xmlsitemap_taxonomy_vocabulary_insert(stdClass $vocabulary) {
  */
 function xmlsitemap_taxonomy_vocabulary_update(stdClass $vocabulary) {
   if (isset($vocabulary->xmlsitemap)) {
-    xmlsitemap_link_bundle_settings_save('taxonomy_term', $vocabulary->vid, $vocabulary->xmlsitemap);
+    xmlsitemap_link_bundle_settings_save('taxonomy_term', $vocabulary->machine_name, $vocabulary->xmlsitemap);
   }
 }
 
@@ -108,7 +107,7 @@ function xmlsitemap_taxonomy_vocabulary_update(stdClass $vocabulary) {
  * Implements hook_taxonomy_vocabulary_delete().
  */
 function xmlsitemap_taxonomy_vocabulary_delete(stdClass $vocabulary) {
-  xmlsitemap_link_bundle_delete('taxonomy_term', $vocabulary->vid);
+  xmlsitemap_link_bundle_delete('taxonomy_term', $vocabulary->machine_name);
 }
 
 /**
@@ -141,7 +140,7 @@ function xmlsitemap_taxonomy_field_extra_fields() {
   $extras = array();
   $bundles = xmlsitemap_get_link_type_enabled_bundles('taxonomy_term');
   foreach (taxonomy_vocabulary_get_names() as $machine_name => $vocabulary) {
-    if (!in_array($vocabulary->vid, $bundles)) {
+    if (!in_array($vocabulary->machine_name, $bundles)) {
       continue;
     }
     $extras['taxonomy_term'][$machine_name]['xmlsitemap'] = array(
@@ -169,12 +168,12 @@ function xmlsitemap_taxonomy_create_link(stdClass &$term) {
     }
   }
 
-  $settings = xmlsitemap_link_bundle_load('taxonomy_term', $term->vid);
+  $settings = xmlsitemap_link_bundle_load('taxonomy_term', $term->vocabulary_machine_name);
 
   $term->xmlsitemap += array(
     'id' => $term->tid,
     'type' => 'taxonomy_term',
-    'subtype' => $term->vid,
+    'subtype' => $term->vocabulary_machine_name,
     'loc' => 'taxonomy/term/' . $term->tid,
     'status' => $settings['status'],
     'status_default' => $settings['status'],
@@ -241,4 +240,14 @@ function xmlsitemap_taxonomy_get_term_depth(stdClass $term) {
 function xmlsitemap_taxonomy_get_node_count(stdClass $term) {
   // @todo Use db_rewrite_sql() w/ switch user.
   return db_query_range("SELECT COUNT(ti.nid) FROM {taxonomy_index} ti LEFT JOIN {node n} USING (nid) WHERE ti.tid = :tid AND n.status = 1", 0, 1, array(':tid' => $term->tid))->fetchField();
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function xmlsitemap_taxonomy_query_xmlsitemap_link_index_count_alter(QueryAlterableInterface $query) {
+  if ($query->getMetaData('entity') == 'taxonomy_term') {
+    $query->innerJoin('taxonomy_vocabulary', 'v', 'base.vid = v.vid');
+    $query->addField('v', 'machine_name', 'vocabulary_machine_name');
+  }
 }
