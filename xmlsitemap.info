@@ -12,6 +12,5 @@ files[] = xmlsitemap.xmlsitemap.inc
 files[] = xmlsitemap.pages.inc
 files[] = xmlsitemap.install
 files[] = xmlsitemap.test
-recommends[] = dialog
 recommends[] = robotstxt
 configure = admin/config/search/xmlsitemap

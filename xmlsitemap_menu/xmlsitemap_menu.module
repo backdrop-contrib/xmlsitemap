@@ -57,7 +57,7 @@ function xmlsitemap_menu_xmlsitemap_index_links($limit) {
 /**
  * Process menu sitemap links.
  *
- * @param $tids
+ * @param $mlids
  *   An array of menu link IDs.
  */
 function xmlsitemap_menu_xmlsitemap_process_menu_links(array $mlids, array $xmlsitemap = array()) {
@@ -85,7 +85,6 @@ function xmlsitemap_menu_xmlsitemap_process_menu_links(array $mlids, array $xmls
  */
 function xmlsitemap_menu_form_menu_edit_menu_alter(&$form, $form_state) {
   $menu = isset($form['menu_name']['#value']) ? $form['menu_name']['#value'] : '';
-
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
   xmlsitemap_add_link_bundle_settings($form, $form_state, 'menu', $menu);
 }
