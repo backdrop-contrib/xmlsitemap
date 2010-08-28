@@ -9,6 +9,73 @@
  */
 
 /**
+ * Extended class for writing XML sitemap files.
+ */
+class XMLSitemapWriter extends XMLWriter {
+  protected $status = TRUE;
+  protected $uri = NULL;
+  protected $sitemapElementCount = 0;
+  protected $linkCountFlush = 500;
+
+  public function openURI($uri) {
+    $return = parent::openUri($uri);
+    if ($return) {
+      $this->uri = $uri;
+      $this->setIndent(FALSE);
+      $this->startDocument('1.0', 'UTF-8');
+    }
+    return $return;
+  }
+
+  /**
+   * Write an full XML sitemap element tag.
+   *
+   * @param $name
+   *   The element name.
+   * @param $element
+   *   An array of the elements properties and values.
+   * @param $sitemap
+   *   The XML sitemap array.
+   */
+  public function writeSitemapElement($name, array &$element, array $sitemap) {
+    $this->startElement($name);
+    foreach ($element as $key => $value) {
+      $this->writeElement($key, $value);
+    }
+    $this->endElement();
+    $this->writeRaw(PHP_EOL);
+
+    // After a certain number of elements have been added, flush the buffer
+    // to the output file.
+    $this->sitemapElementCount++;
+    if (($this->sitemapElementCount % $this->linkCountFlush) == 0) {
+      $this->flush();
+    }
+  }
+
+  /**
+   * Override of XMLWriter::flush() to track file writing status.
+   */
+  public function flush($empty = TRUE) {
+    $return = parent::flush($empty);
+    $this->status &= (bool) $return;
+    return $return;
+  }
+
+  public function getStatus() {
+    return $this->status;
+  }
+
+  public function getURI() {
+    return $this->uri;
+  }
+
+  public function getSitemapElementCount() {
+    return $this->sitemapElementCount;
+  }
+}
+
+/**
  * Given an internal Drupal path, return the alias for the path.
  *
  * This is similar to drupal_get_path_alias(), but designed to fetch all alises
@@ -160,23 +227,21 @@ function xmlsitemap_generate(array $sitemap, $chunk) {
   }
 
   $file = xmlsitemap_sitemap_get_file($sitemap, $chunk);
-
-  if (!$handle = fopen($file, 'wb')) {
+  $writer = new XMLSitemapWriter();
+  if (!$writer->openURI($file)) {
     trigger_error(t('Could not open file @file for writing.', array('@file' => $file)));
     return FALSE;
   }
 
-  $status = TRUE;
   if ($chunk == 'index') {
-    xmlsitemap_generate_index($sitemap, $handle, $status);
+    xmlsitemap_generate_index($sitemap, $writer);
   }
   else {
-    $links = xmlsitemap_generate_chunk($sitemap, $handle, $status, $chunk);
-    // @todo Fix this up.
-    fclose($handle);
-    return $links;
+    xmlsitemap_generate_chunk($sitemap, $writer, $chunk);
   }
-  fclose($handle);
+
+  // End and flush the XML file.
+  $writer->endDocument();
 
   // Track the maximum filesize.
   $filesize = filesize($file);
@@ -184,47 +249,44 @@ function xmlsitemap_generate(array $sitemap, $chunk) {
     variable_set('xmlsitemap_max_filesize', $filesize);
   }
 
-  if (!$status) {
+  if (!$writer->getStatus()) {
     trigger_error(t('Unknown error occurred while writing to file @file.', array('@file' => $file)));
+    return FALSE;
   }
-  elseif (xmlsitemap_var('gz')) {
-    $file_gz = $file . '.gz';
-    file_put_contents($file_gz, gzencode(file_get_contents($file), 9));
-  }
+  //elseif (xmlsitemap_var('gz')) {
+  //  $file_gz = $file . '.gz';
+  //  file_put_contents($file_gz, gzencode(file_get_contents($file), 9));
+  //}
 
-  return $status;
+  return $writer->getSitemapElementCount();
 }
 
 /**
  * Write the proper XML sitemap header.
  *
+ * @param $type
+ *   The type of sitemap to generate, either 'sitemapindex' or 'urlset'.
  * @param $sitemap
  *   An unserialized data array for an XML sitemap.
- * @param $type
- * @param $handle
- *   A file system pointer resource that is typically created using fopen().
- * @param $status
+ * @param $writer
+ *   The XMLWriter object to write to.
  */
-function xmlsitemap_generate_chunk_header($type, array $sitemap, $handle, &$status) {
-  $output = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-
+function xmlsitemap_generate_chunk_header($type, array $sitemap, XMLWriter $writer) {
   // Add the stylesheet link.
   if (variable_get('xmlsitemap_xsl', 1)) {
     $xsl_url = url('sitemap.xsl');
-    $output .= '<?xml-stylesheet type="text/xsl" href="' . $xsl_url . '"?>' . PHP_EOL;
+    $writer->writePi('xml-stylesheet', 'type="text/xsl" href="' . $xsl_url . '"');
+    $writer->writeRaw(PHP_EOL);
   }
 
-  $output .= '<' . $type . ' xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
-
-  // This is the full XML header required for schema validation.
+  $writer->startElement($type);
+  $writer->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+  //$writer->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+  //$writer->writeAttribute('xsi:schemaLocation', 'http://www.sitemaps.org/schemas/sitemap/0.9');
   //$schemas = array('sitemapindex' => 'siteindex.xsd', 'urlset' => 'sitemap.xsd');
-  //$output .= '<' . $type . ' xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' . PHP_EOL;
-  //$output .= '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' . PHP_EOL;
-  //$output .= '  xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9' . PHP_EOL;
-  //$output .= '  http://www.sitemaps.org/schemas/sitemap/0.9/' . $schemas[$type] . '">' . PHP_EOL;
-
-  $status &= (bool) fwrite($handle, $output);
-  return $status;
+  //$writer->writeAttribute('http://www.sitemaps.org/schemas/sitemap/0.9/' . $schemas[$type], '');
+  $writer->writeRaw(PHP_EOL);
+  $writer->flush();
 }
 
 /**
@@ -232,15 +294,12 @@ function xmlsitemap_generate_chunk_header($type, array $sitemap, $handle, &$stat
  *
  * @param $sitemap
  *   An unserialized data array for an XML sitemap.
- * @param $handle
- *   A file system pointer resource that is typically created using fopen().
- * @param $status
- *   A boolean that will be altered by reference with the success status of
- *   writing to $handle.
+ * @param $writer
+ *   The XMLWriter object to write to.
  * @param $chunk
  *   An integer representing the integer of the sitemap page chunk.
  */
-function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
+function xmlsitemap_generate_chunk(array $sitemap, XMLSitemapWriter $writer, $chunk) {
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
   $url_options = $sitemap['uri']['options'];
@@ -269,7 +328,7 @@ function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
   $links = $query->execute();
 
   // Add the XML header and XSL if desired.
-  xmlsitemap_generate_chunk_header('urlset', $sitemap, $handle, $status);
+  xmlsitemap_generate_chunk_header('urlset', $sitemap, $writer);
 
   while ($link = $links->fetchAssoc()) {
     $link['language'] = $link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $url_options['language'];
@@ -290,9 +349,10 @@ function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
       $link_count++;
     }
 
-    $link_output = '<url><loc>' . $link_url . '</loc>';
+    $element = array();
+    $element['loc'] = $link_url;
     if ($link['lastmod']) {
-      $link_output .= '<lastmod>' . gmdate($lastmod_format, $link['lastmod']) . '</lastmod>';
+      $element['lastmod'] = gmdate($lastmod_format, $link['lastmod']);
       // If the link has a lastmod value, update the changefreq so that links
       // with a short changefreq but updated two years ago show decay.
       // We use abs() here just incase items were created on this same cron run
@@ -300,20 +360,16 @@ function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
       $link['changefreq'] = (abs(REQUEST_TIME - $link['lastmod']) + $link['changefreq']) / 2;
     }
     if ($link['changefreq']) {
-      $link_output .= '<changefreq>' . xmlsitemap_get_changefreq($link['changefreq']) . '</changefreq>';
+      $element['changefreq'] = xmlsitemap_get_changefreq($link['changefreq']);
     }
     if (isset($link['priority']) && $link['priority'] != 0.5) {
       // Don't output the priority value for links that have 0.5 priority. This
       // is the default 'assumed' value if priority is not included as per the
       // sitemaps.org specification.
-      $link_output .= '<priority>' . number_format($link['priority'], 1) . '</priority>';
+      $element['priority'] = number_format($link['priority'], 1);
     }
-    $link_output .= '</url>' . PHP_EOL;
-    $status &= (bool) fwrite($handle, $link_output);
+    $writer->writeSitemapElement('url', $element, $sitemap);
   }
-
-  // Close the XML file.
-  $status &= (bool) fwrite($handle, '</urlset>' . PHP_EOL);
 
   return $link_count;
 }
@@ -323,11 +379,11 @@ function xmlsitemap_generate_chunk(array $sitemap, $handle, &$status, $chunk) {
  *
  * @param $sitemap
  *   An unserialized data array for an XML sitemap.
- * @param $handle
- *   A file system pointer resource that is typically created using fopen().
+ * @param $writer
+ *   The XMLWriter object to write to.
  * @param $status
  */
-function xmlsitemap_generate_index(array $sitemap, $handle, &$status) {
+function xmlsitemap_generate_index(array $sitemap, XMLSitemapWriter $writer) {
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
   $url_options = $sitemap['uri']['options'];
@@ -339,22 +395,17 @@ function xmlsitemap_generate_index(array $sitemap, $handle, &$status) {
   );
 
   // Add the XML header and XSL if desired.
-  xmlsitemap_generate_chunk_header('sitemapindex', $sitemap, $handle, $status);
+  xmlsitemap_generate_chunk_header('sitemapindex', $sitemap, $writer);
 
   for ($i = 1; $i <= $sitemap['chunks']; $i++) {
-    $output = '<sitemap>';
     $url_options['query']['page'] = $i;
-    $output .= '<loc>' . url('sitemap.xml', $url_options) . '</loc>';
-    // @todo Use the actual lastmod value of the chunk file.
-    $output .= '<lastmod>' . gmdate($lastmod_format, REQUEST_TIME) . '</lastmod>';
-    $output .= '</sitemap>' . PHP_EOL;
-    $status &= (bool) fwrite($handle, $output);
+    $element = array(
+      'loc' => url('sitemap.xml', $url_options),
+      // @todo Use the actual lastmod value of the chunk file.
+      'lastmod' => gmdate($lastmod_format, REQUEST_TIME),
+    );
+    $writer->writeSitemapElement('sitemap', $element, $sitemap);
   }
-
-  // Close the XML file.
-  $status &= (bool) fwrite($handle, '</sitemapindex>' . PHP_EOL);
-
-  return $sitemap['chunks'];
 }
 
 // BATCH OPERATIONS ------------------------------------------------------------
