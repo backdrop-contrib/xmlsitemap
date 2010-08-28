@@ -660,7 +660,7 @@ function xmlsitemap_link_bundle_settings_form(array $form, array &$form_state, a
  *
  * @todo Add changefreq overridability.
  */
-function xmlsitemap_add_form_link_options(&$form, $entity, $bundle, $id) {
+function xmlsitemap_add_form_link_options(array &$form, $entity, $bundle, $id) {
   $info = xmlsitemap_get_link_info($entity);
 
   if (!$info || empty($info['bundles'][$bundle])) {
@@ -781,6 +781,7 @@ function xmlsitemap_add_form_link_options(&$form, $entity, $bundle, $id) {
   //);
 
   // Add the submit handler to adjust the default values if selected.
+  $form += array('#submit' => array());
   if (!in_array('xmlsitemap_process_form_link_options', $form['#submit'])) {
     array_unshift($form['#submit'], 'xmlsitemap_process_form_link_options');
   }

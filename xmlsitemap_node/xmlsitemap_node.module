@@ -4,7 +4,7 @@
 /**
  * Implements hook_entity_info_alter().
  */
-function xmlsitemap_node_entity_info_alter(&$entity_info) {
+function xmlsitemap_node_entity_info_alter(array &$entity_info) {
   $entity_info['node']['label'] = t('Content');
   $entity_info['node']['bundle label'] = t('Content type');
   $entity_info['node']['xmlsitemap'] = array(
@@ -48,14 +48,14 @@ function xmlsitemap_node_xmlsitemap_process_node_links(array $nids) {
 /**
  * Implements hook_node_insert().
  */
-function xmlsitemap_node_node_insert($node) {
+function xmlsitemap_node_node_insert(stdClass $node) {
   xmlsitemap_node_node_update($node);
 }
 
 /**
  * Implements hook_node_update().
  */
-function xmlsitemap_node_node_update($node) {
+function xmlsitemap_node_node_update(stdClass $node) {
   $link = xmlsitemap_node_create_link($node);
   xmlsitemap_link_save($link);
 }
@@ -63,7 +63,7 @@ function xmlsitemap_node_node_update($node) {
 /**
  * Implements hook_node_delete().
  */
-function xmlsitemap_node_node_delete($node) {
+function xmlsitemap_node_node_delete(stdClass $node) {
   xmlsitemap_link_delete('node', $node->nid);
 }
 
@@ -140,7 +140,7 @@ function xmlsitemap_node_field_extra_fields() {
  * @see node_type_form()
  * @see xmlsitemap_add_link_bundle_settings()
  */
-function xmlsitemap_node_form_node_type_form_alter(&$form, $form_state) {
+function xmlsitemap_node_form_node_type_form_alter(array &$form, array $form_state) {
   $node_type = isset($form['#node_type']->type) ? $form['#node_type']->type : '';
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
   xmlsitemap_add_link_bundle_settings($form, $form_state, 'node', $node_type);
@@ -153,7 +153,7 @@ function xmlsitemap_node_form_node_type_form_alter(&$form, $form_state) {
  *
  * @see xmlsitemap_add_form_link_options()
  */
-function xmlsitemap_node_form_alter(&$form, $form_state, $form_id) {
+function xmlsitemap_node_form_alter(array &$form, array $form_state, $form_id) {
   if (!empty($form['#node_edit_form'])) {
     // Add the link options.
     module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
@@ -170,7 +170,7 @@ function xmlsitemap_node_form_alter(&$form, $form_state, $form_id) {
  * @return
  *   An array of UNIX timestamp integers.
  */
-function xmlsitemap_node_get_timestamps($node) {
+function xmlsitemap_node_get_timestamps(stdClass $node) {
   static $timestamps = array();
 
   if (!isset($timestamps[$node->nid])) {
@@ -188,7 +188,7 @@ function xmlsitemap_node_get_timestamps($node) {
  * @param $node
  *   A node object.
  */
-function xmlsitemap_node_create_link(stdClass &$node) {
+function xmlsitemap_node_create_link(stdClass $node) {
   if (!isset($node->xmlsitemap) || !is_array($node->xmlsitemap)) {
     $node->xmlsitemap = array();
     if ($node->nid && $link = xmlsitemap_link_load('node', $node->nid)) {
