@@ -794,7 +794,7 @@ function _xmlsitemap_delete_recursive($path, $delete_root = FALSE) {
       file_unmanaged_delete_recursive($entry_path, TRUE);
     }
     $dir->close();
-    return $delete_root ? rmdir($path) : TRUE;
+    return $delete_root ? drupal_rmdir($path) : TRUE;
   }
   return file_unmanaged_delete($path);
 }
@@ -908,25 +908,6 @@ function xmlsitemap_get_link_type_indexed_status($entity_type, $bundle = '') {
 
   return $status;
 }
-
-/**
- * Implements hook_query_TAG_alter().
- */
-function xmlsitemap_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInterface $query) {
-  if ($entity = $query->getMetaData('entity_info')) {
-    $bundle = $query->getMetaData('bundle');
-    if (empty($bundle)) {
-      $bundle = xmlsitemap_get_link_type_enabled_bundles($entity);
-    }
-    if (!empty($info['bundle keys']['bundle'])) {
-      $query->condition($info['bundle keys']['bundle'], $bundle);
-    }
-    if (!empty($info['entity keys']['bundle'])) {
-      $query->condition($info['entity keys']['bundle'], $bundles);
-    }
-  }
-}
-
 function xmlsitemap_link_bundle_settings_save($entity, $bundle, array $settings, $update_links = TRUE) {
   if ($update_links) {
     $old_settings = xmlsitemap_link_bundle_load($entity, $bundle);
@@ -1414,3 +1395,22 @@ function xmlsitemap_get_operation_link($url, $options = array()) {
   drupal_alter('xmlsitemap_operation_link', $link);
   return $link;
 }
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function xmlsitemap_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInterface $query) {
+  if ($entity = $query->getMetaData('entity_info')) {
+    $bundle = $query->getMetaData('bundle');
+    if (empty($bundle)) {
+      $bundle = xmlsitemap_get_link_type_enabled_bundles($entity);
+    }
+    if (!empty($info['bundle keys']['bundle'])) {
+      $query->condition($info['bundle keys']['bundle'], $bundle);
+    }
+    if (!empty($info['entity keys']['bundle'])) {
+      $query->condition($info['entity keys']['bundle'], $bundles);
+    }
+  }
+}
+
