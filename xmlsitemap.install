@@ -455,7 +455,6 @@ function xmlsitemap_update_6202() {
  * per-sitemap.
  */
 function xmlsitemap_update_6203() {
-  db_drop_field('xmlsitemap_sitemap', 'max_filesize');
   if (!db_field_exists('xmlsitemap_sitemap', 'max_filesize')) {
     drupal_load('module', 'xmlsitemap');
 
