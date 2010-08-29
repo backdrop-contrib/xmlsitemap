@@ -92,3 +92,21 @@ function xmlsitemap_sitemap_multiple_update(array $smids) {
   $batch = xmlsitemap_regenerate_batch($smids);
   batch_set($batch);
 }
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function xmlsitemap_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInterface $query) {
+  if ($entity = $query->getMetaData('entity_info')) {
+    $bundle = $query->getMetaData('bundle');
+    if (empty($bundle)) {
+      $bundle = xmlsitemap_get_link_type_enabled_bundles($entity);
+    }
+    if (!empty($info['bundle keys']['bundle'])) {
+      $query->condition($info['bundle keys']['bundle'], $bundle);
+    }
+    if (!empty($info['entity keys']['bundle'])) {
+      $query->condition($info['entity keys']['bundle'], $bundles);
+    }
+  }
+}
