@@ -8,6 +8,45 @@
  * @ingroup xmlsitemap
  */
 
+class XMLSitemapIndexWriter extends XMLSitemapWriter {
+  protected $rootElement = 'sitemapindex';
+
+  function __construct(array $sitemap, $page = 'index') {
+    parent::__construct($sitemap, 'index');
+  }
+
+  public function getRootAttributes() {
+    $attributes['xmlns'] = 'http://www.sitemaps.org/schemas/sitemap/0.9';
+    if (variable_get('xmlsitemap_developer_mode', 0)) {
+      $attributes['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance';
+      $attributes['xsi:schemaLocation'] = 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd';
+    }
+    return $attributes;
+  }
+
+  public function generateXML() {
+    $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
+
+    $url_options = $this->sitemap['uri']['options'];
+    $url_options += array(
+      'absolute' => TRUE,
+      'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+      'language' => language_default(),
+      'alias' => TRUE,
+    );
+
+    for ($i = 1; $i <= $this->sitemap['chunks']; $i++) {
+      $url_options['query']['page'] = $i;
+      $element = array(
+        'loc' => url('sitemap.xml', $url_options),
+        // @todo Use the actual lastmod value of the chunk file.
+        'lastmod' => gmdate($lastmod_format, REQUEST_TIME),
+      );
+      $this->writeSitemapElement('sitemap', $element);
+    }
+  }
+}
+
 /**
  * Extended class for writing XML sitemap files.
  */
@@ -16,15 +55,75 @@ class XMLSitemapWriter extends XMLWriter {
   protected $uri = NULL;
   protected $sitemapElementCount = 0;
   protected $linkCountFlush = 500;
+  protected $sitemap = NULL;
+  protected $sitemap_page = NULL;
+  protected $rootElement = 'urlset';
 
-  public function openURI($uri) {
+  /**
+   * Constructor.
+   *
+   * @param $sitemap
+   *   The sitemap array.
+   * @param $page
+   *   The current page of the sitemap being generated.
+   */
+  function __construct(array $sitemap, $page) {
+    $this->sitemap = $sitemap;
+    $this->sitemap_page = $page;
+    $this->uri = xmlsitemap_sitemap_get_file($sitemap, $page);
+    $this->openUri($this->uri);
+  }
+
+  public function openUri($uri) {
     $return = parent::openUri($uri);
-    if ($return) {
-      $this->uri = $uri;
-      $this->setIndent(FALSE);
-      $this->startDocument('1.0', 'UTF-8');
+    if (!$return) {
+      trigger_error(t('Could not open file @file for writing.', array('@file' => $uri)));
     }
     return $return;
+  }
+
+  public function startDocument($version = '1.0', $encoding = 'UTF-8', $standalone = NULL) {
+    $this->setIndent(FALSE);
+    parent::startDocument($version, $encoding);
+    if (variable_get('xmlsitemap_xsl', 1)) {
+      $this->writeXSL();
+    }
+    $this->startElement($this->rootElement, TRUE);
+  }
+
+  /**
+   * Add the XML stylesheet to the XML page.
+   */
+  public function writeXSL() {
+    $this->writePi('xml-stylesheet', 'type="text/xsl" href="' . url('sitemap.xsl') . '"');
+    $this->writeRaw(PHP_EOL);
+  }
+
+  /**
+   * Return an array of attributes for the root element of the XML.
+   */
+  public function getRootAttributes() {
+    $attributes['xmlns'] = 'http://www.sitemaps.org/schemas/sitemap/0.9';
+    if (variable_get('xmlsitemap_developer_mode', 0)) {
+      $attributes['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance';
+      $attributes['xsi:schemaLocation'] = 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd';
+    }
+    return $attributes;
+  }
+
+  public function generateXML() {
+    return xmlsitemap_generate_chunk($this->sitemap, $this, $this->sitemap_page);
+  }
+
+  public function startElement($name, $root = FALSE) {
+    parent::startElement($name);
+
+    if ($root) {
+      foreach ($this->getRootAttributes() as $name => $value) {
+        $this->writeAttribute($name, $value);
+      }
+      $this->writeRaw(PHP_EOL);
+    }
   }
 
   /**
@@ -34,15 +133,9 @@ class XMLSitemapWriter extends XMLWriter {
    *   The element name.
    * @param $element
    *   An array of the elements properties and values.
-   * @param $sitemap
-   *   The XML sitemap array.
    */
-  public function writeSitemapElement($name, array &$element, array $sitemap) {
-    $this->startElement($name);
-    foreach ($element as $key => $value) {
-      $this->writeElement($key, $value);
-    }
-    $this->endElement();
+  public function writeSitemapElement($name, array &$element) {
+    $this->writeElement($name, $element);
     $this->writeRaw(PHP_EOL);
 
     // After a certain number of elements have been added, flush the buffer
@@ -50,6 +143,27 @@ class XMLSitemapWriter extends XMLWriter {
     $this->sitemapElementCount++;
     if (($this->sitemapElementCount % $this->linkCountFlush) == 0) {
       $this->flush();
+    }
+  }
+
+  /**
+   * Write full element tag including support for nested elements.
+   *
+   * @param $name
+   *   The element name.
+   * @param $content
+   *   The element contents or an array of the elements' sub-elements.
+   */
+  public function writeElement($name, $content) {
+    if (is_array($content)) {
+      $this->startElement($name);
+      foreach ($content as $sub_name => $sub_content) {
+        $this->writeElement($sub_name, $sub_content);
+      }
+      $this->endElement();
+    }
+    else {
+      parent::writeElement($name, $content);
     }
   }
 
@@ -72,6 +186,28 @@ class XMLSitemapWriter extends XMLWriter {
 
   public function getSitemapElementCount() {
     return $this->sitemapElementCount;
+  }
+
+  public function endDocument() {
+    $return = parent::endDocument();
+
+    // Track the maximum filesize.
+    $filesize = filesize($this->uri);
+    if ($filesize > variable_get('xmlsitemap_max_filesize', 0)) {
+      variable_set('xmlsitemap_max_filesize', $filesize);
+    }
+
+    if (!$this->getStatus()) {
+      trigger_error(t('Unknown error occurred while writing to file @file.', array('@file' => $this->uri)));
+      return FALSE;
+    }
+
+    //if (xmlsitemap_var('gz')) {
+    //  $file_gz = $file . '.gz';
+    //  file_put_contents($file_gz, gzencode(file_get_contents($file), 9));
+    //}
+
+    return $return;
   }
 }
 
@@ -208,97 +344,29 @@ function _xmlsitemap_regenerate_after() {
 }
 
 /**
- * Fetch the data from {xmlsitemap}, generates the sitemap, then caches it.
- *
- * @param $sitemap
- *   An unserialized data array for an XML sitemap.
- * @param $chunk
- *   An integer representing the integer of the sitemap page chunk.
- * @return
- *   TRUE on success; otherwise FALSE
- *
- * @todo Revise/simplify or remove the function.
- */
-function xmlsitemap_generate(array $sitemap, $chunk) {
-  if ($chunk != 'index' && !is_numeric($chunk)) {
-    // Don't bother translating this string.
-    trigger_error('Improper condition hit in xmlsitemap_generate(). Chunk: ' . $chunk);
-    return FALSE;
-  }
-
-  $file = xmlsitemap_sitemap_get_file($sitemap, $chunk);
-  $writer = new XMLSitemapWriter();
-  if (!$writer->openURI($file)) {
-    trigger_error(t('Could not open file @file for writing.', array('@file' => $file)));
-    return FALSE;
-  }
-
-  if ($chunk == 'index') {
-    xmlsitemap_generate_index($sitemap, $writer);
-  }
-  else {
-    xmlsitemap_generate_chunk($sitemap, $writer, $chunk);
-  }
-
-  // End and flush the XML file.
-  $writer->endDocument();
-
-  // Track the maximum filesize.
-  $filesize = filesize($file);
-  if ($filesize > variable_get('xmlsitemap_max_filesize', 0)) {
-    variable_set('xmlsitemap_max_filesize', $filesize);
-  }
-
-  if (!$writer->getStatus()) {
-    trigger_error(t('Unknown error occurred while writing to file @file.', array('@file' => $file)));
-    return FALSE;
-  }
-  //elseif (xmlsitemap_var('gz')) {
-  //  $file_gz = $file . '.gz';
-  //  file_put_contents($file_gz, gzencode(file_get_contents($file), 9));
-  //}
-
-  return $writer->getSitemapElementCount();
-}
-
-/**
- * Write the proper XML sitemap header.
- *
- * @param $type
- *   The type of sitemap to generate, either 'sitemapindex' or 'urlset'.
- * @param $sitemap
- *   An unserialized data array for an XML sitemap.
- * @param $writer
- *   The XMLWriter object to write to.
- */
-function xmlsitemap_generate_chunk_header($type, array $sitemap, XMLWriter $writer) {
-  // Add the stylesheet link.
-  if (variable_get('xmlsitemap_xsl', 1)) {
-    $xsl_url = url('sitemap.xsl');
-    $writer->writePi('xml-stylesheet', 'type="text/xsl" href="' . $xsl_url . '"');
-    $writer->writeRaw(PHP_EOL);
-  }
-
-  $writer->startElement($type);
-  $writer->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
-  //$writer->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-  //$writer->writeAttribute('xsi:schemaLocation', 'http://www.sitemaps.org/schemas/sitemap/0.9');
-  //$schemas = array('sitemapindex' => 'siteindex.xsd', 'urlset' => 'sitemap.xsd');
-  //$writer->writeAttribute('http://www.sitemaps.org/schemas/sitemap/0.9/' . $schemas[$type], '');
-  $writer->writeRaw(PHP_EOL);
-  $writer->flush();
-}
-
-/**
  * Generate one page (chunk) of the sitemap.
  *
  * @param $sitemap
  *   An unserialized data array for an XML sitemap.
- * @param $writer
- *   The XMLWriter object to write to.
- * @param $chunk
- *   An integer representing the integer of the sitemap page chunk.
+ * @param $page
+ *   An integer of the specific page of the sitemap to generate.
  */
+function xmlsitemap_generate_page(array $sitemap, $page) {
+  try {
+    $writer = new XMLSitemapWriter($sitemap, $page);
+    $writer->startDocument();
+    $writer->generateXML();
+    $writer->endDocument();
+  }
+  catch (Exception $e) {
+    watchdog_exception('xmlsitemap', $e);
+    throw $e;
+    return FALSE;
+  }
+
+  return $writer->getSitemapElementCount();
+}
+
 function xmlsitemap_generate_chunk(array $sitemap, XMLSitemapWriter $writer, $chunk) {
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
@@ -326,9 +394,6 @@ function xmlsitemap_generate_chunk(array $sitemap, XMLSitemapWriter $writer, $ch
   $limit = xmlsitemap_get_chunk_size();
   $query->range($offset, $limit);
   $links = $query->execute();
-
-  // Add the XML header and XSL if desired.
-  xmlsitemap_generate_chunk_header('urlset', $sitemap, $writer);
 
   while ($link = $links->fetchAssoc()) {
     $link['language'] = $link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $url_options['language'];
@@ -368,7 +433,7 @@ function xmlsitemap_generate_chunk(array $sitemap, XMLSitemapWriter $writer, $ch
       // sitemaps.org specification.
       $element['priority'] = number_format($link['priority'], 1);
     }
-    $writer->writeSitemapElement('url', $element, $sitemap);
+    $writer->writeSitemapElement('url', $element);
   }
 
   return $link_count;
@@ -379,33 +444,21 @@ function xmlsitemap_generate_chunk(array $sitemap, XMLSitemapWriter $writer, $ch
  *
  * @param $sitemap
  *   An unserialized data array for an XML sitemap.
- * @param $writer
- *   The XMLWriter object to write to.
- * @param $status
  */
-function xmlsitemap_generate_index(array $sitemap, XMLSitemapWriter $writer) {
-  $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
-
-  $url_options = $sitemap['uri']['options'];
-  $url_options += array(
-    'absolute' => TRUE,
-    'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
-    'language' => language_default(),
-    'alias' => TRUE,
-  );
-
-  // Add the XML header and XSL if desired.
-  xmlsitemap_generate_chunk_header('sitemapindex', $sitemap, $writer);
-
-  for ($i = 1; $i <= $sitemap['chunks']; $i++) {
-    $url_options['query']['page'] = $i;
-    $element = array(
-      'loc' => url('sitemap.xml', $url_options),
-      // @todo Use the actual lastmod value of the chunk file.
-      'lastmod' => gmdate($lastmod_format, REQUEST_TIME),
-    );
-    $writer->writeSitemapElement('sitemap', $element, $sitemap);
+function xmlsitemap_generate_index(array $sitemap) {
+  try {
+    $writer = new XMLSitemapIndexWriter($sitemap);
+    $writer->startDocument();
+    $writer->generateXML();
+    $writer->endDocument();
   }
+  catch (Exception $e) {
+    watchdog_exception('xmlsitemap', $e);
+    throw $e;
+    return FALSE;
+  }
+
+  return $writer->getSitemapElementCount();
 }
 
 // BATCH OPERATIONS ------------------------------------------------------------
@@ -458,7 +511,7 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
   }
 
   $sitemap = &$context['sandbox']['sitemap'];
-  $links = xmlsitemap_generate($sitemap, $sitemap['chunks']);
+  $links = xmlsitemap_generate_page($sitemap, $sitemap['chunks']);
   $context['message'] = t('Now generating %sitemap-url.', array('%sitemap-url' => url('sitemap.xml', $sitemap['uri']['options'] + array('query' => array('page' => $sitemap['chunks'])))));
 
   if ($links) {
@@ -490,7 +543,7 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
 function xmlsitemap_regenerate_batch_generate_index($smid, array &$context) {
   $sitemap = xmlsitemap_sitemap_load($smid);
   if ($sitemap['chunks'] > 1) {
-    xmlsitemap_generate($sitemap, 'index');
+    xmlsitemap_generate_index($sitemap);
     $context['message'] = t('Now generating sitemap index %sitemap-url.', array('%sitemap-url' => url('sitemap.xml', $sitemap['uri']['options'])));
   }
 }
