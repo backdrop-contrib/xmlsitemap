@@ -372,8 +372,8 @@ function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
   if (!isset($context)) {
     $context = xmlsitemap_get_current_context();
   }
-  $hash = md5(serialize($context));
-  $smid = db_query_range("SELECT smid FROM {xmlsitemap_sitemap} WHERE context_hash = :hash", 0, 1, array(':hash' => $hash))->fetchField();
+  $hash = xmlsitemap_sitemap_get_context_hash($context);
+  $smid = db_query_range("SELECT smid FROM {xmlsitemap_sitemap} WHERE smid = :hash", 0, 1, array(':hash' => $hash))->fetchField();
   return xmlsitemap_sitemap_load($smid);
 }
 
@@ -388,8 +388,7 @@ function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
  */
 function xmlsitemap_sitemap_save(array $sitemap) {
   // Make sure context is sorted before saving the hash.
-  asort($sitemap['context']);
-  $sitemap['context_hash'] = md5(serialize($sitemap['context']));
+  $sitemap['smid'] = xmlsitemap_sitemap_get_context_hash($sitemap['context']);
 
   if (!empty($sitemap['smid'])) {
     drupal_write_record('xmlsitemap_sitemap', $sitemap, array('smid'));
@@ -397,6 +396,8 @@ function xmlsitemap_sitemap_save(array $sitemap) {
   else {
     drupal_write_record('xmlsitemap_sitemap', $sitemap);
   }
+
+  return $sitemap;
 }
 
 /**
@@ -455,6 +456,11 @@ function xmlsitemap_sitemap_get_max_filesize(array &$sitemap) {
     $sitemap['max_filesize'] = max($sitemap['max_filesize'], filesize($file->uri));
   }
   return $sitemap['max_filesize'];
+}
+
+function xmlsitemap_sitemap_get_context_hash(array &$context) {
+  asort($context);
+  return drupal_hash_base64(serialize($context));
 }
 
 /**
@@ -744,7 +750,7 @@ function xmlsitemap_get_directory(array $sitemap = NULL) {
     $directory = file_directory_path() . '/' . variable_get('xmlsitemap_path', 'xmlsitemap');
   }
 
-  return $directory . (!empty($sitemap) ? '/' . $sitemap['context_hash'] : '');
+  return $directory . (!empty($sitemap) ? '/' . $sitemap['smid'] : '');
 }
 
 /**

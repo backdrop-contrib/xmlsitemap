@@ -241,17 +241,10 @@ function xmlsitemap_schema() {
   $schema['xmlsitemap_sitemap'] = array(
     'fields' => array(
       'smid' => array(
-        'description' => 'Sitemap ID',
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'context_hash' => array(
-        'description' => 'The MD5 hash of the context field.',
+        'description' => 'The sitemap ID (the hashed value of {xmlsitemap}.context.',
         'type' => 'varchar',
-        'length' => 32,
+        'length' => 64,
         'not null' => TRUE,
-        'default' => '',
       ),
       'context' => array(
         'description' => 'Serialized array with the sitemaps context',
@@ -292,9 +285,6 @@ function xmlsitemap_schema() {
       //),
     ),
     'primary key' => array('smid'),
-    'unique keys' => array(
-      'context_hash' => array('context_hash'),
-    ),
   );
 
   return $schema;
@@ -376,7 +366,7 @@ function xmlsitemap_update_last_removed() {
  * Create the {xmlsitemap_sitemap} table and add the sitemap context data.
  */
 function xmlsitemap_update_6202() {
-  if (!db_table_exists('xmlsitemap_sitemap')) {
+  if (db_table_exists('xmlsitemap_sitemap')) {
     $schema['xmlsitemap_sitemap'] = array(
       'fields' => array(
         'smid' => array(
@@ -455,31 +445,70 @@ function xmlsitemap_update_6202() {
  * per-sitemap.
  */
 function xmlsitemap_update_6203() {
-  if (!db_field_exists('xmlsitemap_sitemap', 'max_filesize')) {
-    drupal_load('module', 'xmlsitemap');
+  if (db_field_exists('xmlsitemap_sitemap', 'max_filesize')) {
+    return;
+  }
 
-    // Add the max_filesize column.
-    $field = array(
-      'type' => 'int',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
-      'default' => 0,
-    );
-    db_add_field('xmlsitemap_sitemap', 'max_filesize', $field);
+  // Add the max_filesize column.
+  $field = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('xmlsitemap_sitemap', 'max_filesize', $field);
 
-    // Scan each sitemap directory for the largest file.
-    $sitemaps = xmlsitemap_sitemap_load_multiple(FALSE);
-    foreach ($sitemaps as $sitemap) {
-      xmlsitemap_sitemap_get_max_filesize($sitemap);
-      db_update('xmlsitemap_sitemap')
-        ->fields(array('max_filesize' => $sitemap['max_filesize']))
-        ->condition('smid', $sitemap['smid'])
-        ->execute();
-    }
+  // Scan each sitemap directory for the largest file.
+  drupal_load('module', 'xmlsitemap');
+  $sitemaps = xmlsitemap_sitemap_load_multiple(FALSE);
+  foreach ($sitemaps as $sitemap) {
+    xmlsitemap_sitemap_get_max_filesize($sitemap);
+    db_update('xmlsitemap_sitemap')
+      ->fields(array('max_filesize' => $sitemap['max_filesize']))
+      ->condition('smid', $sitemap['smid'])
+      ->execute();
   }
 
   variable_del('xmlsitemap_max_filesize');
   variable_del('xmlsitemap_max_chunks');
+}
+
+/**
+ * Convert {xmlsitemap}.context_hash to replace {xmlsitemap}.smid.
+ */
+function xmlsitemap_update_6204() {
+  if (!db_field_exists('xmlsitemap_sitemap', 'context_hash')) {
+    return;
+  }
+
+  db_drop_unique_key('xmlsitemap_sitemap', 'context_hash');
+  db_drop_field('xmlsitemap_sitemap', 'smid');
+
+  // Rename context_hash to the new smid column.
+  $smid_field = array(
+    'description' => 'The sitemap ID (the hashed value of {xmlsitemap}.context.',
+    'type' => 'varchar',
+    'length' => 64,
+    'not null' => TRUE,
+  );
+  db_change_field('xmlsitemap_sitemap', 'context_hash', 'smid', $smid_field);
+
+  // Remove and re-add the primary key now that the smid field is changed.
+  db_drop_primary_key('xmlsitemap_sitemap');
+  db_add_primary_key('xmlsitemap_sitemap', array('smid'));
+
+  // Reload the schema cache and reprocess all sitemap hashes into smids.
+  drupal_load('module', 'xmlsitemap');
+  drupal_get_schema(NULL, TRUE);
+  $sitemaps = xmlsitemap_sitemap_load_multiple(FALSE);
+  foreach ($sitemaps as $sitemap) {
+    $sitemap['smid_old'] = $sitemap['smid'];
+    $sitemap['smid'] = xmlsitemap_sitemap_get_context_hash($sitemap['context']);
+    db_update('xmlsitemap_sitemap')
+      ->fields(array('smid' => $sitemap['smid']))
+      ->condition('smid', $sitemap['smid_old'])
+      ->execute();
+  }
 }
 
 /**
@@ -505,4 +534,11 @@ function xmlsitemap_update_7201() {
  */
 function xmlsitemap_update_7202() {
   xmlsitemap_update_6203();
+}
+
+/**
+ * Convert {xmlsitemap}.context_hash to replace {xmlsitemap}.smid.
+ */
+function xmlsitemap_update_7203() {
+  xmlsitemap_update_6204();
 }
