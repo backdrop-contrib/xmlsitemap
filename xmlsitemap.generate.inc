@@ -191,12 +191,6 @@ class XMLSitemapWriter extends XMLWriter {
   public function endDocument() {
     $return = parent::endDocument();
 
-    // Track the maximum filesize.
-    $filesize = filesize($this->uri);
-    if ($filesize > variable_get('xmlsitemap_max_filesize', 0)) {
-      variable_set('xmlsitemap_max_filesize', $filesize);
-    }
-
     if (!$this->getStatus()) {
       trigger_error(t('Unknown error occurred while writing to file @file.', array('@file' => $this->uri)));
       return FALSE;
@@ -265,10 +259,6 @@ function _xmlsitemap_regenerate_before() {
       WATCHDOG_DEBUG
     );
   }
-
-  // Clear the maximum chunk and file size variables.
-  variable_set('xmlsitemap_max_chunks', 0);
-  variable_set('xmlsitemap_max_filesize', 0);
 }
 
 function _xmlsitemap_get_memory_usage($start = FALSE) {
@@ -529,6 +519,7 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
     // Save the updated chunks and links values.
     $context['sandbox']['max'] = $sitemap['chunks'];
     $sitemap['updated'] = REQUEST_TIME;
+    xmlsitemap_sitemap_get_max_filesize($sitemap);
     xmlsitemap_sitemap_save($sitemap);
   }
 

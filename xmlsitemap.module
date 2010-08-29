@@ -284,15 +284,15 @@ function xmlsitemap_variables() {
     'xmlsitemap_developer_mode' => 0,
     'xmlsitemap_frontpage_priority' => 1.0,
     'xmlsitemap_frontpage_changefreq' => XMLSITEMAP_FREQUENCY_DAILY,
-    'xmlsitemap_max_chunks' => 0,
-    'xmlsitemap_max_filesize' => 0,
     'xmlsitemap_lastmod_format' => XMLSITEMAP_LASTMOD_MEDIUM,
-    // Removed variables are set to NULL so they can still be deleted.
     'xmlsitemap_gz' => FALSE,
+    // Removed variables are set to NULL so they can still be deleted.
     'xmlsitemap_regenerate_last' => NULL,
     'xmlsitemap_custom_links' => NULL,
     'xmlsitemap_priority_default' => NULL,
     'xmlsitemap_languages' => NULL,
+    'xmlsitemap_max_chunks' => NULL,
+    'xmlsitemap_max_filesize' => NULL,
   );
 }
 
@@ -438,6 +438,22 @@ function xmlsitemap_sitemap_delete_multiple(array $smids) {
  */
 function xmlsitemap_sitemap_get_file(array $sitemap, $chunk = 'index') {
   return xmlsitemap_get_directory($sitemap) . "/{$chunk}.xml";
+}
+
+/**
+ * Find the maximum file size of all a sitemap's XML files.
+ *
+ * @param $sitemap
+ *   The XML sitemap array.
+ *
+ */
+function xmlsitemap_sitemap_get_max_filesize(array &$sitemap) {
+  $dir = xmlsitemap_get_directory($sitemap);
+  $sitemap['max_filesize'] = 0;
+  foreach (file_scan_directory($dir, '/\.xml$/') as $file) {
+    $sitemap['max_filesize'] = max($sitemap['max_filesize'], filesize($file->uri));
+  }
+  return $sitemap['max_filesize'];
 }
 
 /**
@@ -1413,4 +1429,3 @@ function xmlsitemap_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInte
     }
   }
 }
-
