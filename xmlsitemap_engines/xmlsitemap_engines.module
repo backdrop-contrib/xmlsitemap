@@ -110,7 +110,7 @@ function xmlsitemap_engines_submit_access() {
  */
 function xmlsitemap_engines_submit_engines(array $smids = array()) {
   if (empty($smids)) {
-    $smids = db_query("SELECT smid FROM {xmlsitemap_sitemap}")->fetchCol();
+    $smids = FALSE;
   }
 
   $sitemaps = xmlsitemap_sitemap_load_multiple($smids);

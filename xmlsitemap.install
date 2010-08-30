@@ -366,7 +366,7 @@ function xmlsitemap_update_last_removed() {
  * Create the {xmlsitemap_sitemap} table and add the sitemap context data.
  */
 function xmlsitemap_update_6202() {
-  if (db_table_exists('xmlsitemap_sitemap')) {
+  if (!db_table_exists('xmlsitemap_sitemap')) {
     $schema['xmlsitemap_sitemap'] = array(
       'fields' => array(
         'smid' => array(

@@ -171,7 +171,7 @@ function hook_xmlsitemap_sitemap_operations() {
  * sitemap has been removed from the table in the database.
  *
  * @param $sitemap
- *   The XML sitemap array that was deleted.
+ *   The XML sitemap object that was deleted.
  */
 function hook_xmlsitemap_sitemap_delete(stdClass $sitemap) {
   db_query("DELETE FROM {mytable} WHERE smid = '%s'", $sitemap->smid);

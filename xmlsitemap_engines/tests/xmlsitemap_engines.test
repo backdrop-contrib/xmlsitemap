@@ -46,20 +46,19 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
   }
 
   function testSubmitSitemaps() {
-    $sitemaps = array(
-      array(
-        'uri' => array(
-          'path' => 'http://example.com/sitemap.xml',
-          'options' => array(),
-        ),
-      ),
-      array(
-        'uri' => array(
-          'path' => 'http://example.com/sitemap-2.xml',
-          'options' => array(),
-        ),
-      ),
+    $sitemaps = array();
+    $sitemap = new stdClass();
+    $sitemap->uri = array(
+      'path' => 'http://example.com/sitemap.xml',
+      'options' => array(),
     );
+    $sitemaps[] = $sitemap;
+    $sitemap = new stdClass();
+    $sitemap->uri = array(
+      'path' => 'http://example.com/sitemap-2.xml',
+      'options' => array(),
+    );
+    $sitemaps[] = $sitemap;
     xmlsitemap_engines_submit_sitemaps($this->submit_url, $sitemaps);
 
     $this->assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'Recieved ping for @sitemap.', 'variables' => array('@sitemap' => 'http://example.com/sitemap.xml')));
