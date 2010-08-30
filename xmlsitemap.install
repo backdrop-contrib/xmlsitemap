@@ -319,11 +319,11 @@ function xmlsitemap_install() {
     ->execute();
 
   // Insert the default context sitemap.
-  $context = serialize(array());
+  $context = array();
   db_insert('xmlsitemap_sitemap')
     ->fields(array(
-      'context' => $context,
-      'context_hash' => md5($context),
+      'smid' => xmlsitemap_sitemap_get_context_hash($context),
+      'context' => serialize($context),
     ))
     ->execute();
 
