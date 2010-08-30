@@ -63,7 +63,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    *   An optional array of the XML sitemap's context.
    * @param $options
    *   Options to be forwarded to url(). These values will be merged with, but
-   *   always override $sitemap['uri']['options'].
+   *   always override $sitemap->uri['options'].
    * @param $headers
    *   An array containing additional HTTP request headers, each formatted as
    *   "name: value".
@@ -75,7 +75,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
     if (!$sitemap) {
       return $this->fail('Could not load sitemap by context.');
     }
-    return $this->drupalGet($sitemap['uri']['path'], $options + $sitemap['uri']['options'], $headers);
+    return $this->drupalGet($sitemap->uri['path'], $options + $sitemap->uri['options'], $headers);
   }
 
   /**

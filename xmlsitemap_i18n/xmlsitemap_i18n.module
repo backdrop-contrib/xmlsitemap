@@ -71,12 +71,12 @@ function xmlsitemap_i18n_query_xmlsitemap_generate_alter(QueryAlterableInterface
   $mode = variable_get('i18n_selection_mode', 'simple');
   $sitemap = $query->getMetaData('sitemap');
 
-  if (!isset($sitemap['context']['language']) || $mode == 'off') {
+  if (!isset($sitemap->context['language']) || $mode == 'off') {
     return;
   }
 
   // Get languages to simplify query building.
-  $current = $sitemap['context']['language'];
+  $current = $sitemap->context['language'];
   $default = i18n_default_language();
 
   if ($mode == 'mixed' && $current == $default) {

@@ -145,10 +145,10 @@ function hook_xmlsitemap_context_url_options_alter(array &$options, array $conte
  */
 function hook_query_xmlsitemap_generate_alter(QueryAlterableInterface $query) {
   $sitemap = $query->getMetaData('sitemap');
-  if (!empty($sitemap['context']['vocabulary'])) {
+  if (!empty($sitemap->context['vocabulary'])) {
     $node_condition = db_and();
     $node_condition->condition('type', 'taxonomy_term');
-    $node_condition->condition('subtype', $sitemap['context']['vocabulary']);
+    $node_condition->condition('subtype', $sitemap->context['vocabulary']);
     $normal_condition = db_and();
     $normal_condition->condition('type', 'taxonomy_term', '<>');
     $condition = db_or();
@@ -173,8 +173,8 @@ function hook_xmlsitemap_sitemap_operations() {
  * @param $sitemap
  *   The XML sitemap array that was deleted.
  */
-function hook_xmlsitemap_sitemap_delete(array $sitemap) {
-  db_query("DELETE FROM {mytable} WHERE smid = '%s'", $sitemap['smid']);
+function hook_xmlsitemap_sitemap_delete(stdClass $sitemap) {
+  db_query("DELETE FROM {mytable} WHERE smid = '%s'", $sitemap->smid);
 }
 
 /**

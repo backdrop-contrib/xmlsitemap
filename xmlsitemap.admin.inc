@@ -62,13 +62,13 @@ function xmlsitemap_sitemap_list_form() {
 
   $options = array();
   foreach ($sitemaps as $smid => $sitemap) {
-    $sitemap['url'] = url($sitemap['uri']['path'], $sitemap['uri']['options']);
+    $sitemap->url = url($sitemap->uri['path'], $sitemap->uri['options']);
 
     $options[$smid]['url'] = array(
       'data' => array(
         '#type' => 'link',
-        '#title' => $sitemap['url'],
-        '#href' => $sitemap['url'],
+        '#title' => $sitemap->url,
+        '#href' => $sitemap->url,
       ),
     );
 
@@ -76,9 +76,9 @@ function xmlsitemap_sitemap_list_form() {
       $options[$smid]['context_' . $context_key] = _xmlsitemap_sitemap_context_summary($sitemap, $context_key, $context_info);
     }
 
-    $options[$smid]['updated'] = $sitemap['updated'] ? format_date($sitemap['updated'], 'short') : t('Never');
-    $options[$smid]['links'] = $sitemap['updated'] ? $sitemap['links'] : '-';
-    $options[$smid]['chunks'] = $sitemap['updated'] ? $sitemap['chunks'] : '-';
+    $options[$smid]['updated'] = $sitemap->updated ? format_date($sitemap->updated, 'short') : t('Never');
+    $options[$smid]['links'] = $sitemap->updated ? $sitemap->links : '-';
+    $options[$smid]['chunks'] = $sitemap->updated ? $sitemap->chunks : '-';
 
     // @todo Highlight sitemaps that need updating.
     //$options[$smid]['#attributes']['class'][] = 'warning';
@@ -156,19 +156,20 @@ function xmlsitemap_sitemap_list_form_submit($form, &$form_state) {
   }
 }
 
-function xmlsitemap_sitemap_edit_form($form, &$form_state, array $sitemap = array()) {
+function xmlsitemap_sitemap_edit_form($form, &$form_state, stdClass $sitemap = NULL) {
   _xmlsitemap_set_breadcrumb();
 
-  $sitemap += array(
-    'smid' => NULL,
-    'context' => array(),
-  );
+  if (!isset($sitemap)) {
+    $sitemap = new stdClass();
+    $sitemap->smid = NULL;
+    $sitemap->context = array();
+  }
 
   $form['#sitemap'] = $sitemap;
 
   $form['smid'] = array(
     '#type' => 'value',
-    '#value' => $sitemap['smid'],
+    '#value' => $sitemap->smid,
   );
   // The context settings should be form_alter'ed by the context modules.
   $form['context'] = array(
@@ -223,7 +224,7 @@ function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   // @todo If context was changed, needs to be regenerated.
 }
 
-function xmlsitemap_sitemap_delete_form($form, &$form_state, array $sitemap) {
+function xmlsitemap_sitemap_delete_form($form, &$form_state, stdClass $sitemap) {
   _xmlsitemap_set_breadcrumb();
 
   $count = (int) db_query("SELECT COUNT(smid) FROM {xmlsitemap_sitemap}")->fetchField();
@@ -234,7 +235,7 @@ function xmlsitemap_sitemap_delete_form($form, &$form_state, array $sitemap) {
   $form['#sitemap'] = $sitemap;
   $form['smid'] = array(
     '#type' => 'value',
-    '#value' => $sitemap['smid'],
+    '#value' => $sitemap->smid,
   );
   return confirm_form(
     $form,

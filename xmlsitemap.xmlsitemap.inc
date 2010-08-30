@@ -26,7 +26,7 @@ class XMLSitemapWriter extends XMLWriter {
    * @param $page
    *   The current page of the sitemap being generated.
    */
-  function __construct(array $sitemap, $page) {
+  function __construct(stdClass $sitemap, $page) {
     $this->sitemap = $sitemap;
     $this->sitemap_page = $page;
     $this->uri = xmlsitemap_sitemap_get_file($sitemap, $page);
@@ -167,7 +167,7 @@ class XMLSitemapWriter extends XMLWriter {
 class XMLSitemapIndexWriter extends XMLSitemapWriter {
   protected $rootElement = 'sitemapindex';
 
-  function __construct(array $sitemap, $page = 'index') {
+  function __construct(stdClass $sitemap, $page = 'index') {
     parent::__construct($sitemap, 'index');
   }
 

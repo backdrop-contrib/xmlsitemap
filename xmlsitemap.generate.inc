@@ -144,7 +144,7 @@ function _xmlsitemap_regenerate_after() {
  * @param $page
  *   An integer of the specific page of the sitemap to generate.
  */
-function xmlsitemap_generate_page(array $sitemap, $page) {
+function xmlsitemap_generate_page(stdClass $sitemap, $page) {
   try {
     $writer = new XMLSitemapWriter($sitemap, $page);
     $writer->startDocument();
@@ -160,10 +160,10 @@ function xmlsitemap_generate_page(array $sitemap, $page) {
   return $writer->getSitemapElementCount();
 }
 
-function xmlsitemap_generate_chunk(array $sitemap, XMLSitemapWriter $writer, $chunk) {
+function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, $chunk) {
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
-  $url_options = $sitemap['uri']['options'];
+  $url_options = $sitemap->uri['options'];
   $url_options += array(
     'absolute' => TRUE,
     'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
@@ -238,7 +238,7 @@ function xmlsitemap_generate_chunk(array $sitemap, XMLSitemapWriter $writer, $ch
  * @param $sitemap
  *   An unserialized data array for an XML sitemap.
  */
-function xmlsitemap_generate_index(array $sitemap) {
+function xmlsitemap_generate_index(stdClass $sitemap) {
   try {
     $writer = new XMLSitemapIndexWriter($sitemap);
     $writer->startDocument();
@@ -294,8 +294,8 @@ function xmlsitemap_regenerate_batch(array $smids = array()) {
 function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
   if (!isset($context['sandbox']['sitemap'])) {
     $context['sandbox']['sitemap'] = xmlsitemap_sitemap_load($smid);
-    $context['sandbox']['sitemap']['chunks'] = 1;
-    $context['sandbox']['sitemap']['links'] = 0;
+    $context['sandbox']['sitemap']->chunks = 1;
+    $context['sandbox']['sitemap']->links = 0;
     $context['sandbox']['max'] = XMLSITEMAP_MAX_SITEMAP_LINKS;
 
     // Clear the cache directory for this sitemap before generating any files.
@@ -304,30 +304,30 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
   }
 
   $sitemap = &$context['sandbox']['sitemap'];
-  $links = xmlsitemap_generate_page($sitemap, $sitemap['chunks']);
-  $context['message'] = t('Now generating %sitemap-url.', array('%sitemap-url' => url('sitemap.xml', $sitemap['uri']['options'] + array('query' => array('page' => $sitemap['chunks'])))));
+  $links = xmlsitemap_generate_page($sitemap, $sitemap->chunks);
+  $context['message'] = t('Now generating %sitemap-url.', array('%sitemap-url' => url('sitemap.xml', $sitemap->uri['options'] + array('query' => array('page' => $sitemap->chunks)))));
 
   if ($links) {
-    $sitemap['links'] += $links;
-    $sitemap['chunks']++;
+    $sitemap->links += $links;
+    $sitemap->chunks++;
   }
   else {
     // Cleanup the 'extra' empty file.
-    $file = xmlsitemap_sitemap_get_file($sitemap, $sitemap['chunks']);
-    if (file_exists($file) && $sitemap['chunks'] > 1) {
+    $file = xmlsitemap_sitemap_get_file($sitemap, $sitemap->chunks);
+    if (file_exists($file) && $sitemap->chunks > 1) {
       file_unmanaged_delete($file);
     }
-    $sitemap['chunks']--;
+    $sitemap->chunks--;
 
     // Save the updated chunks and links values.
-    $context['sandbox']['max'] = $sitemap['chunks'];
-    $sitemap['updated'] = REQUEST_TIME;
+    $context['sandbox']['max'] = $sitemap->chunks;
+    $sitemap->updated = REQUEST_TIME;
     xmlsitemap_sitemap_get_max_filesize($sitemap);
     xmlsitemap_sitemap_save($sitemap);
   }
 
-  if ($sitemap['chunks'] != $context['sandbox']['max']) {
-    $context['finished'] = $sitemap['chunks'] / $context['sandbox']['max'];
+  if ($sitemap->chunks != $context['sandbox']['max']) {
+    $context['finished'] = $sitemap->chunks / $context['sandbox']['max'];
   }
 }
 
@@ -336,9 +336,9 @@ function xmlsitemap_regenerate_batch_generate($smid, array &$context) {
  */
 function xmlsitemap_regenerate_batch_generate_index($smid, array &$context) {
   $sitemap = xmlsitemap_sitemap_load($smid);
-  if ($sitemap['chunks'] > 1) {
+  if ($sitemap->chunks > 1) {
     xmlsitemap_generate_index($sitemap);
-    $context['message'] = t('Now generating sitemap index %sitemap-url.', array('%sitemap-url' => url('sitemap.xml', $sitemap['uri']['options'])));
+    $context['message'] = t('Now generating sitemap index %sitemap-url.', array('%sitemap-url' => url('sitemap.xml', $sitemap->uri['options'])));
   }
 }
 

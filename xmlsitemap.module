@@ -264,7 +264,7 @@ function xmlsitemap_modules_disabled(array $modules) {
  */
 function xmlsitemap_robotstxt() {
   if ($sitemap = xmlsitemap_sitemap_load_by_context()) {
-    $robotstxt[] = 'Sitemap: ' . url($sitemap['uri']['path'], $sitemap['uri']['options']);
+    $robotstxt[] = 'Sitemap: ' . url($sitemap->uri['path'], $sitemap->uri['options']);
     return $robotstxt;
   }
 }
@@ -328,6 +328,9 @@ function xmlsitemap_var($name, $default = NULL) {
  *
  * @param $smid
  *   An XML sitemap ID.
+ *
+ * @return
+ *   The XML sitemap object.
  */
 function xmlsitemap_sitemap_load($smid) {
   $sitemap = xmlsitemap_sitemap_load_multiple(array($smid));
@@ -341,6 +344,9 @@ function xmlsitemap_sitemap_load($smid) {
  *   An array of XML sitemap IDs, or FALSE to load all XML sitemaps.
  * @param $conditions
  *   An array of conditions in the form 'field' => $value.
+ *
+ * @return
+ *   An array of XML sitemap objects.
  */
 function xmlsitemap_sitemap_load_multiple($smids = array(), array $conditions = array()) {
   if ($smids !== FALSE) {
@@ -353,10 +359,10 @@ function xmlsitemap_sitemap_load_multiple($smids = array(), array $conditions = 
     $query->condition($field, $value);
   }
 
-  $sitemaps = $query->execute()->fetchAllAssoc('smid', PDO::FETCH_ASSOC);
+  $sitemaps = $query->execute()->fetchAllAssoc('smid');
   foreach ($sitemaps as $smid => $sitemap) {
-    $sitemaps[$smid]['context'] = unserialize($sitemap['context']);
-    $sitemaps[$smid]['uri'] = xmlsitemap_sitemap_uri($sitemaps[$smid]);
+    $sitemaps[$smid]->context = unserialize($sitemap->context);
+    $sitemaps[$smid]->uri = xmlsitemap_sitemap_uri($sitemaps[$smid]);
   }
 
   return $sitemaps;
@@ -384,18 +390,18 @@ function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
  * Save changes to an XML sitemap or add a new XML sitemap.
  *
  * @param $sitemap
- *   The XML sitemap array to be saved. If $sitemap['smid'] is omitted, a new
+ *   The XML sitemap array to be saved. If $sitemap->smid is omitted, a new
  *   XML sitemap will be added.
  *
  * @todo Save the sitemap's URL as a column?
  */
-function xmlsitemap_sitemap_save(array &$sitemap) {
+function xmlsitemap_sitemap_save(stdClass $sitemap) {
   // Make sure context is sorted before saving the hash.
-  $smid_old = isset($sitemap['smid']) ? $sitemap['smid'] : NULL;
-  $sitemap['smid'] = xmlsitemap_sitemap_get_context_hash($sitemap['context']);
+  $smid_old = isset($sitemap->smid) ? $sitemap->smid : NULL;
+  $sitemap->smid = xmlsitemap_sitemap_get_context_hash($sitemap->context);
 
   // If the context was changed, we need to perform additional actions.
-  if (isset($smid_old) && $sitemap['smid'] != $smid_old) {
+  if (isset($smid_old) && $sitemap->smid != $smid_old) {
     // Rename the files directory so the sitemap does not break.
     $old_dir = xmlsitemap_get_directory(array('smid' => $smid_old));
     $new_dir = xmlsitemap_get_directory($sitemap);
@@ -403,7 +409,7 @@ function xmlsitemap_sitemap_save(array &$sitemap) {
 
     // Change the smid field so drupal_write_record() does not fail.
     db_update('xmlsitemap_sitemap')
-      ->fields(array('smid' => $sitemap['smid']))
+      ->fields(array('smid' => $sitemap->smid))
       ->condition('smid', $smid_old)
       ->execute();
 
@@ -411,7 +417,7 @@ function xmlsitemap_sitemap_save(array &$sitemap) {
     variable_set('xmlsitemap_regenerate_needed', TRUE);
   }
 
-  if (empty($sitemap['smid'])) {
+  if (empty($sitemap->smid)) {
     drupal_write_record('xmlsitemap_sitemap', $sitemap);
     module_invoke_all('xmlsitemap_sitemap_insert', $sitemap);
   }
@@ -461,7 +467,7 @@ function xmlsitemap_sitemap_delete_multiple(array $smids) {
  * @param $chunk
  *   An optional specific chunk in the sitemap. Defaults to the index page.
  */
-function xmlsitemap_sitemap_get_file(array $sitemap, $chunk = 'index') {
+function xmlsitemap_sitemap_get_file(stdClass $sitemap, $chunk = 'index') {
   return xmlsitemap_get_directory($sitemap) . "/{$chunk}.xml";
 }
 
@@ -471,13 +477,13 @@ function xmlsitemap_sitemap_get_file(array $sitemap, $chunk = 'index') {
  * @param $sitemap
  *   The XML sitemap array.
  */
-function xmlsitemap_sitemap_get_max_filesize(array &$sitemap) {
+function xmlsitemap_sitemap_get_max_filesize(stdClass $sitemap) {
   $dir = xmlsitemap_get_directory($sitemap);
-  $sitemap['max_filesize'] = 0;
+  $sitemap->max_filesize = 0;
   foreach (file_scan_directory($dir, '/\.xml$/') as $file) {
-    $sitemap['max_filesize'] = max($sitemap['max_filesize'], filesize($file->uri));
+    $sitemap->max_filesize = max($sitemap->max_filesize, filesize($file->uri));
   }
-  return $sitemap['max_filesize'];
+  return $sitemap->max_filesize;
 }
 
 function xmlsitemap_sitemap_get_context_hash(array &$context) {
@@ -494,10 +500,10 @@ function xmlsitemap_sitemap_get_context_hash(array &$context) {
  *   An array containing the 'path' and 'options' keys used to build the uri of
  *   the XML sitemap, and matching the signature of url().
  */
-function xmlsitemap_sitemap_uri(array $sitemap) {
+function xmlsitemap_sitemap_uri(stdClass $sitemap) {
   $uri['path'] = 'sitemap.xml';
-  $uri['options'] = module_invoke_all('xmlsitemap_context_url_options', $sitemap['context']);
-  drupal_alter('xmlsitemap_context_url_options', $uri['options'], $sitemap['context']);
+  $uri['options'] = module_invoke_all('xmlsitemap_context_url_options', $sitemap->context);
+  drupal_alter('xmlsitemap_context_url_options', $uri['options'], $sitemap->context);
   $uri['options'] += array(
     'absolute' => TRUE,
     'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
@@ -766,15 +772,15 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
  * @} End of "defgroup xmlsitemap_link_api"
  */
 
-function xmlsitemap_get_directory(array $sitemap = NULL) {
+function xmlsitemap_get_directory(stdClass $sitemap = NULL) {
   $directory = &drupal_static(__FUNCTION__);
 
   if (!isset($directory)) {
     $directory = variable_get('xmlsitemap_path', 'xmlsitemap');
   }
 
-  if (!empty($sitemap['smid'])) {
-    return file_build_uri($directory . '/' . $sitemap['smid']);
+  if (!empty($sitemap->smid)) {
+    return file_build_uri($directory . '/' . $sitemap->smid);
   }
   else {
     return file_build_uri($directory);
@@ -784,7 +790,7 @@ function xmlsitemap_get_directory(array $sitemap = NULL) {
 /**
  * Check that the sitemap files directory exists and is writable.
  */
-function xmlsitemap_check_directory(array $sitemap = NULL) {
+function xmlsitemap_check_directory(stdClass $sitemap = NULL) {
   $directory = xmlsitemap_get_directory($sitemap);
   $result = file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   if (!$result) {
@@ -815,7 +821,7 @@ function xmlsitemap_check_all_directories() {
   return $directories;
 }
 
-function xmlsitemap_clear_directory(array $sitemap = NULL, $delete = FALSE) {
+function xmlsitemap_clear_directory(stdClass $sitemap = NULL, $delete = FALSE) {
   $directory = xmlsitemap_get_directory($sitemap);
   return _xmlsitemap_delete_recursive($directory, $delete);
 }
@@ -1390,8 +1396,8 @@ function xmlsitemap_get_current_context() {
   return $context;
 }
 
-function _xmlsitemap_sitemap_context_summary(array $sitemap, $context_key, array $context_info) {
-  $context_value = isset($sitemap['context'][$context_key]) ? $sitemap['context'][$context_key] : NULL;
+function _xmlsitemap_sitemap_context_summary(stdClass $sitemap, $context_key, array $context_info) {
+  $context_value = isset($sitemap->context[$context_key]) ? $sitemap->context[$context_key] : NULL;
 
   if (!isset($context_value)) {
     return t('Default');
