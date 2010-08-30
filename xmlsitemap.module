@@ -403,7 +403,8 @@ function xmlsitemap_sitemap_save(stdClass $sitemap) {
   // If the context was changed, we need to perform additional actions.
   if (isset($smid_old) && $sitemap->smid != $smid_old) {
     // Rename the files directory so the sitemap does not break.
-    $old_dir = xmlsitemap_get_directory(array('smid' => $smid_old));
+    $old_sitemap = (object) array('smid' => $smid_old);
+    $old_dir = xmlsitemap_get_directory($old_sitemap);
     $new_dir = xmlsitemap_get_directory($sitemap);
     xmlsitemap_directory_move($old_dir, $new_dir);
 
