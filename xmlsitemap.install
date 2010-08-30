@@ -477,38 +477,25 @@ function xmlsitemap_update_6203() {
  * Convert {xmlsitemap}.context_hash to replace {xmlsitemap}.smid.
  */
 function xmlsitemap_update_6204() {
-  if (!db_field_exists('xmlsitemap_sitemap', 'context_hash')) {
-    return;
+  if (db_field_exists('xmlsitemap_sitemap', 'context_hash')) {
+    db_drop_unique_key('xmlsitemap_sitemap', 'context_hash');
+    db_drop_field('xmlsitemap_sitemap', 'smid');
+
+    // Rename context_hash to the new smid column.
+    $smid_field = array(
+      'description' => 'The sitemap ID (the hashed value of {xmlsitemap}.context.',
+      'type' => 'varchar',
+      'length' => 64,
+      'not null' => TRUE,
+    );
+    db_change_field('xmlsitemap_sitemap', 'context_hash', 'smid', $smid_field);
+
+    // Remove and re-add the primary key now that the smid field is changed.
+    db_drop_primary_key('xmlsitemap_sitemap');
+    db_add_primary_key('xmlsitemap_sitemap', array('smid'));
   }
 
-  db_drop_unique_key('xmlsitemap_sitemap', 'context_hash');
-  db_drop_field('xmlsitemap_sitemap', 'smid');
-
-  // Rename context_hash to the new smid column.
-  $smid_field = array(
-    'description' => 'The sitemap ID (the hashed value of {xmlsitemap}.context.',
-    'type' => 'varchar',
-    'length' => 64,
-    'not null' => TRUE,
-  );
-  db_change_field('xmlsitemap_sitemap', 'context_hash', 'smid', $smid_field);
-
-  // Remove and re-add the primary key now that the smid field is changed.
-  db_drop_primary_key('xmlsitemap_sitemap');
-  db_add_primary_key('xmlsitemap_sitemap', array('smid'));
-
-  // Reload the schema cache and reprocess all sitemap hashes into smids.
-  drupal_load('module', 'xmlsitemap');
-  drupal_get_schema(NULL, TRUE);
-  $sitemaps = xmlsitemap_sitemap_load_multiple(FALSE);
-  foreach ($sitemaps as $sitemap) {
-    $sitemap['smid_old'] = $sitemap['smid'];
-    $sitemap['smid'] = xmlsitemap_sitemap_get_context_hash($sitemap['context']);
-    db_update('xmlsitemap_sitemap')
-      ->fields(array('smid' => $sitemap['smid']))
-      ->condition('smid', $sitemap['smid_old'])
-      ->execute();
-  }
+  _xmlsitemap_sitemap_rehash_all();
 }
 
 /**
@@ -541,4 +528,20 @@ function xmlsitemap_update_7202() {
  */
 function xmlsitemap_update_7203() {
   xmlsitemap_update_6204();
+  _xmlsitemap_sitemap_rehash_all();
+}
+
+function _xmlsitemap_sitemap_rehash_all() {
+  // Reload the schema cache and reprocess all sitemap hashes into smids.
+  drupal_load('module', 'xmlsitemap');
+  drupal_get_schema(NULL, TRUE);
+
+  // Force a rehash of all sitemaps.
+  $sitemaps = xmlsitemap_sitemap_load_multiple(FALSE);
+  foreach ($sitemaps as $sitemap) {
+    $hash = xmlsitemap_sitemap_get_context_hash($sitemap['context']);
+    if ($hash != $sitemap['smid']) {
+      xmlsitemap_sitemap_save($sitemap);
+    }
+  }
 }

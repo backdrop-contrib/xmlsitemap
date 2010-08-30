@@ -294,7 +294,8 @@ function xmlsitemap_sitemap_multiple_update(array $smids) {
  * Implements hook_query_TAG_alter().
  */
 function xmlsitemap_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInterface $query) {
-  if ($entity = $query->getMetaData('entity_info')) {
+  if ($entity = $query->getMetaData('entity')) {
+    $info = $query->getMetaData('entity_info');
     $bundle = $query->getMetaData('bundle');
     if (empty($bundle)) {
       $bundle = xmlsitemap_get_link_type_enabled_bundles($entity);
@@ -302,8 +303,8 @@ function xmlsitemap_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInte
     if (!empty($info['bundle keys']['bundle'])) {
       $query->condition($info['bundle keys']['bundle'], $bundle);
     }
-    if (!empty($info['entity keys']['bundle'])) {
-      $query->condition($info['entity keys']['bundle'], $bundles);
+    elseif (!empty($info['entity keys']['bundle'])) {
+      $query->condition($info['entity keys']['bundle'], $bundle);
     }
   }
 }
