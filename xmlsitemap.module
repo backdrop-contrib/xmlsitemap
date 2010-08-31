@@ -1086,6 +1086,20 @@ function xmlsitemap_get_bundle_path($entity, $bundle) {
 }
 
 /**
+ * Implements hook_field_attach_rename_bundle().
+ */
+function xmlsitemap_field_attach_rename_bundle($entity_type, $bundle_old, $bundle_new) {
+  xmlsitemap_link_bundle_rename($entity_type, $bundle_old, $bundle_new);
+}
+
+/**
+ * Implements hook_field_attach_delete_bundle().
+ */
+function xmlsitemap_field_attach_delete_bundle($entity_type, $bundle, $instances) {
+  xmlsitemap_link_bundle_delete($entity_type, $bundle, TRUE);
+}
+
+/**
  * Determine the frequency of updates to a link.
  *
  * @param $interval

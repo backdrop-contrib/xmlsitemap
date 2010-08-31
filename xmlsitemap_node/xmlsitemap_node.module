@@ -98,24 +98,6 @@ function xmlsitemap_node_comment_delete(stdClass $comment) {
 }
 
 /**
- * Implements_hook_node_type_update().
- */
-function xmlsitemap_node_node_type_update(stdClass $info) {
-  // Cannot perform xmlsitemap_link_bundle_settings_save() here since
-  // node_type_form_submit() strips all non-essential data from $info.
-  if (!empty($info->old_type) && $info->old_type != $info->type) {
-    xmlsitemap_link_bundle_rename('node', $info->old_type, $info->type);
-  }
-}
-
-/**
- * Implements hook_node_type_delete().
- */
-function xmlsitemap_node_node_type_delete(stdClass $info) {
-  xmlsitemap_link_bundle_delete('node', $info->type);
-}
-
-/**
  * Implements hook_field_extra_fields().
  */
 function xmlsitemap_node_field_extra_fields() {

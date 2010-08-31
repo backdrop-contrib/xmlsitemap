@@ -104,13 +104,6 @@ function xmlsitemap_taxonomy_vocabulary_update(stdClass $vocabulary) {
 }
 
 /**
- * Implements hook_taxonomy_vocabulary_delete().
- */
-function xmlsitemap_taxonomy_vocabulary_delete(stdClass $vocabulary) {
-  xmlsitemap_link_bundle_delete('taxonomy_term', $vocabulary->machine_name);
-}
-
-/**
  * Implements hook_taxonomy_term_insert() {
  */
 function xmlsitemap_taxonomy_term_insert(stdClass $term) {
