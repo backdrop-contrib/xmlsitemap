@@ -319,7 +319,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
     '#size' => 30,
     '#maxlength' => 255,
     '#description' => t('Subdirectory where the sitemap data will be stored. This folder <strong>must not be shared</strong> with any other Drupal site or install using XML sitemap.'),
-    '#field_prefix' =>  file_directory_path() . '/',
+    '#field_prefix' => variable_get('file_public_path', conf_path() . '/files') . '/',
     '#required' => TRUE,
   );
   $form['advanced']['xmlsitemap_base_url'] = array(

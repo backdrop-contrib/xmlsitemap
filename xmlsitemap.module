@@ -868,7 +868,7 @@ function xmlsitemap_directory_move($old_dir, $new_dir, $replace = FILE_EXISTS_RE
  * Note that this only deletes visible files with write permission.
  *
  * @param $path
- *   A filepath relative to file_directory_path.
+ *   A filepath relative to the Drupal root directory.
  * @param $delete_root
  *   A boolean if TRUE will delete the $path directory afterwards.
  */
