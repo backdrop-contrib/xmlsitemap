@@ -118,7 +118,9 @@ function xmlsitemap_engines_submit_engines(array $smids = array()) {
   $engine_info = xmlsitemap_engines_get_engine_info();
 
   foreach ($engines as $engine) {
-    xmlsitemap_engines_submit_sitemaps($engine_info[$engine]['url'], $sitemaps);
+    if (isset($engine_info[$engine]['url'])) {
+      xmlsitemap_engines_submit_sitemaps($engine_info[$engine]['url'], $sitemaps);
+    }
   }
 
   $custom_urls = variable_get('xmlsitemap_engines_custom_urls', '');
@@ -221,10 +223,6 @@ function xmlsitemap_engines_xmlsitemap_engine_info() {
     'name' => t('Bing'),
     'url' => 'http://www.bing.com/webmaster/ping.aspx?siteMap=[sitemap]',
     'help path' => 'http://www.bing.com/webmaster',
-  );
-  $engines['moreover'] = array(
-    'name' => t('Moreover'),
-    'url' => 'http://api.moreover.com/ping?u=[sitemap]',
   );
   return $engines;
 }
