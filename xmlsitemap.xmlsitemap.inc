@@ -183,7 +183,7 @@ class XMLSitemapIndexWriter extends XMLSitemapWriter {
   public function generateXML() {
     $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
-    $url_options = $this->sitemap['uri']['options'];
+    $url_options = $this->sitemap->uri['options'];
     $url_options += array(
       'absolute' => TRUE,
       'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
@@ -191,7 +191,7 @@ class XMLSitemapIndexWriter extends XMLSitemapWriter {
       'alias' => TRUE,
     );
 
-    for ($i = 1; $i <= $this->sitemap['chunks']; $i++) {
+    for ($i = 1; $i <= $this->sitemap->chunks; $i++) {
       $url_options['query']['page'] = $i;
       $element = array(
         'loc' => url('sitemap.xml', $url_options),
