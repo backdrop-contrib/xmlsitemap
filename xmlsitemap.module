@@ -154,7 +154,6 @@ function xmlsitemap_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_sitemap_edit_form', 5),
     'access arguments' => array('administer xmlsitemap'),
-    'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap.admin.inc',
     'modal' => TRUE,
   );
@@ -162,7 +161,6 @@ function xmlsitemap_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_sitemap_delete_form', 5),
     'access arguments' => array('administer xmlsitemap'),
-    'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap.admin.inc',
     'modal' => TRUE,
   );
@@ -319,8 +317,10 @@ function xmlsitemap_var($name, $default = NULL) {
 }
 
 /**
- * @defgroup xmlsitemap_sitemap_api XML sitemap API for sitemaps.
+ * @defgroup xmlsitemap_api XML sitemap API.
  * @{
+ * This is the XML sitemap API to be used by modules wishing to work with
+ * XML sitemap and/or link data.
  */
 
 /**
@@ -511,15 +511,6 @@ function xmlsitemap_sitemap_uri(stdClass $sitemap) {
   );
   return $uri;
 }
-
-/**
- * @} End of "defgroup xmlsitemap_sitemap_api"
- */
-
-/**
- * @defgroup xmlsitemap_link_api XML sitemap API for sitemap links.
- * @{
- */
 
 /**
  * Load a specific sitemap link from the database.
@@ -770,7 +761,7 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
 }
 
 /**
- * @} End of "defgroup xmlsitemap_link_api"
+ * @} End of "defgroup xmlsitemap_api"
  */
 
 function xmlsitemap_get_directory(stdClass $sitemap = NULL) {

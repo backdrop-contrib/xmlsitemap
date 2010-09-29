@@ -26,7 +26,6 @@ function xmlsitemap_custom_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_custom_edit_link_form', 6),
     'access arguments' => array('administer xmlsitemap'),
-    'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap_custom.admin.inc',
     'modal' => TRUE,
   );
@@ -35,7 +34,6 @@ function xmlsitemap_custom_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_custom_delete_link_form', 6),
     'access arguments' => array('administer xmlsitemap'),
-    'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap_custom.admin.inc',
     'modal' => TRUE,
   );
