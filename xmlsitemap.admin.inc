@@ -58,7 +58,7 @@ function xmlsitemap_sitemap_list_form() {
   $query->fields('xmlsitemap_sitemap', array('smid'));
   $query->extend('TableSort')->orderByHeader($header);
   $smids = $query->execute()->fetchCol();
-  $sitemaps = xmlsitemap_sitemap_load_multiple($smids);
+  $sitemaps = $smids ? xmlsitemap_sitemap_load_multiple($smids) : array();
 
   $options = array();
   foreach ($sitemaps as $smid => $sitemap) {

@@ -396,14 +396,19 @@ function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
  * @todo Save the sitemap's URL as a column?
  */
 function xmlsitemap_sitemap_save(stdClass $sitemap) {
+  if (!isset($sitemap->context)) {
+    $sitemap->context = array();
+  }
+
   // Make sure context is sorted before saving the hash.
-  $smid_old = isset($sitemap->smid) ? $sitemap->smid : NULL;
+  $sitemap->is_new = empty($sitemap->smid);
+  $sitemap->old_smid = $sitemap->is_new ? NULL : $sitemap->smid;
   $sitemap->smid = xmlsitemap_sitemap_get_context_hash($sitemap->context);
 
   // If the context was changed, we need to perform additional actions.
-  if (isset($smid_old) && $sitemap->smid != $smid_old) {
+  if (!$sitemap->is_new && $sitemap->smid != $sitemap->old_smid) {
     // Rename the files directory so the sitemap does not break.
-    $old_sitemap = (object) array('smid' => $smid_old);
+    $old_sitemap = (object) array('smid' => $sitemap->old_smid);
     $old_dir = xmlsitemap_get_directory($old_sitemap);
     $new_dir = xmlsitemap_get_directory($sitemap);
     xmlsitemap_directory_move($old_dir, $new_dir);
@@ -411,14 +416,14 @@ function xmlsitemap_sitemap_save(stdClass $sitemap) {
     // Change the smid field so drupal_write_record() does not fail.
     db_update('xmlsitemap_sitemap')
       ->fields(array('smid' => $sitemap->smid))
-      ->condition('smid', $smid_old)
+      ->condition('smid', $sitemap->old_smid)
       ->execute();
 
     // Mark the sitemaps as needing regeneration.
     variable_set('xmlsitemap_regenerate_needed', TRUE);
   }
 
-  if (empty($sitemap->smid)) {
+  if ($sitemap->is_new) {
     drupal_write_record('xmlsitemap_sitemap', $sitemap);
     module_invoke_all('xmlsitemap_sitemap_insert', $sitemap);
   }
