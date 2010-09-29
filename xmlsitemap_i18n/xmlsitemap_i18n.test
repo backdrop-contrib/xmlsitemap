@@ -34,6 +34,7 @@ class XMLSitemapI18nWebTestCase extends XMLSitemapTestHelper {
     $sitemap = new stdClass();
     $sitemap->context = array('language' => 'en');
     xmlsitemap_sitemap_save($sitemap);
+    $sitemap = new stdClass();
     $sitemap->context['language'] = 'fr';
     xmlsitemap_sitemap_save($sitemap);
   }
