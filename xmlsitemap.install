@@ -422,12 +422,14 @@ function xmlsitemap_update_6202() {
 
     if (module_exists('xmlsitemap_i18n') && $languages = variable_get('xmlsitemap_languages', array())) {
       foreach ($languages as $language) {
-        $sitemap = array('context' => array('language' => $language));
+        $sitemap = new stdClass();
+        $sitemap->context = array('language' => $language);
         xmlsitemap_sitemap_save($sitemap);
       }
     }
     else {
-      $sitemap = array('context' => array());
+      $sitemap = new stdClass();
+      $sitemap->context = array();
       xmlsitemap_sitemap_save($sitemap);
     }
   }

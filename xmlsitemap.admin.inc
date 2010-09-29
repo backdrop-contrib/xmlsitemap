@@ -218,10 +218,10 @@ function xmlsitemap_sitemap_edit_form_validate($form, &$form_state) {
 
 function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   form_state_values_clean($form_state);
-  xmlsitemap_sitemap_save($form_state['values']);
+  $sitemap = (object) $form_state['values'];
+  xmlsitemap_sitemap_save($sitemap);
   drupal_set_message(t('The sitemap has been saved.'));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
-  // @todo If context was changed, needs to be regenerated.
 }
 
 function xmlsitemap_sitemap_delete_form(array $form, array &$form_state, stdClass $sitemap) {
