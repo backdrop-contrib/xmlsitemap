@@ -130,7 +130,7 @@ function xmlsitemap_permission() {
 function xmlsitemap_menu() {
   $items['admin/config/search/xmlsitemap'] = array(
     'title' => 'XML sitemap',
-    'description' => 'Configure the XML sitemaps.',
+    'description' => "Configure your site's XML sitemaps to help search engines find and index pages on your site.",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_sitemap_list_form'),
     'access arguments' => array('administer xmlsitemap'),
