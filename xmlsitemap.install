@@ -27,15 +27,6 @@ function xmlsitemap_requirements($phase) {
   }
 
   if ($phase == 'runtime') {
-    if (!user_access('access content', drupal_anonymous_user())) {
-      $requirements['xmlsitemap_access'] = array(
-        'title' => $t('XML sitemap anonymous content access'),
-        'value' => $t('Access denied'),
-        'description' => $t('In order to allow search engines to view the XML sitemap and content on your site, the anonymous user role must have the <a href="@perm-link"><em>View published content</em></a> permission.', array('@perm-link' => url('admin/people/permissions/' . DRUPAL_ANONYMOUS_RID, array('fragment' => 'module-node')))),
-        'severity' => REQUIREMENT_ERROR,
-      );
-    }
-
     // Check that the base directory and all its subdirectories are writable.
     $requirements['xmlsitemap_directory'] = array(
       'title' => $t('XML sitemap cache directory'),

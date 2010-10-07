@@ -197,7 +197,7 @@ function xmlsitemap_menu() {
 
   $items['sitemap.xml'] = array(
     'page callback' => 'xmlsitemap_output_chunk',
-    'access arguments' => array('access content'),
+    'access callback' => TRUE,
     'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap.pages.inc',
   );
