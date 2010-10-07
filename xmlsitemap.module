@@ -63,12 +63,12 @@ function xmlsitemap_hook_info() {
     'xmlsitemap_index_links',
     'xmlsitemap_context_info',
     'xmlsitemap_context_info_alter',
+    'xmlsitemap_context_url_options',
     'xmlsitemap_context',
     'xmlsitemap_sitemap_insert',
     'xmlsitemap_sitemap_update',
     'xmlsitemap_sitemap_operations',
     'xmlsitemap_sitemap_delete',
-    'xmlsitemap_sitemap_uri_alter',
     'xmlsitemap_sitemap_link_url_options_alter',
     'query_xmlsitemap_generate_alter',
     'query_xmlsitemap_link_bundle_access_alter',
@@ -240,7 +240,7 @@ function xmlsitemap_cron() {
 
   // Regenerate the sitemap XML files.
   module_load_include('generate.inc', 'xmlsitemap');
-  xmlsitemap_run_progressive_batch('xmlsitemap_regenerate_batch');
+  xmlsitemap_run_unprogressive_batch('xmlsitemap_regenerate_batch');
 }
 
 /**
@@ -1426,9 +1426,9 @@ function _xmlsitemap_sitemap_context_summary(stdClass $sitemap, $context_key, ar
  */
 
 /**
- * Run a progressive batch operation.
+ * Run a not-progressive batch operation.
  */
-function xmlsitemap_run_progressive_batch() {
+function xmlsitemap_run_unprogressive_batch() {
   $batch = batch_get();
   if (!empty($batch)) {
     // If there is already something in the batch, don't run.
@@ -1441,6 +1441,9 @@ function xmlsitemap_run_progressive_batch() {
   if (!lock_acquire($batch_callback)) {
     return FALSE;
   }
+
+  // Attempt to increase the execution time.
+  drupal_set_time_limit(240);
 
   // Build the batch array.
   $batch = call_user_func_array($batch_callback, $args);

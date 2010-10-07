@@ -40,7 +40,7 @@ function drush_xmlsitemap_regenerate() {
   module_load_include('generate.inc', 'xmlsitemap');
 
   // Run the batch process.
-  xmlsitemap_run_progressive_batch('xmlsitemap_regenerate_batch');
+  xmlsitemap_run_unprogressive_batch('xmlsitemap_regenerate_batch');
 
   $vars = array(
     '@timer' => timer_read('xmlsitemap_regenerate'),
@@ -59,7 +59,7 @@ function drush_xmlsitemap_rebuild() {
   $rebuild_types = xmlsitemap_get_rebuildable_link_types();
 
   // Run the batch process.
-  xmlsitemap_run_progressive_batch('xmlsitemap_rebuild_batch', $rebuild_types, TRUE);
+  xmlsitemap_run_unprogressive_batch('xmlsitemap_rebuild_batch', $rebuild_types, TRUE);
 
   $vars = array(
     '@timer' => timer_read('xmlsitemap_rebuild'),
