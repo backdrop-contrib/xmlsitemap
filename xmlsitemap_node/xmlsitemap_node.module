@@ -135,13 +135,11 @@ function xmlsitemap_node_form_node_type_form_alter(array &$form, array $form_sta
  *
  * @see xmlsitemap_add_form_link_options()
  */
-function xmlsitemap_node_form_alter(array &$form, array &$form_state, $form_id) {
-  if (!empty($form['#node_edit_form'])) {
-    // Add the link options.
-    module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
-    xmlsitemap_add_form_link_options($form, 'node', $form['type']['#value'], $form['nid']['#value']);
-    $form['xmlsitemap']['#weight'] = 30;
-  }
+function xmlsitemap_node_form_node_form_alter(array &$form, array &$form_state) {
+  // Add the link options.
+  module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
+  xmlsitemap_add_form_link_options($form, 'node', $form['type']['#value'], $form['nid']['#value']);
+  $form['xmlsitemap']['#weight'] = 30;
 }
 
 /**
