@@ -113,7 +113,7 @@ class XMLSitemapWriter extends XMLWriter {
    * @param $content
    *   The element contents or an array of the elements' sub-elements.
    */
-  public function writeElement($name, $content) {
+  public function writeElement($name, $content = '') {
     if (is_array($content)) {
       $this->startElement($name);
       foreach ($content as $sub_name => $sub_content) {
