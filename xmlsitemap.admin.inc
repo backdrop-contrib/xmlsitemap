@@ -73,7 +73,9 @@ function xmlsitemap_sitemap_list_form() {
     );
 
     foreach ($contexts as $context_key => $context_info) {
-      $options[$smid]['context_' . $context_key] = _xmlsitemap_sitemap_context_summary($sitemap, $context_key, $context_info);
+      if (!empty($context_info['summary callback'])) {
+        $options[$smid]['context_' . $context_key] = _xmlsitemap_sitemap_context_summary($sitemap, $context_key, $context_info);
+      }
     }
 
     $options[$smid]['updated'] = $sitemap->updated ? format_date($sitemap->updated, 'short') : t('Never');
