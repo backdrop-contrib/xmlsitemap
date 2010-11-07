@@ -756,12 +756,6 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
     $this->assertResponse(200);
     $this->assertNoXMLSitemapProblems();
 
-    // Test anonymous users access to sitemap.xml.
-    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
-    $this->assertXMLSitemapProblems(t('In order to allow search engines to view the XML sitemap and content on your site, the anonymous user role must have the View published content permission.'));
-    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
-    $this->assertNoXMLSitemapProblems();
-
     // Test chunk count > 1000.
     // Test directory not writable.
   }
