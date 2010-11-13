@@ -14,9 +14,7 @@
 class XMLSitemapTestHelper extends DrupalWebTestCase {
   protected $admin_user;
 
-  function setUp() {
-    // Call parent::setUp() allowing test cases to pass further modules.
-    $modules = func_get_args();
+  function setUp($modules = array()) {
     array_unshift($modules, 'xmlsitemap');
     parent::setUp($modules);
   }
@@ -687,8 +685,9 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
     );
   }
 
-  function setUp() {
-    parent::setUp('path');
+  function setUp($modules = array()) {
+    $modules[] = 'path';
+    parent::setUp($modules);
     $this->admin_user = $this->drupalCreateUser(array('access content', 'administer site configuration', 'administer xmlsitemap'));
     $this->drupalLogin($this->admin_user);
   }
@@ -771,8 +770,9 @@ class XMLSitemapRobotsTxtIntegrationTest extends XMLSitemapTestHelper {
     );
   }
 
-  function setUp() {
-    parent::setUp('robotstxt');
+  function setUp($modules = array()) {
+    $modules[] = 'robotstxt';
+    parent::setUp($modules);
   }
 
   function testRobotsTxt() {

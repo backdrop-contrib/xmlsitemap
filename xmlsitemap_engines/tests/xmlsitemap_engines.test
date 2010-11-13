@@ -17,8 +17,11 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     );
   }
 
-  function setUp() {
-    parent::setUp(array('xmlsitemap_engines', 'xmlsitemap_engines_test'));
+  function setUp($modules = array()) {
+    $modules[] = 'xmlsitemap_engines';
+    $modules[] = 'xmlsitemap_engines_test';
+    parent::setUp($modules);
+
     $this->admin_user = $this->drupalCreateUser(array('access content', 'administer xmlsitemap'));
     $this->drupalLogin($this->admin_user);
 

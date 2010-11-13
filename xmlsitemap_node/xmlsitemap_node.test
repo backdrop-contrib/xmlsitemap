@@ -18,8 +18,10 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     );
   }
 
-  function setUp() {
-    parent::setUp('xmlsitemap_node', 'comment');
+  function setUp($modules = array()) {
+    $modules[] = 'xmlsitemap_node';
+    $modules[] = 'comment';
+    parent::setUp($modules);
 
     $this->admin_user = $this->drupalCreateUser(array('administer nodes', 'bypass node access', 'administer content types', 'administer xmlsitemap'));
     $this->normal_user = $this->drupalCreateUser(array('create page content', 'edit any page content', 'access content', 'view own unpublished content'));
