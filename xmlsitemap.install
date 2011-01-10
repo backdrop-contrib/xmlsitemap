@@ -483,8 +483,9 @@ function xmlsitemap_update_6204() {
     );
     db_change_field('xmlsitemap_sitemap', 'context_hash', 'smid', $smid_field);
 
-    // Remove and re-add the primary key now that the smid field is changed.
-    db_drop_primary_key('xmlsitemap_sitemap');
+    // Re-add the primary key now that the smid field is changed.
+    // We don't need to drop the primary key since we already dropped the field
+    // that was the primary key.
     db_add_primary_key('xmlsitemap_sitemap', array('smid'));
   }
 
