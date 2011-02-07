@@ -73,9 +73,9 @@ function xmlsitemap_user_user_update(&$edit, $account, $category) {
 }
 
 /**
- * Implements hook_user_cancel().
+ * Implements hook_user_delete().
  */
-function xmlsitemap_user_user_cancel($edit, $account, $method) {
+function xmlsitemap_user_user_delete($account) {
   xmlsitemap_link_delete('user', $account->uid);
 }
 
