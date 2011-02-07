@@ -2,7 +2,7 @@
 // $Id$
 
 /**
- * @defgroup xmlsitemap XML sitemap: create sitemaps.org sitemaps.
+ * @defgroup xmlsitemap XML sitemap
  */
 
 /**
@@ -79,6 +79,7 @@ function xmlsitemap_hook_info() {
   foreach ($hooks as $hook => $info) {
     $hooks[$hook] = array('group' => 'xmlsitemap');
   }
+
   return $hooks;
 }
 
@@ -149,8 +150,10 @@ function xmlsitemap_menu() {
     'type' => MENU_LOCAL_ACTION,
     'file' => 'xmlsitemap.admin.inc',
     'modal' => TRUE,
+    'options' => array('modal' => TRUE),
   );
   $items['admin/config/search/xmlsitemap/edit/%xmlsitemap_sitemap'] = array(
+    'title' => 'Edit XML sitemap',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_sitemap_edit_form', 5),
     'access arguments' => array('administer xmlsitemap'),
@@ -158,6 +161,7 @@ function xmlsitemap_menu() {
     'modal' => TRUE,
   );
   $items['admin/config/search/xmlsitemap/delete/%xmlsitemap_sitemap'] = array(
+    'title' => 'Delete XML sitemap',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('xmlsitemap_sitemap_delete_form', 5),
     'access arguments' => array('administer xmlsitemap'),
@@ -975,19 +979,33 @@ function xmlsitemap_get_link_type_indexed_status($entity_type, $bundle = '') {
   $status['indexed'] = db_query("SELECT COUNT(id) FROM {xmlsitemap} WHERE type = :entity AND subtype = :bundle", array(':entity' => $entity_type, ':bundle' => $bundle))->fetchField();
   $status['visible'] = db_query("SELECT COUNT(id) FROM {xmlsitemap} WHERE type = :entity AND subtype = :bundle AND status = 1 AND access = 1", array(':entity' => $entity_type, ':bundle' => $bundle))->fetchField();
 
-  // @todo Convert this query to a countQuery().
-  $total = db_select($info['base table'], 'base');
-  $total->addExpression('COUNT(:id)', 'count_expression', array(':id' => $info['entity keys']['id']));
-  //$total->addField('base', $info['entity keys']['id']);
-  $total->condition($info['entity keys']['id'], 0, '>');
-  $total->addTag('xmlsitemap_link_bundle_access');
+  $total = new EntityFieldQuery();
+  $total->entityCondition('entity_type', $entity_type);
+  $total->entityCondition('bundle', $bundle);
+  $total->entityCondition('entity_id', 0, '>');
+  //$total->addTag('xmlsitemap_link_bundle_access');
   $total->addTag('xmlsitemap_link_indexed_status');
   $total->addMetaData('entity', $entity_type);
   $total->addMetaData('bundle', $bundle);
   $total->addMetaData('entity_info', $info);
-  $status['total'] = $total->/*countQuery()->*/execute()->fetchField();
+  $total->count();
+  $status['total'] = $total->execute();
 
   return $status;
+}
+
+/**
+ * Implements hook_entity_query_alter().
+ *
+ * @todo Remove when http://drupal.org/node/1054168 is fixed.
+ */
+function xmlsitemap_entity_query_alter($query) {
+  $conditions = &$query->entityConditions;
+
+  // Alter user entity queries only.
+  if (isset($conditions['entity_type']) && $conditions['entity_type']['value'] == 'user' && isset($conditions['bundle'])) {
+    unset($conditions['bundle']);
+  }
 }
 
 function xmlsitemap_link_bundle_settings_save($entity, $bundle, array $settings, $update_links = TRUE) {
@@ -1488,9 +1506,11 @@ function xmlsitemap_get_operation_link($url, $options = array()) {
   $link = array('href' => $url) + $options;
 
   // Fetch the item's menu router link info and title.
-  $item = menu_get_item($url);
-  $link += array('title' => $item['title'], 'router info' => $item, 'query' => $destination);
+  if (!isset($link['title'])) {
+    $item = menu_get_item($url);
+    $link['title'] = $item['title'];
+  }
 
-  drupal_alter('xmlsitemap_operation_link', $link);
+  $link += array('query' => $destination);
   return $link;
 }

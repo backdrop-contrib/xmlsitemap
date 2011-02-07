@@ -427,16 +427,18 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   }
   $info = $context['sandbox']['info'];
 
-  $query = db_select($info['base table'], 'base');
-  $query->addField('base', $info['entity keys']['id']);
-  $query->condition($info['entity keys']['id'], $context['sandbox']['last_id'], '>');
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', $entity);
+  $query->entityCondition('entity_id', $context['sandbox']['last_id'], '>');
   $query->addTag('xmlsitemap_link_bundle_access');
   $query->addTag('xmlsitemap_rebuild');
   $query->addMetaData('entity', $entity);
   $query->addMetaData('entity_info', $info);
 
   if (!isset($context['sandbox']['max'])) {
-    $context['sandbox']['max'] = $query->countQuery()->execute()->fetchField();
+    $count_query = clone $query;
+    $count_query->count();
+    $context['sandbox']['max'] = $count_query->execute();
     if (!$context['sandbox']['max']) {
       // If there are no items to process, skip everything else.
       return;
@@ -444,12 +446,14 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   }
 
   // PostgreSQL cannot have the ORDERED BY in the count query.
-  $query->orderBy($info['entity keys']['id']);
+  $query->entityOrderBy('entity_id');
 
   $limit = 20; //variable_get('xmlsitemap_batch_limit', 100)
   $query->range(0, $limit);
 
-  $ids = $query->execute()->fetchCol();
+  $result = $query->execute();
+  $ids = array_keys($result[$entity]);
+
   $info['xmlsitemap']['process callback']($ids);
   $context['sandbox']['last_id'] = end($ids);
   $context['sandbox']['progress'] += count($ids);

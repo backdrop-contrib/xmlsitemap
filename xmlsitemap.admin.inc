@@ -495,9 +495,9 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
     $totals['visible'] += $status['visible'];
 
     $row = array();
-    $edit_link = xmlsitemap_get_operation_link("admin/config/search/xmlsitemap/settings/$entity/$bundle", array('modal' => TRUE));
-    if (!empty($edit_link['router info']['access'])) {
-      $row[] = l($bundle_info['label'], $edit_link['href'], $edit_link);
+    if (drupal_valid_path("admin/config/search/xmlsitemap/settings/$entity/$bundle")) {
+      $edit_link = xmlsitemap_get_operation_link("admin/config/search/xmlsitemap/settings/$entity/$bundle", array('title' => $bundle_info['label'], 'modal' => TRUE));
+      $row[] = l($edit_link['title'], $edit_link['href'], $edit_link);
     }
     else {
       $row[] = $bundle_info['label'];

@@ -237,11 +237,34 @@ function xmlsitemap_taxonomy_get_node_count(stdClass $term) {
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_entity_query_alter().
+ *
+ * @todo Remove when http://drupal.org/node/1054162 is fixed.
  */
-function xmlsitemap_taxonomy_query_xmlsitemap_link_bundle_access_alter(QueryAlterableInterface $query) {
-  if ($query->getMetaData('entity') == 'taxonomy_term') {
-    $query->innerJoin('taxonomy_vocabulary', 'v', 'base.vid = v.vid');
-    $query->addField('v', 'machine_name', 'vocabulary_machine_name');
+function xmlsitemap_taxonomy_entity_query_alter($query) {
+  $conditions = &$query->entityConditions;
+
+  // Alter taxonomy term queries only.
+  if (isset($conditions['entity_type']) && $conditions['entity_type']['value'] == 'taxonomy_term' && isset($conditions['bundle'])) {
+
+    // We can only support the operators that are explicit in values.
+    if (in_array($conditions['bundle']['operator'], array(NULL, '=', '!=', 'IN', 'NOT IN'))) {
+      $vids = array();
+
+      // Convert vocabulary machine names to vocabulary IDs.
+      if (is_array($conditions['bundle']['value'])) {
+        foreach ($conditions['bundle']['value'] as $vocabulary_machine_name) {
+          $vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_machine_name);
+          $vids[] = $vocabulary->vid;
+        }
+      }
+      else {
+        $vocabulary = taxonomy_vocabulary_machine_name_load($conditions['bundle']['value']);
+        $vids = $vocabulary->vid;
+      }
+
+      $query->propertyCondition('vid', $vids, $conditions['bundle']['operator']);
+      unset($conditions['bundle']);
+    }
   }
 }
