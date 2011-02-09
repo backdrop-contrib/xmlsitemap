@@ -47,6 +47,9 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
   }
 }
 
+/**
+ * Entity URI callback.
+ */
 function xmlsitemap_menu_menu_link_uri($menu_item) {
   return is_array($menu_item) ? $menu_item['href'] : $menu_item->href;
 }
