@@ -209,16 +209,6 @@ function xmlsitemap_engines_xmlsitemap_engine_info() {
     'url' => 'http://www.google.com/webmasters/tools/ping?sitemap=[sitemap]',
     'help url' => 'http://www.google.com/support/webmasters/bin/answer.py?hl=en&answer=156184',
   );
-  $engines['yahoo'] = array(
-    'name' => t('Yahoo!'),
-    'url' => 'http://search.yahooapis.com/SiteExplorerService/V1/updateNotification?appid=SitemapWriter&url=[sitemap]',
-    'help url' => 'http://help.yahoo.com/l/us/yahoo/search/siteexplorer/manage/siteexplorer-45.html',
-  );
-  $engines['ask'] = array(
-    'name' => t('Ask.com'),
-    'url' => 'http://submissions.ask.com/ping?sitemap=[sitemap]',
-    'help url' => 'http://about.ask.com/en/docs/about/webmasters.shtml#22',
-  );
   $engines['bing'] = array(
     'name' => t('Bing'),
     'url' => 'http://www.bing.com/webmaster/ping.aspx?siteMap=[sitemap]',
