@@ -31,6 +31,7 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
       'xmlsitemap' => array(
         'process callback' => 'xmlsitemap_menu_xmlsitemap_process_menu_links',
       ),
+      'bundle label' => t('Menu'),
     );
 
     foreach (menu_get_menus() as $type => $name) {

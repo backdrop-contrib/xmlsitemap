@@ -626,11 +626,11 @@ function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $
 }
 
 function xmlsitemap_link_bundle_settings_form(array $form, array &$form_state, array $bundle) {
-  if (empty($form_state['ajax']) && !empty($bundle['info']['admin']['real path'])) {
+  if (empty($form_state['ajax']) && $admin_path = xmlsitemap_get_bundle_path($bundle['entity'], $bundle['bundle'])) {
     // If this is a non-ajax form, redirect to the bundle administration page.
     $destination = drupal_get_destination();
     unset($_GET['destination']);
-    drupal_goto($bundle['info']['admin']['real path'], array('query' => $destination));
+    drupal_goto($admin_path, array('query' => $destination));
   }
   else {
     drupal_set_title( t('@bundle XML sitemap settings', array('@bundle' => $bundle['info']['label'])));
