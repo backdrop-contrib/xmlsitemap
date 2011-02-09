@@ -623,10 +623,10 @@ function xmlsitemap_link_save(array $link) {
  * @return
  *   The number of links that were updated.
  */
-function xmlsitemap_link_update_multiple($updates = array(), $conditions = array()) {
+function xmlsitemap_link_update_multiple($updates = array(), $conditions = array(), $check_flag = TRUE) {
   // If we are going to modify a visible sitemap link, we will need to set
   // the regenerate needed flag.
-  if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {
+  if ($check_flag && !variable_get('xmlsitemap_regenerate_needed', FALSE)) {
     _xmlsitemap_check_changed_links($conditions, $updates, TRUE);
   }
 
@@ -1031,6 +1031,24 @@ function xmlsitemap_link_bundle_rename($entity, $bundle_old, $bundle_new) {
     xmlsitemap_link_bundle_settings_save($entity, $bundle_new, $settings, FALSE);
     xmlsitemap_link_update_multiple(array('subtype' => $bundle_new), array('type' => $entity, 'subtype' => $bundle_old));
   }
+}
+
+/**
+ * Rename a link type.
+ */
+function xmlsitemap_link_type_rename($entity_old, $entity_new, $bundles = NULL) {
+  $variables = db_query("SELECT name FROM {variable} WHERE name LIKE :pattern", array(':pattern' => db_like('xmlsitemap_settings_' . $entity_old . '_') . '%'))->fetchCol();
+  foreach ($variables as $variable) {
+    $value = variable_get($variable);
+    variable_del($variable);
+    if (isset($value)) {
+      $variable_new = str_replace($entity_old, $entity_new, $variable);
+      variable_set($variable_new, $value);
+    }
+  }
+
+  xmlsitemap_link_update_multiple(array('type' => $entity_new), array('type' => $entity_old), FALSE);
+  xmlsitemap_get_link_info(NULL, TRUE);
 }
 
 function xmlsitemap_link_bundle_load($entity, $bundle, $load_bundle_info = TRUE) {
