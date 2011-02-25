@@ -1,4 +1,3 @@
-; $Id$
 name = XML sitemap node
 description = Adds content links to the sitemap.
 package = XML sitemap

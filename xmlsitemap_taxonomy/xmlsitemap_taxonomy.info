@@ -1,4 +1,3 @@
-; $Id$
 name = XML sitemap taxonomy
 description = Add taxonomy term links to the sitemap.
 package = XML sitemap

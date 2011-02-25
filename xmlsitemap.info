@@ -1,4 +1,3 @@
-; $Id$
 name = XML sitemap
 description = Creates an XML sitemap conforming to the <a href="http://sitemaps.org/">sitemaps.org protocol</a>.
 package = XML sitemap

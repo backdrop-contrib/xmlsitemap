@@ -1,4 +1,3 @@
-; $Id$
 name = XML sitemap engines test
 description = Support module for XML sitemap engines testing.
 package = Testing

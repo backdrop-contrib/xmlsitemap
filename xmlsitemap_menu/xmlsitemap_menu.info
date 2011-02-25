@@ -1,4 +1,3 @@
-; $Id$
 name = XML sitemap menu
 description = Adds menu item links to the sitemap.
 package = XML sitemap

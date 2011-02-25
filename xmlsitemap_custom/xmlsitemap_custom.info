@@ -1,4 +1,3 @@
-; $Id$
 name = XML sitemap custom
 description = Adds user configurable links to the sitemap.
 package = XML sitemap

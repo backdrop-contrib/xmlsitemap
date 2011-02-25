@@ -1,4 +1,3 @@
-; $Id$
 name = XML sitemap internationalization
 description = Enables multilingual XML sitemaps.
 package = XML sitemap

@@ -1,4 +1,3 @@
-; $Id$
 name = XML sitemap modal UI
 description = "Provides an AJAX modal UI for common XML sitemap tasks."
 package = XML sitemap
