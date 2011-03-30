@@ -1041,7 +1041,7 @@ function xmlsitemap_link_type_rename($entity_old, $entity_new, $bundles = NULL) 
     $value = variable_get($variable);
     variable_del($variable);
     if (isset($value)) {
-      $variable_new = str_replace($entity_old, $entity_new, $variable);
+      $variable_new = str_replace('xmlsitemap_settings_' . $entity_old, 'xmlsitemap_settings_' . $entity_new, $variable);
       variable_set($variable_new, $value);
     }
   }
