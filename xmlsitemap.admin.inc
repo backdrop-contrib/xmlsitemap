@@ -277,7 +277,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
   $form['xmlsitemap_prefetch_aliases'] = array(
     '#type' => 'checkbox',
     '#title' => t('Prefetch URL aliases during sitemap generation.'),
-    '#description' => t('When enabled, this will fetch all URL alises at once instead of one at a time during sitemap generation. For medium or large sites, it is recommended to disable this feature as it uses a lot of memory.'),
+    '#description' => t('When enabled, this will fetch all URL aliases at once instead of one at a time during sitemap generation. For medium or large sites, it is recommended to disable this feature as it uses a lot of memory.'),
     '#default_value' => variable_get('xmlsitemap_prefetch_aliases', 1),
   );
 
