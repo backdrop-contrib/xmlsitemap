@@ -499,7 +499,8 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
       $row[] = l($edit_link['title'], $edit_link['href'], $edit_link);
     }
     else {
-      $row[] = $bundle_info['label'];
+      // Bundle labels are assumed to be un-escaped input.
+      $row[] = check_plain($bundle_info['label']);
     }
     $row[] = $statuses[$bundle_info['xmlsitemap']['status'] ? 1 : 0];
     $row[] = $priorities[number_format($bundle_info['xmlsitemap']['priority'], 1)];
@@ -511,7 +512,7 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
 
   if ($rows) {
     $header = array(
-      $entity_info['bundle label'],
+      isset($entity_info['bundle label']) ? $entity_info['bundle label'] : '',
       t('Inclusion'),
       t('Priority'),
       t('Available'),

@@ -35,7 +35,7 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
 
     foreach (menu_get_menus() as $type => $name) {
       $info['menu_link']['bundles'][$type] = array(
-        'label' => t('@menu-name menu', array('@menu-name' => $name)),
+        'label' => $name,
         'admin' => array(
           'path' => 'admin/structure/menu/manage/%menu/edit',
           'bundle argument' => 4,
