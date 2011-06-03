@@ -421,7 +421,7 @@ function xmlsitemap_update_6202() {
   }
 
   // Add the default sitemap(s) and use language contexts if possible.
-  if (!db_query("SELECT COUNT(smid) FROM {xmlsitemap_sitemap}")->fetchField()) {
+  if (!db_query_range("SELECT 1 FROM {xmlsitemap_sitemap}", 0, 1)->fetchField()) {
     // Refresh the schema and load the module if it's disabled.
     drupal_get_schema(NULL, TRUE);
     drupal_load('module', 'xmlsitemap');
