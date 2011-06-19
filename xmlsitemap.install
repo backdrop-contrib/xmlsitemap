@@ -111,7 +111,7 @@ function xmlsitemap_requirements($phase) {
     $generated_ago = REQUEST_TIME - $generated_last;
     $requirements['xmlsitemap_generated'] = array(
       'title' => $t('XML sitemap'),
-      'value' => $generated_last ? $t('Last generated on !date (!interval ago).', array('!date' => format_date($generated_last, 'small'), '!interval' => format_interval($generated_ago))) : $t('Cached files have not been generated yet.'),
+      'value' => $generated_last ? $t('Last attempted generation on !date (!interval ago).', array('!date' => format_date($generated_last, 'small'), '!interval' => format_interval($generated_ago))) : $t('Cached files have not been generated yet.'),
       'severity' => REQUIREMENT_OK,
     );
     if (variable_get('xmlsitemap_rebuild_needed', FALSE) && _xmlsitemap_rebuild_form_access()) {
@@ -119,7 +119,11 @@ function xmlsitemap_requirements($phase) {
       $requirements['xmlsitemap_generated']['description'] = $t('The XML sitemap data is out of sync and needs to be <a href="@link-rebuild">completely rebuilt<a>.', array('@link-rebuild' => url('admin/config/search/xmlsitemap/rebuild')));
     }
     elseif (variable_get('xmlsitemap_regenerate_needed', FALSE)) {
-      if ($generated_ago >= variable_get('cron_threshold_error', 1209600)) {
+      if ($max_filesize == 0) {
+        // A maximum sitemap file size of 0 indicates an error in generation.
+        $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
+      }
+      elseif ($generated_ago >= variable_get('cron_threshold_error', 1209600)) {
         $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
       }
       elseif ($generated_ago >= variable_get('cron_threshold_warning', 172800)) {
