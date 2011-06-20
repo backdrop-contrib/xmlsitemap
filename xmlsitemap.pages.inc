@@ -108,6 +108,9 @@ function xmlsitemap_file_transfer($uri, $headers) {
   }
   drupal_send_headers();
 
+  // Attempt to increase time to transfer file.
+  drupal_set_time_limit(240);
+
   $scheme = variable_get('file_default_scheme', 'public');
   // Transfer file in 16 KB chunks to save memory usage.
   if ($scheme && file_stream_wrapper_valid_scheme($scheme) && $fd = fopen($uri, 'rb')) {
