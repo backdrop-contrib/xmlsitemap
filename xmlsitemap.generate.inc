@@ -458,7 +458,10 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   $context['sandbox']['progress'] += count($ids);
   $context['message'] = t('Now processing %entity @last_id (@progress of @count).', array('%entity' => $entity, '@last_id' => $context['sandbox']['last_id'], '@progress' => $context['sandbox']['progress'], '@count' => $context['sandbox']['max']));
 
-  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+  if ($context['sandbox']['progress'] >= $context['sandbox']['max']) {
+    $context['finished'] = 1;
+  }
+  else {
     $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
   }
 }
