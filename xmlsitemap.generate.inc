@@ -17,7 +17,7 @@
  * @param $path
  *   An internal Drupal path.
  * @param $language
- *   A language code to look use when looking up the paths.
+ *   A language code to use when looking up the paths.
  */
 function xmlsitemap_get_path_alias($path, $language) {
   static $aliases;
