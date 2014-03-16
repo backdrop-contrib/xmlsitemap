@@ -13,7 +13,6 @@ class XMLSitemapGenerationException extends XMLSitemapException {}
  * Extended class for writing XML sitemap files.
  */
 class XMLSitemapWriter extends XMLWriter {
-  protected $status = TRUE;
   protected $uri = NULL;
   protected $sitemapElementCount = 0;
   protected $linkCountFlush = 500;
@@ -129,19 +128,6 @@ class XMLSitemapWriter extends XMLWriter {
     }
   }
 
-  /**
-   * Override of XMLWriter::flush() to track file writing status.
-   */
-  public function flush($empty = TRUE) {
-    $return = parent::flush($empty);
-    $this->status &= (bool) $return;
-    return $return;
-  }
-
-  public function getStatus() {
-    return $this->status;
-  }
-
   public function getURI() {
     return $this->uri;
   }
@@ -153,7 +139,7 @@ class XMLSitemapWriter extends XMLWriter {
   public function endDocument() {
     $return = parent::endDocument();
 
-    if (!$this->getStatus()) {
+    if (!$return) {
       throw new XMLSitemapGenerationException(t('Unknown error occurred while writing to file @file.', array('@file' => $this->uri)));
     }
 
