@@ -45,11 +45,15 @@ class XMLSitemapWriter extends XMLWriter {
 
   public function startDocument($version = '1.0', $encoding = 'UTF-8', $standalone = NULL) {
     $this->setIndent(FALSE);
-    parent::startDocument($version, $encoding);
+    $result = parent::startDocument($version, $encoding);
+    if (!$result) {
+      throw new XMLSitemapGenerationException(t('Unknown error occurred while writing to file @file.', array('@file' => $this->uri)));
+    }
     if (variable_get('xmlsitemap_xsl', 1)) {
       $this->writeXSL();
     }
     $this->startElement($this->rootElement, TRUE);
+    return $result;
   }
 
   /**
@@ -147,6 +151,10 @@ class XMLSitemapWriter extends XMLWriter {
     //  $file_gz = $file . '.gz';
     //  file_put_contents($file_gz, gzencode(file_get_contents($file), 9));
     //}
+
+    if (!filesize($this->uri)) {
+      throw new XMLSitemapGenerationException(t('Generated @file resulted in an empty file.', array('@file' => $this->uri)));
+    }
 
     return $return;
   }
