@@ -150,7 +150,7 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
   $link_count = 0;
 
   $query = db_select('xmlsitemap', 'x');
-  $query->fields('x', array('loc', 'lastmod', 'changefreq', 'changecount', 'priority', 'language', 'access', 'status'));
+  $query->fields('x', array('id', 'type', 'subtype', 'loc', 'lastmod', 'changefreq', 'changecount', 'priority', 'language', 'access', 'status'));
   $query->condition('x.access', 1);
   $query->condition('x.status', 1);
   $query->orderBy('x.language', 'DESC');
@@ -207,6 +207,10 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
       // sitemaps.org specification.
       $element['priority'] = number_format($link['priority'], 1);
     }
+
+    // @todo Should this be moved to XMLSitemapWritier::writeSitemapElement()?
+    drupal_alter('xmlsitemap_element', $element, $link, $sitemap);
+
     $writer->writeSitemapElement('url', $element);
   }
 

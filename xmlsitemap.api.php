@@ -179,6 +179,56 @@ function hook_xmlsitemap_context_url_options_alter(array &$options, array $conte
 }
 
 /**
+ * Alter the content added to an XML sitemap for an individual element.
+ *
+ * This hooks is called when the module is generating the XML content for the
+ * sitemap and allows other modules to alter existing or add additional XML data
+ * for any element by adding additional key value paris to the $element array.
+ *
+ * The key in the element array is then used as the name of the XML child
+ * element to add and the value is the value of that element. For example:
+ *
+ * @code $element['video:title'] = 'Big Ponycorn'; @endcode
+ *
+ * Would result in a child element like <video:title>Big Ponycorn</video:title>
+ * being added to the sitemap for this particular link.
+ *
+ * @param array $element
+ *   The element that will be converted to XML for the link.
+ * @param array $link
+ *   An array of properties providing context about the link that we are
+ *   generating an XML element for.
+ * @param object $sitemap
+ *   The sitemap that is currently being generated.
+ */
+function hook_xmlsitemap_element_alter(array &$element, array $link, $sitemap) {
+  if ($link['subtype'] === 'video') {
+    $node = node_load($link['id']);
+    $element['video:video'] = array(
+      'video:title' => check_plain($node->title),
+      'video:description' => isset($node->body[LANGUAGE_NONE][0]['summary']) ? check_plain($node->body[LANGUAGE_NONE][0]['summary']) : check_plain($node->body[LANGUAGE_NONE][0]['value']),
+      'video:live' => 'no',
+    );
+  }
+}
+
+/**
+ * Alter the attributes used for the root element of the XML sitemap.
+ *
+ * For example add an xmlns:video attribute:
+ * <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+ *
+ * @param array $attributes
+ *   An associative array of attributes to use in the root element of an XML
+ *   sitemap.
+ * @param object $sitemap
+ *   The sitemap that is currently being generated.
+ */
+function hook_xmlsitemap_root_attributes_alter(&$attributes, $sitemap) {
+  $attributes['xmlns:video'] = 'http://www.google.com/schemas/sitemap-video/1.1';
+}
+
+/**
  * Alter the query selecting data from {xmlsitemap} during sitemap generation.
  *
  * @param $query

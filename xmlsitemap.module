@@ -64,6 +64,8 @@ function xmlsitemap_hook_info() {
     'xmlsitemap_context_info_alter',
     'xmlsitemap_context_url_options',
     'xmlsitemap_context',
+    'xmlsitemap_element_alter',
+    'xmlsitemap_root_attributes_alter',
     'xmlsitemap_sitemap_insert',
     'xmlsitemap_sitemap_update',
     'xmlsitemap_sitemap_operations',
