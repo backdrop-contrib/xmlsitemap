@@ -60,10 +60,12 @@ function hook_xmlsitemap_link_info() {
 /**
  * Alter the data of a sitemap link before the link is saved.
  *
- * @param $link
+ * @param array $link
  *   An array with the data of the sitemap link.
+ * @param array $context
+ *   An optional context array containing data related to the link.
  */
-function hook_xmlsitemap_link_alter(&$link) {
+function hook_xmlsitemap_link_alter(array &$link, array $context) {
   if ($link['type'] == 'mymodule') {
     $link['priority'] += 0.5;
   }
@@ -75,10 +77,12 @@ function hook_xmlsitemap_link_alter(&$link) {
  * @param $link
  *   Associative array defining an XML sitemap link as passed into
  *   xmlsitemap_link_save().
+ * @param array $context
+ *   An optional context array containing data related to the link.
  *
  * @see hook_xmlsitemap_link_update()
  */
-function hook_xmlsitemap_link_insert(array $link) {
+function hook_xmlsitemap_link_insert(array $link, array $context) {
   db_insert('mytable')
     ->fields(array(
       'link_type' => $link['type'],
@@ -94,10 +98,12 @@ function hook_xmlsitemap_link_insert(array $link) {
  * @param $link
  *   Associative array defining an XML sitemap link as passed into
  *   xmlsitemap_link_save().
+ * @param array $context
+ *   An optional context array containing data related to the link.
  *
  * @see hook_xmlsitemap_link_insert()
  */
-function hook_xmlsitemap_link_update(array $link) {
+function hook_xmlsitemap_link_update(array $link, array $context) {
   db_update('mytable')
     ->fields(array(
       'link_type' => $link['type'],

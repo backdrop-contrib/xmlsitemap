@@ -560,10 +560,15 @@ function xmlsitemap_link_load_multiple(array $conditions = array()) {
 /**
  * Saves or updates a sitemap link.
  *
- * @param $link
+ * @param array $link
  *   An array with a sitemap link.
+ * @param array $context
+ *   An optional context array containing data related to the link.
+ *
+ * @return array
+ *   The saved sitemap link.
  */
-function xmlsitemap_link_save(array $link) {
+function xmlsitemap_link_save(array $link, array $context = array()) {
   $link += array(
     'access' => 1,
     'status' => 1,
@@ -577,7 +582,7 @@ function xmlsitemap_link_save(array $link) {
   );
 
   // Allow other modules to alter the link before saving.
-  drupal_alter('xmlsitemap_link', $link);
+  drupal_alter('xmlsitemap_link', $link, $context);
 
   // Temporary validation checks.
   // @todo Remove in final?
@@ -599,11 +604,11 @@ function xmlsitemap_link_save(array $link) {
   // Save the link and allow other modules to respond to the link being saved.
   if ($existing) {
     drupal_write_record('xmlsitemap', $link, array('type', 'id'));
-    module_invoke_all('xmlsitemap_link_update', $link);
+    module_invoke_all('xmlsitemap_link_update', $link, $context);
   }
   else {
     drupal_write_record('xmlsitemap', $link);
-    module_invoke_all('xmlsitemap_link_insert', $link);
+    module_invoke_all('xmlsitemap_link_insert', $link, $context);
   }
 
   return $link;
