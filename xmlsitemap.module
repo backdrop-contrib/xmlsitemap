@@ -236,6 +236,10 @@ function xmlsitemap_cron() {
   if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {
     return;
   }
+  // If cron sitemap file regeneration is disabled, stop.
+  if (variable_get('xmlsitemap_disable_cron_regeneration', 0)) {
+    return;
+  }
 
   // If the minimum sitemap lifetime hasn't been passed, skip.
   $lifetime = REQUEST_TIME - variable_get('xmlsitemap_generated_last', 0);
@@ -292,6 +296,7 @@ function xmlsitemap_variables() {
     'xmlsitemap_frontpage_changefreq' => XMLSITEMAP_FREQUENCY_DAILY,
     'xmlsitemap_lastmod_format' => XMLSITEMAP_LASTMOD_MEDIUM,
     'xmlsitemap_gz' => FALSE,
+    'xmlsitemap_disable_cron_regeneration' => 0,
     // Removed variables are set to NULL so they can still be deleted.
     'xmlsitemap_regenerate_last' => NULL,
     'xmlsitemap_custom_links' => NULL,
