@@ -117,17 +117,20 @@ class XMLSitemapWriter extends XMLWriter {
   /**
    * Write full element tag including support for nested elements.
    *
-   * @param $name
+   * @param string $name
    *   The element name.
-   * @param $content
+   * @param string|array $content
    *   The element contents or an array of the elements' sub-elements.
+   *
+   * @todo Missing a return value since XMLWriter::writeElement() has one.
    */
-  public function writeElement($name, $content = '') {
+  public function writeElement($name, $content = NULL) {
     if (is_array($content)) {
       $this->startElement($name);
-      foreach ($content as $sub_name => $sub_content) {
-        $this->writeElement($sub_name, $sub_content);
-      }
+      $xml_content = format_xml_elements($content);
+      // Remove additional spaces from the output.
+      $xml_content = str_replace(array(" <", ">\n"), array("<", ">"), $xml_content);
+      $this->writeRaw($xml_content);
       $this->endElement();
     }
     else {
