@@ -199,9 +199,8 @@ class XMLSitemapIndexWriter extends XMLSitemapWriter {
     $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
     for ($i = 1; $i <= $this->sitemap->chunks; $i++) {
-      $url_options['query']['page'] = $i;
       $element = array(
-        'loc' => $this->getSitemapUrl('sitemap.xml'),
+        'loc' => $this->getSitemapUrl('sitemap.xml', array('query' => array('page' => $i))),
         // @todo Use the actual lastmod value of the chunk file.
         'lastmod' => gmdate($lastmod_format, REQUEST_TIME),
       );
