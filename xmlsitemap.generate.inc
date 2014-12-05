@@ -44,6 +44,7 @@ function xmlsitemap_get_path_alias($path, $language) {
     'absolute' => FALSE,
     'alias' => FALSE,
     'prefix' => '',
+    'external' => FALSE,
   );
 
   if ($language != LANGUAGE_NONE && isset($aliases[$language][$path])) {
