@@ -32,15 +32,32 @@ function xmlsitemap_get_path_alias($path, $language) {
     $last_language = $language;
   }
 
+  // We need to pass our path through hook_url_outbound_alter(). This fixes
+  // clean URLs not working when they don't exist in the {url_alias} table and
+  // are created with something like subpathauto.
+  $normalized_path = $path;
+
+  // hook_url_outbound_alter() expects defaults in url() options.
+  $options = array(
+    'fragment' => '',
+    'query' => array(),
+    'absolute' => FALSE,
+    'alias' => FALSE,
+    'prefix' => '',
+  );
+
   if ($language != LANGUAGE_NONE && isset($aliases[$language][$path])) {
-    return $aliases[$language][$path];
+    $normalized_path = $aliases[$language][$path];
+    $options['alias'] = TRUE;
   }
   elseif (isset($aliases[LANGUAGE_NONE][$path])) {
-    return $aliases[LANGUAGE_NONE][$path];
+    $normalized_path = $aliases[LANGUAGE_NONE][$path];
+    $options['alias'] = TRUE;
   }
-  else {
-    return $path;
-  }
+
+  $original_path = $normalized_path;
+  drupal_alter('url_outbound', $normalized_path, $options, $original_path);
+  return $normalized_path;
 }
 
 /**
