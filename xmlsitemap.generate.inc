@@ -154,6 +154,7 @@ function xmlsitemap_generate_page(stdClass $sitemap, $page) {
 }
 
 function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, $chunk) {
+  $output_elements = drupal_map_assoc(variable_get('xmlsitemap_output_elements', array('lastmod', 'changefreq', 'priority')));
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
   $url_options = $sitemap->uri['options'];
@@ -209,17 +210,19 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
     $element = array();
     $element['loc'] = $link_url;
     if ($link['lastmod']) {
-      $element['lastmod'] = gmdate($lastmod_format, $link['lastmod']);
+      if (!empty($output_elements['lastmod'])) {
+        $element['lastmod'] = gmdate($lastmod_format, $link['lastmod']);
+      }
       // If the link has a lastmod value, update the changefreq so that links
       // with a short changefreq but updated two years ago show decay.
       // We use abs() here just incase items were created on this same cron run
       // because lastmod would be greater than REQUEST_TIME.
       $link['changefreq'] = (abs(REQUEST_TIME - $link['lastmod']) + $link['changefreq']) / 2;
     }
-    if ($link['changefreq']) {
+    if (!empty($output_elements['changefreq']) && $link['changefreq']) {
       $element['changefreq'] = xmlsitemap_get_changefreq($link['changefreq']);
     }
-    if (isset($link['priority']) && $link['priority'] != 0.5) {
+    if (!empty($output_elements['priority']) && isset($link['priority']) && $link['priority'] != 0.5) {
       // Don't output the priority value for links that have 0.5 priority. This
       // is the default 'assumed' value if priority is not included as per the
       // sitemaps.org specification.
