@@ -461,6 +461,13 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   $query->addTag('xmlsitemap_rebuild');
   $query->addMetaData('entity', $entity);
   $query->addMetaData('entity_info', $info);
+  if ($types = xmlsitemap_get_link_type_enabled_bundles($entity)) {
+    $query->entityCondition('bundle', $types, 'IN');
+  }
+  else {
+    // If no enabled bundle types, skip everything else.
+    return;
+  }
 
   if (!isset($context['sandbox']['max'])) {
     $count_query = clone $query;
