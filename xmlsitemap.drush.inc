@@ -39,6 +39,7 @@ function drush_xmlsitemap_regenerate() {
   module_load_include('generate.inc', 'xmlsitemap');
 
   // Run the batch process.
+  timer_start('xmlsitemap_regenerate');
   xmlsitemap_run_unprogressive_batch('xmlsitemap_regenerate_batch');
 
   $vars = array(
@@ -56,8 +57,12 @@ function drush_xmlsitemap_rebuild() {
 
   // Build a list of rebuildable link types.
   $rebuild_types = xmlsitemap_get_rebuildable_link_types();
+  if (empty($rebuild_types)) {
+    return drush_set_error("No link types are rebuildable.");
+  }
 
   // Run the batch process.
+  timer_start('xmlsitemap_rebuild');
   xmlsitemap_run_unprogressive_batch('xmlsitemap_rebuild_batch', $rebuild_types, TRUE);
 
   $vars = array(
