@@ -67,7 +67,8 @@ function drush_xmlsitemap_rebuild() {
 
   // Build a list of rebuildable link types.
   $types = xmlsitemap_get_rebuildable_link_types();
-  if ($option_types = explode(',', drush_get_option('types', ''))) {
+  if ($option_types = drush_get_option('types', '')) {
+    $option_types = explode(',', $option_types);
     if ($invalid_types = array_diff($option_types, $types)) {
       drush_set_error(dt('The following link types are invalid: @types', array('@types' => implode(', ', $invalid_types))));
     }
@@ -113,7 +114,8 @@ function drush_xmlsitemap_queue_rebuild() {
   module_load_include('generate.inc', 'xmlsitemap');
 
   $types = xmlsitemap_get_rebuildable_link_types();
-  if ($option_types = explode(',', drush_get_option('types', ''))) {
+  if ($option_types = drush_get_option('types', '')) {
+    $option_types = explode(',', $option_types);
     if ($invalid_types = array_diff($option_types, $types)) {
       drush_set_error(dt('The following link types are invalid: @types', array('@types' => implode(', ', $invalid_types))));
     }
