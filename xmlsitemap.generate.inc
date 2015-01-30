@@ -424,6 +424,9 @@ function xmlsitemap_batch_variable_set(array $variables) {
  */
 function xmlsitemap_rebuild_batch_clear(array $entities, $save_custom, &$context) {
   if (!empty($entities)) {
+    // Let other modules respond to the rebuild clearing.
+    module_invoke_all('xmlsitemap_rebuild_clear', $entities, $save_custom);
+
     $query = db_delete('xmlsitemap');
     $query->condition('type', $entities);
 
