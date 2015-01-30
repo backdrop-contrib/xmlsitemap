@@ -58,7 +58,7 @@ function drush_xmlsitemap_rebuild() {
   // Build a list of rebuildable link types.
   $rebuild_types = xmlsitemap_get_rebuildable_link_types();
   if (empty($rebuild_types)) {
-    return drush_set_error("No link types are rebuildable.");
+    return drush_set_error(dt('No link types are rebuildable.'));
   }
 
   // Run the batch process.
