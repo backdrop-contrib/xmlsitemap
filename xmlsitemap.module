@@ -74,6 +74,7 @@ function xmlsitemap_hook_info() {
     'query_xmlsitemap_generate_alter',
     'query_xmlsitemap_link_bundle_access_alter',
     'form_xmlsitemap_sitemap_edit_form_alter',
+    'xmlsitemap_rebuild_clear',
   );
 
   $hooks = array_combine($hooks, $hooks);
