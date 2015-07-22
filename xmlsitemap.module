@@ -51,6 +51,16 @@ define('XMLSITEMAP_STATUS_DEFAULT', 0);
  */
 define('XMLSITEMAP_PRIORITY_DEFAULT', 0.5);
 
+
+/**
+ * Implements hook_autoload_info().
+ */
+function xmlsitemap_autoload_info() {
+  return array(
+    'XMLSitemapWriter' => 'xmlsitemap.xmlsitemap.inc',
+  );
+}
+
 /**
  * Implements hook_hook_info().
  */
@@ -919,7 +929,10 @@ function _xmlsitemap_delete_recursive($path, $delete_root = FALSE) {
  * @see hook_xmlsitemap_link_info_alter()
  */
 function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
+
+  //@TODO fix global $language issue. Should be a way of getting this object.
   global $language;
+
   $link_info = &drupal_static(__FUNCTION__);
 
   if ($reset) {
