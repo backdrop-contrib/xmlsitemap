@@ -341,7 +341,7 @@ function xmlsitemap_install() {
 
   // Create the link process the queue.
   /** @var DrupalReliableQueueInterface $queue */
-  $queue = DrupalQueue::get('xmlsitemap_link_process', TRUE);
+  $queue = BackdropQueue::get('xmlsitemap_link_process', TRUE);
   $queue->createQueue();
 }
 
@@ -371,7 +371,7 @@ function xmlsitemap_uninstall() {
 
   // Remove the queue.
   /** @var DrupalReliableQueueInterface $queue */
-  $queue = DrupalQueue::get('xmlsitemap_link_process', TRUE);
+  $queue = BackdropQueue::get('xmlsitemap_link_process', TRUE);
   $queue->deleteQueue();
 }
 
