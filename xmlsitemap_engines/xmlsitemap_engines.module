@@ -178,7 +178,7 @@ function xmlsitemap_engines_get_engine_info($engine = NULL) {
   $engines = &drupal_static(__FUNCTION__);
 
   if (!isset($engines)) {
-    if ($cached = cache_get('xmlsitemap:engines:' . $language->language)) {
+    if ($cached = cache_get('xmlsitemap:engines:' . $language->langcode)) {
       $engines = $cached->data;
     }
     else {
@@ -187,7 +187,7 @@ function xmlsitemap_engines_get_engine_info($engine = NULL) {
       // Allow other modulse to alter the engine info.
       drupal_alter('xmlsitemap_engine_info', $engines);
       // Cache by language since engine names are translated.
-      cache_set('xmlsitemap:engines:' . $language->language, $engines);
+      cache_set('xmlsitemap:engines:' . $language->langcode, $engines);
     }
   }
 

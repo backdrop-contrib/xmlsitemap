@@ -941,7 +941,7 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
   }
 
   if (!isset($link_info)) {
-    $cid = 'xmlsitemap:link_info:' . $language->language;
+    $cid = 'xmlsitemap:link_info:' . $language->langcode;
     if ($cache = cache_get($cid)) {
       $link_info = $cache->data;
     }
@@ -1441,7 +1441,7 @@ function xmlsitemap_get_context_info($context = NULL, $reset = FALSE) {
   if ($reset) {
     $info = NULL;
   }
-  elseif ($cached = cache_get('xmlsitemap:context_info:' . $language->language)) {
+  elseif ($cached = cache_get('xmlsitemap:context_info:' . $language->langcode)) {
     $info = $cached->data;
   }
 
@@ -1450,7 +1450,7 @@ function xmlsitemap_get_context_info($context = NULL, $reset = FALSE) {
     drupal_alter('xmlsitemap_context_info', $info);
     ksort($info);
     // Cache by language since this info contains translated strings.
-    cache_set('xmlsitemap:context_info:' . $language->language, $info);
+    cache_set('xmlsitemap:context_info:' . $language->langcode, $info);
   }
 
   if (isset($context)) {
