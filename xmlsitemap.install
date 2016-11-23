@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Install, update and uninstall functions for the xmlsitemap module.
@@ -130,7 +129,7 @@ function xmlsitemap_requirements($phase) {
         $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_WARNING;
       }
       if ($requirements['xmlsitemap_generated']['severity']) {
-        $requirements['xmlsitemap_generated']['description'] = $t('The XML cached files are out of date and need to be regenerated. You can <a href="@link-cron">run cron manually</a> to regenerate the sitemap files.', array('@link-cron' => url('admin/reports/status/run-cron', array('query' => drupal_get_destination()))));
+        $requirements['xmlsitemap_generated']['description'] = $t('The XML cached files are out of date and need to be regenerated. You can <a href="@link-cron">run cron manually</a> to regenerate the sitemap files.', array('@link-cron' => url('admin/reports/status/run-cron', array('query' => backdrop_get_destination()))));
       }
     }
   }
@@ -313,7 +312,7 @@ function xmlsitemap_install() {
     ->execute();
 
   // Load the module.
-  drupal_load('module', 'xmlsitemap');
+  backdrop_load('module', 'xmlsitemap');
 
   // Insert the homepage link into the {xmlsitemap} table so we do not show an
   // empty sitemap after install.
@@ -360,7 +359,7 @@ function xmlsitemap_enable() {
  */
 function xmlsitemap_uninstall() {
   // Remove variables.
-  drupal_load('module', 'xmlsitemap');
+  backdrop_load('module', 'xmlsitemap');
   $variables = array_keys(xmlsitemap_variables());
   foreach ($variables as $variable) {
     variable_del($variable);
@@ -379,192 +378,5 @@ function xmlsitemap_uninstall() {
  * Implements hook_update_last_removed().
  */
 function xmlsitemap_update_last_removed() {
-  return 6201;
-}
-
-/**
- * Create the {xmlsitemap_sitemap} table and add the sitemap context data.
- */
-function xmlsitemap_update_6202() {
-  if (!db_table_exists('xmlsitemap_sitemap')) {
-    $schema['xmlsitemap_sitemap'] = array(
-      'fields' => array(
-        'smid' => array(
-          'description' => 'Sitemap ID',
-          'type' => 'serial',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'context_hash' => array(
-          'description' => 'The MD5 hash of the context field.',
-          'type' => 'varchar',
-          'length' => 32,
-          'not null' => TRUE,
-          'default' => '',
-        ),
-        'context' => array(
-          'description' => 'Serialized array with the sitemaps context',
-          'type' => 'text',
-          'not null' => TRUE,
-        ),
-        'updated' => array(
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-        'links' => array(
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-        'chunks' => array(
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-      ),
-      'primary key' => array('smid'),
-      'unique keys' => array(
-        'context_hash' => array('context_hash'),
-      ),
-    );
-    db_create_table('xmlsitemap_sitemap', $schema['xmlsitemap_sitemap']);
-  }
-
-  // Add the default sitemap(s) and use language contexts if possible.
-  if (!db_query_range("SELECT 1 FROM {xmlsitemap_sitemap}", 0, 1)->fetchField()) {
-    // Refresh the schema and load the module if it's disabled.
-    drupal_get_schema(NULL, TRUE);
-    drupal_load('module', 'xmlsitemap');
-
-    if (module_exists('xmlsitemap_i18n') && $languages = variable_get('xmlsitemap_languages', array())) {
-      foreach ($languages as $language) {
-        $sitemap = new stdClass();
-        $sitemap->context = array('language' => $language);
-        xmlsitemap_sitemap_save($sitemap);
-      }
-    }
-    else {
-      $sitemap = new stdClass();
-      $sitemap->context = array();
-      xmlsitemap_sitemap_save($sitemap);
-    }
-  }
-
-  // Language variable is no longer needed, so go ahead and delete it.
-  variable_del('xmlsitemap_languages');
-
-  // Ensure that the sitemaps will be refreshed on next cron.
-  variable_set('xmlsitemap_generated_last', 0);
-  variable_set('xmlsitemap_regenerate_needed', TRUE);
-}
-
-/**
- * Convert the xmlsitemap_max_filesize variable to a max_filesize column
- * per-sitemap.
- */
-function xmlsitemap_update_6203() {
-  if (db_field_exists('xmlsitemap_sitemap', 'max_filesize')) {
-    return;
-  }
-
-  // Add the max_filesize column.
-  $field = array(
-    'type' => 'int',
-    'unsigned' => TRUE,
-    'not null' => TRUE,
-    'default' => 0,
-  );
-  db_add_field('xmlsitemap_sitemap', 'max_filesize', $field);
-
-  // Scan each sitemap directory for the largest file.
-  drupal_load('module', 'xmlsitemap');
-  $sitemaps = xmlsitemap_sitemap_load_multiple(FALSE);
-  foreach ($sitemaps as $sitemap) {
-    xmlsitemap_sitemap_get_max_filesize($sitemap);
-    db_update('xmlsitemap_sitemap')
-      ->fields(array('max_filesize' => $sitemap->max_filesize))
-      ->condition('smid', $sitemap->smid)
-      ->execute();
-  }
-
-  variable_del('xmlsitemap_max_filesize');
-  variable_del('xmlsitemap_max_chunks');
-}
-
-/**
- * Convert {xmlsitemap}.context_hash to replace {xmlsitemap}.smid.
- */
-function xmlsitemap_update_6204() {
-  if (db_field_exists('xmlsitemap_sitemap', 'context_hash')) {
-    db_drop_unique_key('xmlsitemap_sitemap', 'context_hash');
-    db_drop_field('xmlsitemap_sitemap', 'smid');
-
-    // Rename context_hash to the new smid column.
-    $smid_field = array(
-      'description' => 'The sitemap ID (the hashed value of {xmlsitemap}.context.',
-      'type' => 'varchar',
-      'length' => 64,
-      'not null' => TRUE,
-    );
-    db_change_field('xmlsitemap_sitemap', 'context_hash', 'smid', $smid_field);
-
-    // Re-add the primary key now that the smid field is changed.
-    // We don't need to drop the primary key since we already dropped the field
-    // that was the primary key.
-    db_add_primary_key('xmlsitemap_sitemap', array('smid'));
-  }
-
-  _xmlsitemap_sitemap_rehash_all();
-}
-
-/**
- * Update empty string languages to LANGUAGE_NONE.
- */
-function xmlsitemap_update_7200() {
-  db_update('xmlsitemap')
-    ->fields(array('language' => LANGUAGE_NONE))
-    ->condition('language', '')
-    ->execute();
-}
-
-/**
- * Re-run xmlsitemap_update_6202() to ensure sitemap data has been added.
- */
-function xmlsitemap_update_7201() {
-  xmlsitemap_update_6202();
-}
-
-/**
- * Convert the xmlsitemap_max_filesize variable to a max_filesize column
- * per-sitemap.
- */
-function xmlsitemap_update_7202() {
-  xmlsitemap_update_6203();
-}
-
-/**
- * Convert {xmlsitemap}.context_hash to replace {xmlsitemap}.smid.
- */
-function xmlsitemap_update_7203() {
-  xmlsitemap_update_6204();
-  _xmlsitemap_sitemap_rehash_all();
-}
-
-function _xmlsitemap_sitemap_rehash_all() {
-  // Reload the schema cache and reprocess all sitemap hashes into smids.
-  drupal_load('module', 'xmlsitemap');
-  drupal_get_schema(NULL, TRUE);
-
-  // Force a rehash of all sitemaps.
-  $sitemaps = xmlsitemap_sitemap_load_multiple(FALSE);
-  foreach ($sitemaps as $sitemap) {
-    $hash = xmlsitemap_sitemap_get_context_hash($sitemap->context);
-    if ($hash != $sitemap->smid) {
-      xmlsitemap_sitemap_save($sitemap);
-    }
-  }
+  return 7203;
 }

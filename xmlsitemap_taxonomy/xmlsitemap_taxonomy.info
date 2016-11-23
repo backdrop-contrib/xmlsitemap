@@ -1,11 +1,8 @@
+type = module
 name = XML sitemap taxonomy
 description = Add taxonomy term links to the sitemap.
 package = XML sitemap
-core = 7.x
 backdrop = 1.x
-type = module
+
 dependencies[] = xmlsitemap
 dependencies[] = taxonomy
-;files[] = xmlsitemap_taxonomy.module
-;files[] = xmlsitemap_taxonomy.install
-;files[] = xmlsitemap_taxonomy.test

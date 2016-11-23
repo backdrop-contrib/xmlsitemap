@@ -1,0 +1,5 @@
+[XMLSitemapTaxonomyFunctionalTest]
+name = XML sitemap taxonomy
+description = Functional tests for the XML sitemap taxonomy module.
+group = XML sitemap
+file = xmlsitemap_taxonomy.test

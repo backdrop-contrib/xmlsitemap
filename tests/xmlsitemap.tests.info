@@ -1,0 +1,18 @@
+[XMLSitemapUnitTest]
+name = XML sitemap unit tests
+description = Unit tests for the XML sitemap module.
+group = XML sitemap
+file = xmlsitemap.test
+
+[XMLSitemapFunctionalTest]
+name = XML sitemap interface tests
+description = Functional tests for the XML sitemap module.
+group = XML sitemap
+file = xmlsitemap.test
+
+;[XMLSitemapRobotsTxtIntegrationTest]
+;name = XML sitemap robots.txt
+;description = Integration tests for the XML sitemap and robots.txt module.
+;group = XML sitemap
+;file = xmlsitemap.test
+;dependancies[] = robotstxt @todo

@@ -1,4 +1,18 @@
 <?php
+/**
+ * @file
+ * Adds menu item links to the sitemap.
+ */
+
+/**
+ * Implements hook_autoload_info().
+ */
+function xmlsitemap_menu_autoload_info() {
+  return array(
+    // Tests.
+    'XMLSitemapMenuFunctionalTest' => 'tests/xmlsitemap_menu.test',
+  );
+}
 
 /**
  * Implements hook_entity_info_alter().

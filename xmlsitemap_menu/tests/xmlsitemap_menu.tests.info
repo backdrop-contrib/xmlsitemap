@@ -1,0 +1,5 @@
+[XMLSitemapMenuFunctionalTest]
+name = XML sitemap menu
+description = Functional tests for the XML sitemap menu module.
+group = XML sitemap
+file = xmlsitemap_menu.test

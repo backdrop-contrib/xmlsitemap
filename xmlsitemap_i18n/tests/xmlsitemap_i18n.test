@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Unit tests for the xmlsitemap_i18n module.
@@ -40,14 +39,6 @@ class XMLSitemapI18nWebTestCase extends XMLSitemapTestHelper {
 }
 
 class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
-  public static function getInfo() {
-    return array(
-      'name' => 'XML sitemap i18n tests',
-      'description' => 'Functional and integration tests for the XML sitemap and internationalization modules.',
-      'group' => 'XML sitemap',
-      'dependencies' => array('i18n', 'disable-this-test-for-now'),
-    );
-  }
 
   function testLanguageSelection() {
     // Create our three different language nodes.
@@ -107,14 +98,6 @@ class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
 }
 
 class XMLSitemapI18nNodeTest extends XMLSitemapI18nWebTestCase {
-  public static function getInfo() {
-    return array(
-      'name' => 'XML sitemap i18n node tests',
-      'description' => 'Functional and integration tests for the XML sitemap node and internationalization modules.',
-      'group' => 'XML sitemap',
-      'dependencies' => array('i18n', 'disable-this-test-for-now'),
-    );
-  }
 
   function setUp($modules = array()) {
     $modules[] = 'xmlsitemap_node';

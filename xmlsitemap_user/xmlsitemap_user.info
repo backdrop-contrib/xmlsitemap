@@ -1,10 +1,7 @@
+type = module
 name = XML sitemap user
 description = Adds user profile links to the sitemap.
 package = XML sitemap
-dependencies[] = xmlsitemap
-core = 7.x
 backdrop = 1.x
-type = module
-;files[] = xmlsitemap_user.module
-;files[] = xmlsitemap_user.install
-;files[] = xmlsitemap_user.test
+
+dependencies[] = xmlsitemap

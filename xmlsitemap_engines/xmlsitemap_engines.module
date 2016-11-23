@@ -1,4 +1,18 @@
 <?php
+/**
+ * @file
+ * Submit the sitemap to search engines.
+ */
+
+/**
+ * Implements hook_autoload_info().
+ */
+function xmlsitemap_engines_autoload_info() {
+  return array(
+    // Tests.
+    'XMLSitemapEnginesFunctionalTest' => 'tests/xmlsitemap_engines.test',
+  );
+}
 
 /**
  * Implements hook_hook_info().
@@ -14,22 +28,6 @@ function xmlsitemap_engines_hook_info() {
 }
 
 /**
- * Implements hook_help().
- */
-function xmlsitemap_engines_help($path, $arg) {
-  $output = '';
-  switch ($path) {
-    case 'admin/config/search/xmlsitemap/engines':
-      if (!module_exists('site_verify')) {
-        $output .= '<p>' . t('In order to verify site ownership with the search engines listed below, it is highly recommended to download and install the <a href="@site-verify">Site verification module</a>.', array('@site-verify' => 'http://drupal.org/project/site_verify')) . '</p>';
-      }
-      break;
-  }
-
-  return $output;
-}
-
-/**
  * Implements hook_menu().
  */
 function xmlsitemap_engines_menu() {
@@ -41,11 +39,6 @@ function xmlsitemap_engines_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'xmlsitemap_engines.admin.inc',
   );
-  //$items['admin/config/search/xmlsitemap/engines/submit'] = array(
-  //  'page callback' => 'xmlsitemap_engines_submit',
-  //  'access callback' => 'xmlsitemap_engines_submit_access',
-  //  'type' => MENU_CALLBACK,
-  //);
 
   return $items;
 }

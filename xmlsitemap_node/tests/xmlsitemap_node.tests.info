@@ -1,0 +1,5 @@
+[XMLSitemapNodeFunctionalTest]
+name = XML sitemap node
+description = Functional tests for the XML sitemap node module.
+group = XML sitemap
+file = xmlsitemap_node.test

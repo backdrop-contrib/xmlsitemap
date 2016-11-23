@@ -1,4 +1,18 @@
 <?php
+/**
+ * @file
+ * Adds user configurable links to the sitemap.
+ */
+
+/**
+ * Implements hook_autoload_info().
+ */
+function xmlsitemap_custom_autoload_info() {
+  return array(
+    // Tests.
+    'XMLSitemapCustomFunctionalTest' => 'tests/xmlsitemap_custom.test',
+  );
+}
 
 /**
  * Implements hook_menu().

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Administrative page callbacks for the xmlsitemap_custom module.
@@ -115,15 +114,14 @@ function xmlsitemap_custom_edit_link_form($form, &$form_state, $link = array()) 
     '#access' => $languages,
   );
 
-  $form['actions'] = array(
-    '#type' => 'actions'
-  );
+  $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
     '#weight' => 5,
   );
   $form['actions']['cancel'] = array(
+    '#type' => 'markup',
     '#markup' => l(t('Cancel'), 'admin/config/search/xmlsitemap/custom'),
     '#weight' => 10,
   );

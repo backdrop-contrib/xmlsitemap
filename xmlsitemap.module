@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @defgroup xmlsitemap XML sitemap
  */
@@ -57,7 +56,15 @@ define('XMLSITEMAP_PRIORITY_DEFAULT', 0.5);
  */
 function xmlsitemap_autoload_info() {
   return array(
+    'XMLSitemapException' => 'xmlsitemap.xmlsitemap.inc',
+    'XMLSitemapGenerationException' => 'xmlsitemap.xmlsitemap.inc',
     'XMLSitemapWriter' => 'xmlsitemap.xmlsitemap.inc',
+    'XMLSitemapIndexWriter' => 'xmlsitemap.xmlsitemap.inc',
+    // Tests.
+    'XMLSitemapTestHelper' => 'tests/xmlsitemap.test',
+    'XMLSitemapUnitTest' => 'tests/xmlsitemap.test',
+    'XMLSitemapFunctionalTest' => 'tests/xmlsitemap.test',
+    'XMLSitemapRobotsTxtIntegrationTest' => 'tests/xmlsitemap.test',
   );
 }
 
@@ -93,38 +100,6 @@ function xmlsitemap_hook_info() {
   }
 
   return $hooks;
-}
-
-/**
- * Implements hook_help().
- */
-function xmlsitemap_help($path, $arg) {
-  $output = '';
-
-  switch ($path) {
-    case 'admin/help/xmlsitemap':
-    case 'admin/config/search/xmlsitemap/settings/%/%/%':
-    case 'admin/config/search/xmlsitemap/edit/%':
-    case 'admin/config/search/xmlsitemap/delete/%':
-      return;
-    case 'admin/help#xmlsitemap':
-      break;
-    case 'admin/config/search/xmlsitemap':
-      break;
-    case 'admin/config/search/xmlsitemap/rebuild':
-      $output .= '<p>' . t("This action rebuilds your site's XML sitemap and regenerates the cached files, and may be a lengthy process. If you just installed XML sitemap, this can be helpful to import all your site's content into the sitemap. Otherwise, this should only be used in emergencies.") . '</p>';
-  }
-
-  if (arg(0) == 'admin' && strpos($path, 'xmlsitemap') !== FALSE && user_access('administer xmlsitemap')) {
-    module_load_include('inc', 'xmlsitemap');
-    if ($arg[1] == 'config') {
-      // Alert the user to any potential problems detected by hook_requirements.
-      xmlsitemap_check_status();
-    }
-    $output .= _xmlsitemap_get_blurb();
-  }
-
-  return $output;
 }
 
 /**
@@ -323,7 +298,7 @@ function xmlsitemap_variables() {
  * Internal implementation of variable_get().
  */
 function xmlsitemap_var($name, $default = NULL) {
-  $defaults = &drupal_static(__FUNCTION__);
+  $defaults = &backdrop_static(__FUNCTION__);
   if (!isset($defaults)) {
     $defaults = xmlsitemap_variables();
   }
@@ -622,7 +597,7 @@ function xmlsitemap_link_save(array $link, array $context = array()) {
 
   // Save the link and allow other modules to respond to the link being saved.
   if ($existing) {
-    drupal_write_record('xmlsitemap', $link, array('type', 'id'));
+    backdrop_write_record('xmlsitemap', $link, array('type', 'id'));
     module_invoke_all('xmlsitemap_link_update', $link, $context);
   }
   else {
@@ -799,7 +774,7 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
  */
 
 function xmlsitemap_get_directory(stdClass $sitemap = NULL) {
-  $directory = &drupal_static(__FUNCTION__);
+  $directory = &backdrop_static(__FUNCTION__);
 
   if (!isset($directory)) {
     $directory = variable_get('xmlsitemap_path', 'xmlsitemap');
@@ -938,7 +913,7 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
   }
 
   if (!isset($link_info)) {
-    $cid = 'xmlsitemap:link_info:' . $language->language;
+    $cid = 'xmlsitemap:link_info:' . $language->langcode;
     if ($cache = cache_get($cid)) {
       $link_info = $cache->data;
     }
@@ -986,7 +961,6 @@ function xmlsitemap_get_link_type_enabled_bundles($entity_type) {
   foreach ($info['bundles'] as $bundle => $bundle_info) {
     $settings = xmlsitemap_link_bundle_load($entity_type, $bundle);
     if (!empty($settings['status'])) {
-    //if (!empty($bundle_info['xmlsitemap']['status'])) {
       $bundles[] = $bundle;
     }
   }
@@ -1414,7 +1388,7 @@ function xmlsitemap_language_load($language = LANGUAGE_NONE) {
     $languages[LANGUAGE_NONE] = NULL;
   }
 
-  return isset($languages[$language]) ? $languages[$language] : NULL;
+  return isset($languages[$langcode]) ? $languages[$langcode] : NULL;
 }
 
 /**

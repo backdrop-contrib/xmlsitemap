@@ -1,4 +1,20 @@
 <?php
+/**
+ * @file
+ * Enables multilingual XML sitemaps.
+ */
+
+/**
+ * Implements hook_autoload_info().
+ */
+function xmlsitemap_i18n_autoload_info() {
+  return array(
+    // Tests.
+    'XMLSitemapI18nWebTestCase' => 'tests/xmlsitemap_i18n.test',
+    'XMLSitemapI18nTest' => 'tests/xmlsitemap_i18n.test',
+    'XMLSitemapI18nNodeTest' => 'tests/xmlsitemap_i18n.test',
+  );
+}
 
 /**
  * Implements hook_xmlsitemap_context_info().

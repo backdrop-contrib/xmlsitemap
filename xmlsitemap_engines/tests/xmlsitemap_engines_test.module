@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Functional tests for the XML sitemap engines module.
+ */
 
 /**
  * Implements hook_menu().
@@ -30,6 +34,9 @@ function xmlsitemap_engines_test_xmlsitemap_engine_info_alter(&$engines) {
   $engines['simpletest']['url'] = url('ping', array('absolute' => TRUE, 'query' => array('sitemap' => ''))) . '[sitemap]';
 }
 
+/**
+ * Menu callback. Logs to watchdog on ping.
+ */
 function xmlsitemap_engines_test_pinged() {
   if (empty($_GET['sitemap']) || !valid_url($_GET['sitemap'])) {
     watchdog('xmlsitemap', 'No valid sitemap parameter provided.', array(), WATCHDOG_WARNING);

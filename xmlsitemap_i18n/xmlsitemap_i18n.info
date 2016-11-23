@@ -1,10 +1,8 @@
+type = module
 name = XML sitemap internationalization
 description = Enables multilingual XML sitemaps.
 package = XML sitemap
-core = 7.x
 backdrop = 1.x
-type = module
+
 dependencies[] = xmlsitemap
 dependencies[] = i18n
-;files[] = xmlsitemap_i18n.module
-;files[] = xmlsitemap_i18n.test
