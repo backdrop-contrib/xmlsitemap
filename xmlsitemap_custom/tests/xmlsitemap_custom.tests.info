@@ -1,0 +1,5 @@
+[XMLSitemapCustomFunctionalTest]
+name = XML sitemap custom interface tests
+description = Functional tests for the XML sitemap custom module.
+group = XML sitemap
+file = xmlsitemap_custom.test

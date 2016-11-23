@@ -47,7 +47,7 @@ function _xmlsitemap_get_version() {
  * Check the status of all hook_requirements() from any xmlsitemap modules.
  */
 function xmlsitemap_check_status() {
-  $messages = &drupal_static(__FUNCTION__);
+  $messages = &backdrop_static(__FUNCTION__);
 
   if (!isset($messages)) {
     // Cache the list of modules that are checked.
@@ -81,7 +81,7 @@ function xmlsitemap_check_status() {
       if (user_access('access site reports')) {
         $message .= t('Check the <a href="@status-report">status report</a> for more information.', array('@status-report' => url('admin/reports/status')));
       }
-      drupal_set_message($message, 'warning', FALSE);
+      backdrop_set_message($message, 'warning', FALSE);
     }
   }
 

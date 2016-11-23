@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Install and uninstall schema and functions for the xmlsitemap_custom module.
@@ -9,6 +8,6 @@
  * Implements hook_uninstall().
  */
 function xmlsitemap_custom_uninstall() {
-  drupal_load('module', 'xmlsitemap');
+  backdrop_load('module', 'xmlsitemap');
   xmlsitemap_link_delete_multiple(array('type' => 'custom'));
 }

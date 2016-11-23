@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Sitemap generation and rebuilding functions for the xmlsitemap module.
@@ -8,14 +7,14 @@
  */
 
 /**
- * Given an internal Drupal path, return the alias for the path.
+ * Given an internal path, return the alias for the path.
  *
- * This is similar to drupal_get_path_alias(), but designed to fetch all alises
+ * This is similar to backdrop_get_path_alias(), but designed to fetch all alises
  * at once so that only one database query is executed instead of several or
  * possibly thousands during sitemap generation.
  *
  * @param $path
- *   An internal Drupal path.
+ *   An internal path.
  * @param $language
  *   A language code to use when looking up the paths.
  */
@@ -57,7 +56,7 @@ function xmlsitemap_get_path_alias($path, $language) {
   }
 
   $original_path = $normalized_path;
-  drupal_alter('url_outbound', $normalized_path, $options, $original_path);
+  backdrop_alter('url_outbound', $normalized_path, $options, $original_path);
   return $normalized_path;
 }
 
@@ -93,7 +92,7 @@ function _xmlsitemap_get_memory_usage($start = FALSE) {
  * the currently loaded modules.
  */
 function _xmlsitemap_get_optimal_memory_limit() {
-  $optimal_limit = &drupal_static(__FUNCTION__);
+  $optimal_limit = &backdrop_static(__FUNCTION__);
   if (!isset($optimal_limit)) {
     // Set the base memory amount from the provided core constant.
     $optimal_limit = parse_size(DRUPAL_MINIMUM_PHP_MEMORY_LIMIT);
@@ -154,7 +153,7 @@ function xmlsitemap_generate_page(stdClass $sitemap, $page) {
 }
 
 function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, $chunk) {
-  $output_elements = drupal_map_assoc(variable_get('xmlsitemap_output_elements', array('lastmod', 'changefreq', 'priority')));
+  $output_elements = backdrop_map_assoc(variable_get('xmlsitemap_output_elements', array('lastmod', 'changefreq', 'priority')));
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
   $url_options = $sitemap->uri['options'];
@@ -230,7 +229,7 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
     }
 
     // @todo Should this be moved to XMLSitemapWritier::writeSitemapElement()?
-    drupal_alter('xmlsitemap_element', $element, $link, $sitemap);
+    backdrop_alter('xmlsitemap_element', $element, $link, $sitemap);
 
     $writer->writeSitemapElement('url', $element);
   }
@@ -280,7 +279,7 @@ function xmlsitemap_regenerate_batch(array $smids = array()) {
     //'error_message' => $t('An error has occurred.'),
     'finished' => 'xmlsitemap_regenerate_batch_finished',
     'title' => t('Regenerating Sitemap'),
-    'file' => drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.generate.inc',
+    'file' => backdrop_get_path('module', 'xmlsitemap') . '/xmlsitemap.generate.inc',
   );
 
   // Set the regenerate flag in case something fails during file generation.
@@ -361,7 +360,7 @@ function xmlsitemap_regenerate_batch_generate_index($smid, array &$context) {
 function xmlsitemap_regenerate_batch_finished($success, $results, $operations, $elapsed) {
   if ($success && !variable_get('xmlsitemap_regenerate_needed', FALSE)) {
     variable_set('xmlsitemap_generated_last', REQUEST_TIME);
-    //drupal_set_message(t('The sitemaps were regenerated.'));
+    //backdrop_set_message(t('The sitemaps were regenerated.'));
     // Show a watchdog message that the sitemap was regenerated.
     watchdog('xmlsitemap',
       'Finished XML sitemap generation in @elapsed. Memory usage: @memory-peak.',
@@ -373,7 +372,7 @@ function xmlsitemap_regenerate_batch_finished($success, $results, $operations, $
     );
   }
   else {
-    drupal_set_message(t('The sitemaps were not successfully regenerated.'), 'error');
+    backdrop_set_message(t('The sitemaps were not successfully regenerated.'), 'error');
   }
 }
 
@@ -385,7 +384,7 @@ function xmlsitemap_rebuild_batch(array $entities, $save_custom = FALSE) {
     'operations' => array(),
     'finished' => 'xmlsitemap_rebuild_batch_finished',
     'title' => t('Rebuilding Sitemap'),
-    'file' => drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.generate.inc',
+    'file' => backdrop_get_path('module', 'xmlsitemap') . '/xmlsitemap.generate.inc',
   );
 
   // Set the rebuild flag in case something fails during the rebuild.
@@ -506,10 +505,10 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
  */
 function xmlsitemap_rebuild_batch_finished($success, $results, $operations, $elapsed) {
   if ($success && !variable_get('xmlsitemap_rebuild_needed', FALSE)) {
-    drupal_set_message(t('The sitemap links were rebuilt.'));
+    backdrop_set_message(t('The sitemap links were rebuilt.'));
   }
   else {
-    drupal_set_message(t('The sitemap links were not successfully rebuilt.'), 'error');
+    backdrop_set_message(t('The sitemap links were not successfully rebuilt.'), 'error');
   }
 }
 

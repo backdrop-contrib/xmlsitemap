@@ -1,4 +1,18 @@
 <?php
+/**
+ * @file
+ * Adds user profile links to the sitemap.
+ */
+
+/**
+ * Implements hook_autoload_info().
+ */
+function xmlsitemap_user_autoload_info() {
+  return array(
+    // Tests.
+    'XMLSitemapUserFunctionalTest' => 'tests/xmlsitemap_user.test',
+  );
+}
 
 /**
  * Implements hook_entity_info_alter().
@@ -44,12 +58,12 @@ function xmlsitemap_user_xmlsitemap_process_user_links(array $uids) {
 /**
  * Implements hook_user_presave().
  */
-function xmlsitemap_user_user_presave(&$edit, $account, $category) {
+function xmlsitemap_user_user_presave($account) {
   if (!empty($account->uid)) {
     $link = xmlsitemap_user_create_link($account);
-    if (isset($edit['xmlsitemap'])) {
-      $link = $edit['xmlsitemap'] + $link;
-      unset($edit['xmlsitemap']);
+    if (isset($account->xmlsitemap)) {
+      $link = $account->xmlsitemap + $link;
+      unset($account->xmlsitemap);
     }
     xmlsitemap_link_save($link, array($link['type'] => $account));
   }
@@ -58,7 +72,7 @@ function xmlsitemap_user_user_presave(&$edit, $account, $category) {
 /**
  * Implements hook_user_insert().
  */
-function xmlsitemap_user_user_insert(&$edit, $account, $category) {
+function xmlsitemap_user_user_insert($account) {
   $link = xmlsitemap_user_create_link($account);
   xmlsitemap_link_save($link, array($link['type'] => $account));
 }
@@ -66,7 +80,7 @@ function xmlsitemap_user_user_insert(&$edit, $account, $category) {
 /**
  * Implements hook_user_update().
  */
-function xmlsitemap_user_user_update(&$edit, $account, $category) {
+function xmlsitemap_user_user_update($account) {
   $link = xmlsitemap_user_create_link($account);
   xmlsitemap_link_save($link, array($link['type'] => $account));
 }

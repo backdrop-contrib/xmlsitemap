@@ -1,12 +1,9 @@
+type = module
 name = XML sitemap custom
 description = Adds user configurable links to the sitemap.
 package = XML sitemap
-core = 7.x
 backdrop = 1.x
-type = module
+
 dependencies[] = xmlsitemap
-;files[] = xmlsitemap_custom.module
-;files[] = xmlsitemap_custom.admin.inc
-;files[] = xmlsitemap_custom.install
-;files[] = xmlsitemap_custom.test
+
 configure = admin/config/search/xmlsitemap/custom

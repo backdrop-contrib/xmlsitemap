@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * XML sitemap integration functions for xmlsitemap.module.
@@ -88,7 +87,7 @@ class XMLSitemapWriter extends XMLWriter {
       $attributes['xsi:schemaLocation'] = 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd';
     }
 
-    drupal_alter('xmlsitemap_root_attributes', $attributes, $this->sitemap);
+    backdrop_alter('xmlsitemap_root_attributes', $attributes, $this->sitemap);
 
     return $attributes;
   }
@@ -190,7 +189,7 @@ class XMLSitemapIndexWriter extends XMLSitemapWriter {
       $attributes['xsi:schemaLocation'] = 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd';
     }
 
-    drupal_alter('xmlsitemap_root_attributes', $attributes, $this->sitemap);
+    backdrop_alter('xmlsitemap_root_attributes', $attributes, $this->sitemap);
 
     return $attributes;
   }

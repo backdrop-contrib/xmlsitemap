@@ -11,7 +11,7 @@
  * Render a tableselect list of XML sitemaps for the main admin page.
  */
 function xmlsitemap_sitemap_list_form() {
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
 
   // Build the 'Update options' form.
   $form['#operations'] = module_invoke_all('xmlsitemap_sitemap_operations');
@@ -152,7 +152,7 @@ function xmlsitemap_sitemap_list_form_submit($form, &$form_state) {
 
     $count = count($form_state['values']['sitemaps']);
     //watchdog('xmlsitemap', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count));
-    drupal_set_message(format_plural(count($sitemaps), '@action @count XML sitemap.', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count)));
+    backdrop_set_message(format_plural(count($sitemaps), '@action @count XML sitemap.', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count)));
     //$form_state['redirect'] = 'admin/config/search/xmlsitemap';
   }
 }
@@ -221,7 +221,7 @@ function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   form_state_values_clean($form_state);
   $sitemap = (object) $form_state['values'];
   xmlsitemap_sitemap_save($sitemap);
-  drupal_set_message(t('The sitemap has been saved.'));
+  backdrop_set_message(t('The sitemap has been saved.'));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 
@@ -230,7 +230,7 @@ function xmlsitemap_sitemap_delete_form(array $form, array &$form_state, stdClas
 
   $count = (int) db_query("SELECT COUNT(smid) FROM {xmlsitemap_sitemap}")->fetchField();
   if ($count === 1 && empty($_POST)) {
-    drupal_set_message(t('It is not recommended to delete the only XML sitemap.'), 'error');
+    backdrop_set_message(t('It is not recommended to delete the only XML sitemap.'), 'error');
   }
 
   $form['#sitemap'] = $sitemap;
@@ -250,7 +250,7 @@ function xmlsitemap_sitemap_delete_form(array $form, array &$form_state, stdClas
 
 function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
   xmlsitemap_sitemap_delete($form_state['values']['smid']);
-  drupal_set_message(t('The sitemap has been deleted.'));
+  backdrop_set_message(t('The sitemap has been deleted.'));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 
@@ -264,7 +264,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
   $form['xmlsitemap_minimum_lifetime'] = array(
     '#type' => 'select',
     '#title' => t('Minimum sitemap lifetime'),
-    '#options' => array(0 => t('No minimum')) + drupal_map_assoc(array(300, 900, 1800, 3600, 10800, 21600, 43200, 86400, 172800, 259200, 604800), 'format_interval'),
+    '#options' => array(0 => t('No minimum')) + backdrop_map_assoc(array(300, 900, 1800, 3600, 10800, 21600, 43200, 86400, 172800, 259200, 604800), 'format_interval'),
     '#description' => t('The minimum amount of time that will elapse before the sitemaps are regenerated. The sitemaps will also only be regenerated on cron if any links have been added, updated, or deleted.') . '<br />' . t('Recommended value: %value.', array('%value' => t('1 day'))),
     '#default_value' => variable_get('xmlsitemap_minimum_lifetime', 0),
   );
@@ -297,7 +297,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
   $form['advanced']['xmlsitemap_chunk_size'] = array(
     '#type' => 'select',
     '#title' => t('Number of links in each sitemap page'),
-    '#options' => array('auto' => t('Automatic (recommended)')) + drupal_map_assoc(array(100, 500, 1000, 2500, 5000, 10000, 25000, XMLSITEMAP_MAX_SITEMAP_LINKS)),
+    '#options' => array('auto' => t('Automatic (recommended)')) + backdrop_map_assoc(array(100, 500, 1000, 2500, 5000, 10000, 25000, XMLSITEMAP_MAX_SITEMAP_LINKS)),
     '#default_value' => xmlsitemap_var('chunk_size'),
     // @todo This description is not clear.
     '#description' => t('If there are problems with rebuilding the sitemap, you may want to manually set this value. If you have more than @max links, an index with multiple sitemap pages will be generated. There is a maximum of @max sitemap pages.', array('@max' => XMLSITEMAP_MAX_SITEMAP_LINKS)),
@@ -305,7 +305,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
   $form['advanced']['xmlsitemap_batch_limit'] = array(
     '#type' => 'select',
     '#title' => t('Maximum number of sitemap links to process at once'),
-    '#options' => drupal_map_assoc(array(5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000)),
+    '#options' => backdrop_map_assoc(array(5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000)),
     '#default_value' => xmlsitemap_var('batch_limit'),
     '#description' => t('If you have problems running cron or rebuilding the sitemap, you may want to lower this value.'),
   );
@@ -318,7 +318,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
     '#default_value' => variable_get('xmlsitemap_path', 'xmlsitemap'),
     '#size' => 30,
     '#maxlength' => 255,
-    '#description' => t('Subdirectory where the sitemap data will be stored. This folder <strong>must not be shared</strong> with any other Drupal site or install using XML sitemap.'),
+    '#description' => t('Subdirectory where the sitemap data will be stored. This folder <strong>must not be shared</strong> with any other Backdrop site or install using XML sitemap.'),
     '#field_prefix' => file_build_uri(''),
     '#required' => TRUE,
   );
@@ -362,7 +362,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
       'changefreq' => t('Change frequency: @changfreq', array('@changfreq' => '<changefreq>')),
       'priority' => t('Priority: @priority', array('@priority' => '<priority>')),
     ),
-    '#default_value' => drupal_map_assoc(variable_get('xmlsitemap_output_elements', array('lastmod', 'changefreq', 'priority'))),
+    '#default_value' => backdrop_map_assoc(variable_get('xmlsitemap_output_elements', array('lastmod', 'changefreq', 'priority'))),
   );
 
   $form['xmlsitemap_settings'] = array(
@@ -442,11 +442,11 @@ function xmlsitemap_settings_form_submit($form, $form_state) {
 function xmlsitemap_rebuild_form() {
   if (!$_POST && !variable_get('xmlsitemap_rebuild_needed', FALSE)) {
     if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {
-      drupal_set_message(t('Your sitemap is up to date and does not need to be rebuilt.'), 'error');
+      backdrop_set_message(t('Your sitemap is up to date and does not need to be rebuilt.'), 'error');
     }
     else {
       $_REQUEST += array('destination' => 'admin/config/search/xmlsitemap');
-      drupal_set_message(t('A rebuild is not necessary. If you are just wanting to regenerate the XML sitemap files, you can <a href="@link-cron">run cron manually</a>.', array('@link-cron' => url('admin/reports/status/run-cron', array('query' => drupal_get_destination())))), 'warning');
+      backdrop_set_message(t('A rebuild is not necessary. If you are just wanting to regenerate the XML sitemap files, you can <a href="@link-cron">run cron manually</a>.', array('@link-cron' => url('admin/reports/status/run-cron', array('query' => backdrop_get_destination())))), 'warning');
     }
   }
 
@@ -459,7 +459,7 @@ function xmlsitemap_rebuild_form() {
     '#title' => t("Select which link types you would like to rebuild"),
     '#description' => t('If no link types are selected, the sitemap files will just be regenerated.'),
     '#multiple' => TRUE,
-    '#options' => drupal_map_assoc($rebuild_types),
+    '#options' => backdrop_map_assoc($rebuild_types),
     '#default_value' => variable_get('xmlsitemap_rebuild_needed', FALSE) || !variable_get('xmlsitemap_developer_mode', 0) ? $rebuild_types : array(),
     '#access' => variable_get('xmlsitemap_developer_mode', 0),
   );
@@ -498,7 +498,7 @@ function xmlsitemap_rebuild_form_submit($form, &$form_state) {
 function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info) {
   $priorities = xmlsitemap_get_priority_options(NULL, FALSE);
   $statuses = xmlsitemap_get_status_options(NULL);
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
 
   $rows = array();
   $totals = array('total' => 0, 'indexed' => 0, 'visible' => 0);
@@ -510,7 +510,7 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
     $totals['visible'] += $status['visible'];
 
     $row = array();
-    if (drupal_valid_path("admin/config/search/xmlsitemap/settings/$entity/$bundle")) {
+    if (backdrop_valid_path("admin/config/search/xmlsitemap/settings/$entity/$bundle")) {
       $edit_link = xmlsitemap_get_operation_link("admin/config/search/xmlsitemap/settings/$entity/$bundle", array('title' => $bundle_info['label'], 'modal' => TRUE));
       $row[] = l($edit_link['title'], $edit_link['href'], $edit_link);
     }
@@ -592,7 +592,7 @@ function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $
     '#group' => 'additional_settings',
     '#attached' => array(
       'js' => array(
-        'vertical-tabs' => drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.js',
+        'vertical-tabs' => backdrop_get_path('module', 'xmlsitemap') . '/xmlsitemap.js',
       ),
     ),
     '#tree' => TRUE,
@@ -644,12 +644,12 @@ function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $
 function xmlsitemap_link_bundle_settings_form(array $form, array &$form_state, array $bundle) {
   if (empty($form_state['ajax']) && $admin_path = xmlsitemap_get_bundle_path($bundle['entity'], $bundle['bundle'])) {
     // If this is a non-ajax form, redirect to the bundle administration page.
-    $destination = drupal_get_destination();
+    $destination = backdrop_get_destination();
     unset($_GET['destination']);
-    drupal_goto($admin_path, array('query' => $destination));
+    backdrop_goto($admin_path, array('query' => $destination));
   }
   else {
-    drupal_set_title( t('@bundle XML sitemap settings', array('@bundle' => $bundle['info']['label'])));
+    backdrop_set_title( t('@bundle XML sitemap settings', array('@bundle' => $bundle['info']['label'])));
   }
 
   $form = array();
@@ -711,7 +711,7 @@ function xmlsitemap_add_form_link_options(array &$form, $entity, $bundle, $id) {
     '#group' => 'additional_settings',
     '#attached' => array(
       'js' => array(
-        'vertical-tabs' => drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.js',
+        'vertical-tabs' => backdrop_get_path('module', 'xmlsitemap') . '/xmlsitemap.js',
       ),
     ),
   );
@@ -725,7 +725,7 @@ function xmlsitemap_add_form_link_options(array &$form, $entity, $bundle, $id) {
     $form['xmlsitemap']['description'] = array(
       '#prefix' => '<div class="description">',
       '#suffix' => '</div>',
-      '#markup' => t('The default XML sitemap settings for this @bundle can be changed <a href="@link-type">here</a>.', array('@bundle' => drupal_strtolower($info['bundle label']), '@link-type' => url($path, array('query' => drupal_get_destination())))),
+      '#markup' => t('The default XML sitemap settings for this @bundle can be changed <a href="@link-type">here</a>.', array('@bundle' => backdrop_strtolower($info['bundle label']), '@link-type' => url($path, array('query' => backdrop_get_destination())))),
     );
   }
 
@@ -868,7 +868,7 @@ function xmlsitemap_get_status_options($default = NULL) {
 
   if (isset($default)) {
     $default = $default ? 1 : 0;
-    $options['default'] = t('Default (@value)', array('@value' => drupal_strtolower($statuses[$default])));
+    $options['default'] = t('Default (@value)', array('@value' => backdrop_strtolower($statuses[$default])));
   }
 
   $options += $statuses;

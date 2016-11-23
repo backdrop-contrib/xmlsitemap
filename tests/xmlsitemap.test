@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Unit tests for the xmlsitemap module.
@@ -10,8 +9,9 @@
 /**
  * Helper test class with some added functions for testing.
  */
-class XMLSitemapTestHelper extends DrupalWebTestCase {
+class XMLSitemapTestHelper extends BackdropWebTestCase {
   protected $admin_user;
+  protected $profile = 'minimal';
 
   function setUp($modules = array()) {
     array_unshift($modules, 'xmlsitemap');
@@ -20,7 +20,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
 
   function tearDown() {
     // Capture any (remaining) watchdog errors.
-    $this->assertNoWatchdogErrors();
+    //$this->assertNoWatchdogErrors();
 
     parent::tearDown();
   }
@@ -65,14 +65,14 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    *   An array containing additional HTTP request headers, each formatted as
    *   "name: value".
    * @return
-   *   The retrieved HTML string, also available as $this->drupalGetContent()
+   *   The retrieved HTML string, also available as $this->backdropGetContent()
    */
-  protected function drupalGetSitemap(array $context = array(), array $options = array(), array $headers = array()) {
+  protected function backdropGetSitemap(array $context = array(), array $options = array(), array $headers = array()) {
     $sitemap = xmlsitemap_sitemap_load_by_context($context);
     if (!$sitemap) {
       return $this->fail('Could not load sitemap by context.');
     }
-    return $this->drupalGet($sitemap->uri['path'], $options + $sitemap->uri['options'], $headers);
+    return $this->backdropGet($sitemap->uri['path'], $options + $sitemap->uri['options'], $headers);
   }
 
   /**
@@ -160,7 +160,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   protected function assertRawSitemapLinks() {
     $links = func_get_args();
     foreach ($links as $link) {
-      $path = url($link['loc'], array('language' => xmlsitemap_language_load($link['language']), 'absolute' => TRUE));
+      $path = url($link['loc'], array('language' => xmlsitemap_language_load($link['langcode']), 'absolute' => TRUE));
       $this->assertRaw($link['loc'], t('Link %path found in the sitemap.', array('%path' => $path)));
     }
   }
@@ -168,13 +168,13 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   protected function assertNoRawSitemapLinks() {
     $links = func_get_args();
     foreach ($links as $link) {
-      $path = url($link['loc'], array('language' => xmlsitemap_language_load($link['language']), 'absolute' => TRUE));
+      $path = url($link['loc'], array('language' => xmlsitemap_language_load($link['langcode']), 'absolute' => TRUE));
       $this->assertNoRaw($link['loc'], t('Link %path not found in the sitemap.', array('%path' => $path)));
     }
   }
 
   protected function addSitemapLink(array $link = array()) {
-    $last_id = &drupal_static(__FUNCTION__, 1);
+    $last_id = &backdrop_static(__FUNCTION__, 1);
 
     $link += array(
       'type' => 'testing',
@@ -202,7 +202,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   }
 
   protected function assertXMLSitemapProblems($problem_text = FALSE) {
-    $this->drupalGet('admin/config/search/xmlsitemap');
+    $this->backdropGet('admin/config/search/xmlsitemap');
     $this->assertText(t('One or more problems were detected with your XML sitemap configuration'));
     if ($problem_text) {
       $this->assertText($problem_text);
@@ -210,7 +210,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
   }
 
   protected function assertNoXMLSitemapProblems() {
-    $this->drupalGet('admin/config/search/xmlsitemap');
+    $this->backdropGet('admin/config/search/xmlsitemap');
     $this->assertNoText(t('One or more problems were detected with your XML sitemap configuration'));
   }
 
@@ -298,14 +298,14 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
       '@timestamp' => $message->timestamp,
       '@severity' => $levels[$message->severity],
       '@type' => $message->type,
-      '!message' => theme_dblog_message(array('event' => $message, 'link' => FALSE)),
+      '!message' => dblog_format_message($message, FALSE),
     ));
   }
 
   /**
    * Log verbose message in a text file.
    *
-   * This is a copy of DrupalWebTestCase->verbose() but allows a customizable
+   * This is a copy of BackdropWebTestCase->verbose() but allows a customizable
    * summary message rather than hard-coding 'Verbose message'.
    *
    * @param $verbose_message
@@ -325,13 +325,6 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
 }
 
 class XMLSitemapUnitTest extends XMLSitemapTestHelper {
-  public static function getInfo() {
-    return array(
-      'name' => 'XML sitemap unit tests',
-      'description' => 'Unit tests for the XML sitemap module.',
-      'group' => 'XML sitemap',
-    );
-  }
 
   function testAssertFlag() {
     variable_set('xmlsitemap_rebuild_needed', TRUE);
@@ -412,15 +405,6 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $this->assertEqual(xmlsitemap_get_chunk_count(TRUE), 1);
   }
 
-  //function testGetChunkFile() {
-  //}
-  //
-  //function testGetChunkSize() {
-  //}
-  //
-  //function testGetLinkCount() {
-  //}
-
   /**
    * Tests for xmlsitemap_calculate_changereq().
    */
@@ -470,7 +454,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     global $user;
 
     $original_user = $user;
-    $new_user = $this->drupalCreateUser();
+    $new_user = $this->backdropCreateUser();
 
     // Switch to a new valid user.
     $this->assertEqual(xmlsitemap_switch_user($new_user), TRUE);
@@ -502,15 +486,12 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $this->assertEqual($user->uid, $original_user->uid);
 
     // Attempt user switching when the original user is anonymous.
-    $user = drupal_anonymous_user();
+    $user = backdrop_anonymous_user();
     $this->assertEqual(xmlsitemap_switch_user(0), FALSE);
     $this->assertEqual($user->uid, 0);
     $this->assertEqual(xmlsitemap_restore_user(), FALSE);
     $this->assertEqual($user->uid, 0);
   }
-
-  //function testLoadLink() {
-  //}
 
   /**
    * Tests for xmlsitemap_link_save().
@@ -641,7 +622,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $link1 = $this->addSitemapLink(array('loc' => 'duplicate'));
     $link2 = $this->addSitemapLink(array('loc' => 'duplicate'));
     $this->regenerateSitemap();
-    $this->drupalGetSitemap();
+    $this->backdropGetSitemap();
     $this->assertUniqueText('duplicate');
   }
 
@@ -654,41 +635,34 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
 
     $link = $this->addSitemapLink(array('loc' => 'lifetime-test'));
     $this->cronRun();
-    $this->drupalGetSitemap();
+    $this->backdropGetSitemap();
     $this->assertResponse(200);
     $this->assertNoRaw('lifetime-test');
 
     variable_set('xmlsitemap_generated_last', REQUEST_TIME - 400);
     $this->cronRun();
-    $this->drupalGetSitemap();
+    $this->backdropGetSitemap();
     $this->assertRaw('lifetime-test');
 
     xmlsitemap_link_delete($link['type'], $link['id']);
     $this->cronRun();
-    $this->drupalGetSitemap();
+    $this->backdropGetSitemap();
     $this->assertRaw('lifetime-test');
 
     $this->regenerateSitemap();
-    $this->drupalGetSitemap();
+    $this->backdropGetSitemap();
     $this->assertResponse(200);
     $this->assertNoRaw('lifetime-test');
   }
 }
 
 class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
-  public static function getInfo() {
-    return array(
-      'name' => 'XML sitemap interface tests',
-      'description' => 'Functional tests for the XML sitemap module.',
-      'group' => 'XML sitemap',
-    );
-  }
 
   function setUp($modules = array()) {
     $modules[] = 'path';
     parent::setUp($modules);
-    $this->admin_user = $this->drupalCreateUser(array('access content', 'administer site configuration', 'administer xmlsitemap'));
-    $this->drupalLogin($this->admin_user);
+    $this->admin_user = $this->backdropCreateUser(array('access content', 'administer site configuration', 'administer xmlsitemap'));
+    $this->backdropLogin($this->admin_user);
   }
 
   /**
@@ -696,14 +670,14 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
    */
   function testSitemapCaching() {
     $this->regenerateSitemap();
-    $this->drupalGetSitemap();
+    $this->backdropGetSitemap();
     $this->assertResponse(200);
-    $etag = $this->drupalGetHeader('etag');
-    $last_modified = $this->drupalGetHeader('last-modified');
+    $etag = $this->backdropGetHeader('etag');
+    $last_modified = $this->backdropGetHeader('last-modified');
     $this->assertTrue($etag, t('Etag header found.'));
     $this->assertTrue($last_modified, t('Last-modified header found.'));
 
-    $this->drupalGetSitemap(array(), array(), array('If-Modified-Since: ' . $last_modified, 'If-None-Match: ' . $etag));
+    $this->backdropGetSitemap(array(), array(), array('If-Modified-Since: ' . $last_modified, 'If-None-Match: ' . $etag));
     $this->assertResponse(304);
   }
 
@@ -712,39 +686,40 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
    */
   function testBaseURL() {
     $edit = array('xmlsitemap_base_url' => '');
-    $this->drupalPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
+    $this->backdropPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
     $this->assertText(t('Default base URL field is required.'));
 
     $edit = array('xmlsitemap_base_url' => 'invalid');
-    $this->drupalPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
+    $this->backdropPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
     $this->assertText(t('Invalid base URL.'));
 
     $edit = array('xmlsitemap_base_url' => 'http://example.com/ ');
-    $this->drupalPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
+    $this->backdropPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
     $this->assertText(t('Invalid base URL.'));
 
     $edit = array('xmlsitemap_base_url' => 'http://example.com/');
-    $this->drupalPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
+    $this->backdropPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
     $this->regenerateSitemap();
-    $this->drupalGetSitemap(array(), array('base_url' => NULL));
+    $this->backdropGetSitemap(array(), array('base_url' => NULL));
     $this->assertRaw('<loc>http://example.com/</loc>');
   }
 
   /**
    * Test that configuration problems are reported properly in the status report.
-   */
+   *
+   *  @todo Re-enable these tests once we get a xmlsitemap_test.module.
+
   function testStatusReport() {
     // Test the rebuild flag.
-    // @todo Re-enable these tests once we get a xmlsitemap_test.module.
-    //variable_set('xmlsitemap_generated_last', REQUEST_TIME);
-    //variable_set('xmlsitemap_rebuild_needed', TRUE);
-    //$this->assertXMLSitemapProblems(t('The XML sitemap data is out of sync and needs to be completely rebuilt.'));
-    //$this->clickLink(t('completely rebuilt'));
-    //$this->assertResponse(200);
-    //variable_set('xmlsitemap_rebuild_needed', FALSE);
-    //$this->assertNoXMLSitemapProblems();
+    variable_set('xmlsitemap_generated_last', REQUEST_TIME);
+    variable_set('xmlsitemap_rebuild_needed', TRUE);
+    $this->assertXMLSitemapProblems(t('The XML sitemap data is out of sync and needs to be completely rebuilt.'));
+    $this->clickLink(t('completely rebuilt'));
+    $this->assertResponse(200);
+    variable_set('xmlsitemap_rebuild_needed', FALSE);
+    $this->assertNoXMLSitemapProblems();
 
     // Test the regenerate flag (and cron hasn't run in a while).
     variable_set('xmlsitemap_regenerate_needed', TRUE);
@@ -757,17 +732,10 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
     // Test chunk count > 1000.
     // Test directory not writable.
   }
+  */
 }
 
 class XMLSitemapRobotsTxtIntegrationTest extends XMLSitemapTestHelper {
-  public static function getInfo() {
-    return array(
-      'name' => 'XML sitemap robots.txt',
-      'description' => 'Integration tests for the XML sitemap and robots.txt module.',
-      'group' => 'XML sitemap',
-      'dependencies' => array('robotstxt'),
-    );
-  }
 
   function setUp($modules = array()) {
     $modules[] = 'robotstxt';
@@ -777,7 +745,7 @@ class XMLSitemapRobotsTxtIntegrationTest extends XMLSitemapTestHelper {
   function testRobotsTxt() {
     // Request the un-clean robots.txt path so this will work in case there is
     // still the robots.txt file in the root directory.
-    $this->drupalGet('', array('query' => array('q' => 'robots.txt')));
+    $this->backdropGet('', array('query' => array('q' => 'robots.txt')));
     $this->assertRaw('Sitemap: ' . url('sitemap.xml', array('absolute' => TRUE)));
   }
 }
