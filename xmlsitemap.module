@@ -929,10 +929,7 @@ function _xmlsitemap_delete_recursive($path, $delete_root = FALSE) {
  * @see hook_xmlsitemap_link_info_alter()
  */
 function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
-
-  //@TODO fix global $language issue. Should be a way of getting this object.
   global $language;
-
   $link_info = &drupal_static(__FUNCTION__);
 
   if ($reset) {
@@ -941,26 +938,17 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
   }
 
   if (!isset($link_info)) {
-    $cid = 'xmlsitemap:link_info:' . $language->langcode;
+    $cid = 'xmlsitemap:link_info:' . $language->language;
     if ($cache = cache_get($cid)) {
       $link_info = $cache->data;
     }
     else {
       entity_info_cache_clear();
-      $link_info = entity_get_info();
-      foreach ($link_info as $key => $info) {
-        if (empty($info['uri callback']) || !isset($info['xmlsitemap'])) {
-          // Remove any non URL-able or XML sitemap un-supported entites.
-          unset($link_info[$key]);
-        }
-        foreach ($info['bundles'] as $bundle_key => $bundle) {
-          if (!isset($bundle['xmlsitemap'])) {
-            // Remove any un-supported entity bundles.
-            //unset($link_info[$key]['bundles'][$bundle_key]);
-          }
-        }
-      }
-      $link_info = array_merge($link_info, module_invoke_all('xmlsitemap_link_info'));
+      $link_info = array_merge(entity_get_info(), module_invoke_all('xmlsitemap_link_info'));
+      // Remove the entity types we know we don't want to support.
+        // @todo maybe
+      unset($link_info['file']);
+      unset($link_info['comment']);
       foreach ($link_info as $key => &$info) {
         $info += array(
           'type' => $key,
@@ -968,14 +956,14 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
           'bundles' => array(),
           'xmlsitemap' => array(),
         );
-        if (!isset($info['xmlsitemap']['rebuild callback']) && !empty($info['base table']) && !empty($info['entity keys']['id']) && !empty($info['xmlsitemap']['process callback'])) {
+        if (!isset($info['xmlsitemap']['rebuild callback']) && !empty($info['base table'])
+          && !empty($info['entity keys']['id']) && !empty($info['xmlsitemap']['process callback'])) {
           $info['xmlsitemap']['rebuild callback'] = 'xmlsitemap_rebuild_batch_fetch';
         }
         foreach ($info['bundles'] as $bundle => &$bundle_info) {
           $bundle_info += array(
-            'xmlsitemap' => array(),
+            'xmlsitemap' => xmlsitemap_link_bundle_load($key, $bundle, FALSE),
           );
-          $bundle_info['xmlsitemap'] += xmlsitemap_link_bundle_load($key, $bundle, FALSE);
         }
       }
       drupal_alter('xmlsitemap_link_info', $link_info);
