@@ -24,7 +24,7 @@ class XMLSitemapI18nWebTestCase extends XMLSitemapTestHelper {
     // Add predefined language and reset the locale cache.
     require_once DRUPAL_ROOT . '/includes/locale.inc';
     locale_add_language('fr', NULL, NULL, LANGUAGE_LTR, '', 'fr');
-    drupal_language_initialize();
+    backdrop_language_initialize();
     variable_set('language_negotiation', LOCALE_LANGUAGE_NEGOTIATION_URL_PREFIX);
 
     // Create the two different language-context sitemaps.
@@ -53,34 +53,34 @@ class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
 
     variable_set('i18n_selection_mode', 'off');
     $this->regenerateSitemap();
-    $this->drupalGetSitemap(array('language' => 'en'));
+    $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node, $node_en, $node_fr, $link, $link_en, $link_fr);
-    $this->drupalGetSitemap(array('language' => 'fr'));
+    $this->backdropGetSitemap(array('language' => 'fr'));
     $this->assertRawSitemapLinks($node, $node_en, $node_fr, $link, $link_en, $link_fr);
 
     variable_set('i18n_selection_mode', 'simple');
     $this->regenerateSitemap();
-    $this->drupalGetSitemap(array('language' => 'en'));
+    $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node, $node_en, $link, $link_en);
     $this->assertNoRawSitemapLinks($node_fr, $link_fr);
-    $this->drupalGetSitemap(array('language' => 'fr'));
+    $this->backdropGetSitemap(array('language' => 'fr'));
     $this->assertRawSitemapLinks($node, $node_fr, $link, $link_fr);
     $this->assertNoRawSitemapLinks($node_en, $link_en);
 
     variable_set('i18n_selection_mode', 'mixed');
     $this->regenerateSitemap();
-    $this->drupalGetSitemap(array('language' => 'en'));
+    $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node, $node_en, $link, $link_en);
     $this->assertNoRawSitemapLinks($node_fr, $link_fr);
-    $this->drupalGetSitemap(array('language' => 'fr'));
+    $this->backdropGetSitemap(array('language' => 'fr'));
     $this->assertRawSitemapLinks($node, $node_en, $node_fr, $link, $link_en, $link_fr);
 
     variable_set('i18n_selection_mode', 'default');
     $this->regenerateSitemap();
-    $this->drupalGetSitemap(array('language' => 'en'));
+    $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node, $node_en, $link, $link_en);
     $this->assertNoRawSitemapLinks($node_fr, $link_fr);
-    $this->drupalGetSitemap(array('language' => 'fr'));
+    $this->backdropGetSitemap(array('language' => 'fr'));
     $this->assertRawSitemapLinks($node, $node_en, $link, $link_en);
     $this->assertNoRawSitemapLinks($node_fr, $link_fr);
 
@@ -88,10 +88,10 @@ class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
     // language neutral non-node should be.
     variable_set('i18n_selection_mode', 'strict');
     $this->regenerateSitemap();
-    $this->drupalGetSitemap(array('language' => 'en'));
+    $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node_en, $link, $link_en);
     $this->assertNoRawSitemapLinks($node, $node_fr, $link_fr);
-    $this->drupalGetSitemap(array('language' => 'fr'));
+    $this->backdropGetSitemap(array('language' => 'fr'));
     $this->assertRawSitemapLinks($node_fr, $link, $link_fr);
     $this->assertNoRawSitemapLinks($node, $node_en, $link_en);
   }
@@ -104,18 +104,18 @@ class XMLSitemapI18nNodeTest extends XMLSitemapI18nWebTestCase {
     parent::setUp($modules);
 
     variable_set('language_content_type_page', 1);
-    $this->admin_user = $this->drupalCreateUser(array('administer nodes'));
-    $this->drupalLogin($this->admin_user);
+    $this->admin_user = $this->backdropCreateUser(array('administer nodes'));
+    $this->backdropLogin($this->admin_user);
   }
 
   function testNodeLanguageData() {
-    $node = $this->drupalCreateNode(array());
+    $node = $this->backdropCreateNode(array());
 
-    $this->drupalPost('node/' . $node->nid . '/edit', array('language' => 'en'), t('Save'));
+    $this->backdropPost('node/' . $node->nid . '/edit', array('language' => 'en'), t('Save'));
     $link = $this->assertSitemapLink('node', $node->nid);
     $this->assertIdentical($link['language'], 'en');
 
-    $this->drupalPost('node/' . $node->nid . '/edit', array('language' => 'fr'), t('Save'));
+    $this->backdropPost('node/' . $node->nid . '/edit', array('language' => 'fr'), t('Save'));
     $link = $this->assertSitemapLink('node', $node->nid);
     $this->assertIdentical($link['language'], 'fr');
   }

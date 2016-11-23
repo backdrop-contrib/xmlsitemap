@@ -14,7 +14,7 @@ function xmlsitemap_requirements($phase) {
   $t = get_t();
 
   // Check that required PHP extensions are enabled.
-  // Note: Drupal 7 already requires the 'xml' extension.
+  // Note: Backdrop CMS already requires the 'xml' extension.
   $required_extensions = array('xmlwriter');
   $missing_extensions = array_diff($required_extensions, array_filter($required_extensions, 'extension_loaded'));
 
@@ -167,7 +167,7 @@ function xmlsitemap_schema() {
         'default' => '',
       ),
       'loc' => array(
-        'description' => 'The URL to the item relative to the Drupal path.',
+        'description' => 'The URL to the item relative to the site base path.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -339,7 +339,7 @@ function xmlsitemap_install() {
   // @todo Does the sitemap show up on first install or is it a 404 page?
 
   // Create the link process the queue.
-  /** @var DrupalReliableQueueInterface $queue */
+  /** @var BackdropReliableQueueInterface $queue */
   $queue = BackdropQueue::get('xmlsitemap_link_process', TRUE);
   $queue->createQueue();
 }
@@ -369,7 +369,7 @@ function xmlsitemap_uninstall() {
   xmlsitemap_clear_directory(NULL, TRUE);
 
   // Remove the queue.
-  /** @var DrupalReliableQueueInterface $queue */
+  /** @var BackdropReliableQueueInterface $queue */
   $queue = BackdropQueue::get('xmlsitemap_link_process', TRUE);
   $queue->deleteQueue();
 }

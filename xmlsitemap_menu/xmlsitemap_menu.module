@@ -23,7 +23,7 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
   if (!isset($info['menu_link'])) {
     $info['menu_link'] = array(
       'label' => t('Menu link'),
-      'controller class' => 'DrupalDefaultEntityController',
+      'controller class' => 'BackdropDefaultEntityController',
       'base table' => 'menu_links',
       'uri callback' => 'xmlsitemap_menu_menu_link_uri',
       'fieldable' => FALSE,
@@ -39,7 +39,7 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
       'view modes' => array(),
       'translation' => array(),
       'schema_fields_sql' => array(
-        'base table' => drupal_schema_fields_sql('menu_links'),
+        'base table' => backdrop_schema_fields_sql('menu_links'),
       ),
       'xmlsitemap' => array(
         'process callback' => 'xmlsitemap_menu_xmlsitemap_process_menu_links',

@@ -18,7 +18,7 @@ function xmlsitemap_custom_list_links() {
   }
 
   $rows = array();
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
 
   $query = db_select('xmlsitemap')
     ->extend('PagerDefault')
@@ -33,7 +33,7 @@ function xmlsitemap_custom_list_links() {
     $row = array();
     $row['loc'] = l($link->loc, $link->loc);
     $row['priority'] = number_format($link->priority, 1);
-    $row['changefreq'] = $link->changefreq ? drupal_ucfirst(xmlsitemap_get_changefreq($link->changefreq)) : t('None');
+    $row['changefreq'] = $link->changefreq ? backdrop_ucfirst(xmlsitemap_get_changefreq($link->changefreq)) : t('None');
     if (isset($header['language'])) {
       $row['language'] = module_invoke('locale', 'language_name', $link->language);
     }
@@ -87,7 +87,7 @@ function xmlsitemap_custom_edit_link_form($form, &$form_state, $link = array()) 
     '#type' => 'textfield',
     '#title' => t('Path to link'),
     '#field_prefix' => url('', array('absolute' => TRUE)),
-    '#default_value' => $link['loc'] ? drupal_get_path_alias($link['loc'], $link['language']) : '',
+    '#default_value' => $link['loc'] ? backdrop_get_path_alias($link['loc'], $link['language']) : '',
     '#required' => TRUE,
     '#size' => 30,
   );
@@ -134,7 +134,7 @@ function xmlsitemap_custom_edit_link_form_validate($form, &$form_state) {
 
   // Make sure we trim and normalize the path first.
   $link['loc'] = trim($link['loc']);
-  $link['loc'] = drupal_get_normal_path($link['loc'], $link['language']);
+  $link['loc'] = backdrop_get_normal_path($link['loc'], $link['language']);
 
   // Test anonymous user access to the custom link paths.
   xmlsitemap_switch_user(0);
@@ -142,7 +142,7 @@ function xmlsitemap_custom_edit_link_form_validate($form, &$form_state) {
   xmlsitemap_restore_user();
 
   // Since the menu item access results are cached, manually check the current path.
-  if ($menu_item && strpos($link['loc'], 'admin/config/search/xmlsitemap/custom') === 0 && !user_access('administer xmlsitemap', drupal_anonymous_user())) {
+  if ($menu_item && strpos($link['loc'], 'admin/config/search/xmlsitemap/custom') === 0 && !user_access('administer xmlsitemap', backdrop_anonymous_user())) {
     $menu_item['access'] = FALSE;
   }
 
@@ -159,7 +159,7 @@ function xmlsitemap_custom_edit_link_form_validate($form, &$form_state) {
 function xmlsitemap_custom_edit_link_form_submit($form, &$form_state) {
   $link = $form_state['values'];
   xmlsitemap_link_save($link);
-  drupal_set_message(t('The custom link for %loc was saved.', array('%loc' => $link['loc'])));
+  backdrop_set_message(t('The custom link for %loc was saved.', array('%loc' => $link['loc'])));
   $form_state['redirect'] = 'admin/config/search/xmlsitemap/custom';
 }
 
@@ -190,7 +190,7 @@ function xmlsitemap_custom_delete_link_form($form, &$form_state, array $link) {
 function xmlsitemap_custom_delete_link_form_submit($form, &$form_state) {
   $link = $form_state['values']['link'];
   xmlsitemap_link_delete('custom', $link['id']);
-  drupal_set_message(t('The custom link for %loc has been deleted.', array('%loc' => $link['loc'])));
+  backdrop_set_message(t('The custom link for %loc has been deleted.', array('%loc' => $link['loc'])));
   watchdog('xmlsitemap', 'The custom link for %loc has been deleted.', array('%loc' => $link['loc']), WATCHDOG_NOTICE);
   $form_state['redirect'] = 'admin/config/search/xmlsitemap/custom';
 }

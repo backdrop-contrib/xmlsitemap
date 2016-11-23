@@ -161,7 +161,7 @@ function xmlsitemap_node_form_node_form_alter(array &$form, array &$form_state) 
  *   An array of UNIX timestamp integers.
  */
 function xmlsitemap_node_get_timestamps(stdClass $node) {
-  $timestamps = &drupal_static(__FUNCTION__, array());
+  $timestamps = &backdrop_static(__FUNCTION__, array());
 
   if (!isset($timestamps[$node->nid])) {
     $timestamps[$node->nid] = db_query("SELECT nr.timestamp FROM {node_revision} nr WHERE nr.nid = :nid", array(':nid' => $node->nid))->fetchCol();
@@ -211,14 +211,14 @@ function xmlsitemap_node_create_link(stdClass $node) {
   $node->xmlsitemap['changecount'] = $node->nid ? count($timestamps) - 1 : 0;
 
   // Node access must be reset since it a user may have changed published status, etc.
-  //$access = &drupal_static('node_access');
+  //$access = &backdrop_static('node_access');
   //unset($access[0][$node->nid]);
   //node_access_acquire_grants($node);
 
   // The following values must always be checked because they are volatile.
   $node->xmlsitemap['loc'] = $uri['path'];
   $node->xmlsitemap['lastmod'] = count($timestamps) ? max($timestamps) : 0;
-  $node->xmlsitemap['access'] = $node->nid ? xmlsitemap_node_view_access($node, drupal_anonymous_user()) : 1;
+  $node->xmlsitemap['access'] = $node->nid ? xmlsitemap_node_view_access($node, backdrop_anonymous_user()) : 1;
   $node->xmlsitemap['language'] = isset($node->language) ? $node->language : LANGUAGE_NONE;
 
   return $node->xmlsitemap;
@@ -236,13 +236,13 @@ function xmlsitemap_node_create_link(stdClass $node) {
  * @return
  *   TRUE if the operation may be performed, FALSE otherwise.
  *
- * This is for all intesive purposes a copy of Drupal 7's node_access() function.
+ * This is for all intesive purposes a copy of the core node_access() function.
  */
 function xmlsitemap_node_view_access($node, $account = NULL) {
   global $user;
 
   $op = 'view';
-  $rights = &drupal_static(__FUNCTION__, array());
+  $rights = &backdrop_static(__FUNCTION__, array());
 
   if (!$node || !in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
     // If there was no node to check against, or the $op was not one of the
@@ -310,7 +310,7 @@ function xmlsitemap_node_view_access($node, $account = NULL) {
       $query->range(0, 1);
 
       // Fetch the node grants and allow other modules to alter them (D7 backport).
-      $grants = &drupal_static(__FUNCTION__ . ':grants', array());
+      $grants = &backdrop_static(__FUNCTION__ . ':grants', array());
       if (!isset($grants[$account->uid][$op])) {
         // Indicate that this is our special function in the grants.
         $account->xmlsitemap_node_access = TRUE;

@@ -33,7 +33,7 @@ function xmlsitemap_engines_hook_info() {
 function xmlsitemap_engines_menu() {
   $items['admin/config/search/xmlsitemap/engines'] = array(
     'title' => 'Search Engines',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('xmlsitemap_engines_settings_form'),
     'access arguments' => array('administer xmlsitemap'),
     'type' => MENU_LOCAL_TASK,
@@ -136,7 +136,7 @@ function xmlsitemap_engines_submit_sitemaps($url, array $sitemaps) {
   foreach ($sitemaps as $sitemap) {
     $sitemap->url = url($sitemap->uri['path'], $sitemap->uri['options']);
     $submit_url = xmlsitemap_engines_prepare_url($url, $sitemap->url);
-    $request = drupal_http_request($submit_url);
+    $request = backdrop_http_request($submit_url);
     watchdog('xmlsitemap', 'Submitted the sitemap to %url and received response @code.', array('%url' => $submit_url, '@code' => $request->code));
   }
 }
@@ -168,7 +168,7 @@ function xmlsitemap_engines_prepare_url($url, $sitemap) {
  */
 function xmlsitemap_engines_get_engine_info($engine = NULL) {
   global $language;
-  $engines = &drupal_static(__FUNCTION__);
+  $engines = &backdrop_static(__FUNCTION__);
 
   if (!isset($engines)) {
     if ($cached = cache_get('xmlsitemap:engines:' . $language->langcode)) {
@@ -178,7 +178,7 @@ function xmlsitemap_engines_get_engine_info($engine = NULL) {
       // Fetch the results of all hook_xmlsitemap_engine_info() implementations.
       $engines = module_invoke_all('xmlsitemap_engine_info');
       // Allow other modulse to alter the engine info.
-      drupal_alter('xmlsitemap_engine_info', $engines);
+      backdrop_alter('xmlsitemap_engine_info', $engines);
       // Cache by language since engine names are translated.
       cache_set('xmlsitemap:engines:' . $language->langcode, $engines);
     }
