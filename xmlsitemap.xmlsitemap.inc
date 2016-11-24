@@ -48,7 +48,7 @@ class XMLSitemapWriter extends XMLWriter {
     if (!$result) {
       throw new XMLSitemapGenerationException(t('Unknown error occurred while writing to file @file.', array('@file' => $this->uri)));
     }
-    if (variable_get('xmlsitemap_xsl', 1)) {
+    if (config_get('xmlsitemap.settings', 'xsl')) {
       $this->writeXSL();
     }
     $this->startElement($this->rootElement, TRUE);
@@ -59,7 +59,7 @@ class XMLSitemapWriter extends XMLWriter {
     $options += $this->sitemap->uri['options'];
     $options += array(
       'absolute' => TRUE,
-      'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+      'base_url' => config_get('xmlsitemap.settings', 'base_url', $GLOBALS['base_url']),
       'language' => language_default(),
       'alias' => TRUE,
     );
@@ -82,7 +82,7 @@ class XMLSitemapWriter extends XMLWriter {
    */
   public function getRootAttributes() {
     $attributes['xmlns'] = 'http://www.sitemaps.org/schemas/sitemap/0.9';
-    if (variable_get('xmlsitemap_developer_mode', 0)) {
+    if (config_get('xmlsitemap.settings', 'developer_mode', 0)) {
       $attributes['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance';
       $attributes['xsi:schemaLocation'] = 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd';
     }
@@ -184,7 +184,7 @@ class XMLSitemapIndexWriter extends XMLSitemapWriter {
 
   public function getRootAttributes() {
     $attributes['xmlns'] = 'http://www.sitemaps.org/schemas/sitemap/0.9';
-    if (variable_get('xmlsitemap_developer_mode', 0)) {
+    if (config_get('xmlsitemap.settings', 'developer_mode', 0)) {
       $attributes['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance';
       $attributes['xsi:schemaLocation'] = 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd';
     }
@@ -195,7 +195,7 @@ class XMLSitemapIndexWriter extends XMLSitemapWriter {
   }
 
   public function generateXML() {
-    $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
+    $lastmod_format = config_get('xmlsitemap.settings', 'lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
     for ($i = 1; $i <= $this->sitemap->chunks; $i++) {
       $element = array(
@@ -226,6 +226,7 @@ function xmlsitemap_xmlsitemap_link_info() {
  * XML sitemap link type settings callback for frontpage link entity.
  */
 function xmlsitemap_link_frontpage_settings(&$form) {
+  $config = config('xmlsitemap.settings');
   module_load_include('admin.inc', 'xmlsitemap');
   if (user_access('administer site configuration')) {
     $form['#description'] = t('The front page path can be changed in the <a href="@url-frontpage">site information configuration</a>.', array('@url-frontpage' => url('admin/config/system/site-information')));
@@ -234,13 +235,13 @@ function xmlsitemap_link_frontpage_settings(&$form) {
     '#type' => 'select',
     '#title' => t('Priority'),
     '#options' => xmlsitemap_get_priority_options(),
-    '#default_value' => variable_get('xmlsitemap_frontpage_priority', 1.0),
+    '#default_value' => $config->get('frontpage_priority'),
   );
   $form['xmlsitemap_frontpage_changefreq'] = array(
     '#type' => 'select',
     '#title' => t('Change frequency'),
     '#options' => xmlsitemap_get_changefreq_options(),
-    '#default_value' => variable_get('xmlsitemap_frontpage_changefreq', XMLSITEMAP_FREQUENCY_DAILY),
+    '#default_value' => $config->get('frontpage_changefreq'),
   );
   return $form;
 }
@@ -250,9 +251,10 @@ function xmlsitemap_link_frontpage_settings(&$form) {
  */
 function xmlsitemap_xmlsitemap_link_alter(&$link) {
   // Alter the frontpage priority.
-  if ($link['type'] == 'frontpage' || $link['loc'] == '' || $link['loc'] == variable_get('site_frontpage', 'node')) {
-    $link['priority'] = variable_get('xmlsitemap_frontpage_priority', 1.0);
-    $link['changefreq'] = variable_get('xmlsitemap_frontpage_changefreq', XMLSITEMAP_FREQUENCY_DAILY);
+  if ($link['type'] == 'frontpage' || $link['loc'] == '' || $link['loc'] == config_get('system_core', 'site_frontpage')) {
+    $config = config('xmlsitemap.settings');
+    $link['priority'] = $config->get('frontpage_priority', 1.0);
+    $link['changefreq'] = $config->get('frontpage_changefreq', XMLSITEMAP_FREQUENCY_DAILY);
   }
 }
 

@@ -108,7 +108,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
    */
   function testCron() {
     $limit = 5;
-    variable_set('xmlsitemap_batch_limit', $limit);
+    config_set('xmlsitemap.settings', 'xmlsitemap_batch_limit', $limit);
 
     $nodes = array();
     for ($i = 1; $i <= ($limit + 1); $i++) {

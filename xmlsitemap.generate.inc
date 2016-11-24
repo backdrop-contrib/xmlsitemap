@@ -67,7 +67,7 @@ function _xmlsitemap_regenerate_before() {
   // Attempt to increase the memory limit.
   _xmlsitemap_set_memory_limit();
 
-  if (variable_get('xmlsitemap_developer_mode', 0)) {
+  if (config_get('xmlsitemap.settings', 'developer_mode', 0)) {
     watchdog('xmlsitemap', 'Starting XML sitemap generation. Memory usage: @memory-peak.', array(
         '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
       ),
@@ -95,13 +95,13 @@ function _xmlsitemap_get_optimal_memory_limit() {
   $optimal_limit = &backdrop_static(__FUNCTION__);
   if (!isset($optimal_limit)) {
     // Set the base memory amount from the provided core constant.
-    $optimal_limit = parse_size(DRUPAL_MINIMUM_PHP_MEMORY_LIMIT);
+    $optimal_limit = parse_size(BACKDROP_MINIMUM_PHP_MEMORY_LIMIT);
 
     // Add memory based on the chunk size.
     $optimal_limit += xmlsitemap_get_chunk_size() * 500;
 
     // Add memory for storing the url aliases.
-    if (variable_get('xmlsitemap_prefetch_aliases', 1)) {
+    if (config_get('xmlsitemap.settings', 'prefetch_aliases', 1)) {
       $aliases = db_query("SELECT COUNT(pid) FROM {url_alias}")->fetchField();
       $optimal_limit += $aliases * 250;
     }
@@ -153,15 +153,16 @@ function xmlsitemap_generate_page(stdClass $sitemap, $page) {
 }
 
 function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, $chunk) {
-  $output_elements = backdrop_map_assoc(variable_get('xmlsitemap_output_elements', array('lastmod', 'changefreq', 'priority')));
-  $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
+  $config = config('xmlsitemap.settings');
+  $output_elements = backdrop_map_assoc($config->get('output_elements'));
+  $lastmod_format = $config->get('lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
   $url_options = $sitemap->uri['options'];
   $url_options += array(
     'absolute' => TRUE,
-    'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+    'base_url' => $config->get('base_url', $GLOBALS['base_url']),
     'language' => language_default(),
-    'alias' => variable_get('xmlsitemap_prefetch_aliases', TRUE),
+    'alias' => $config->get('prefetch_aliases', TRUE),
   );
 
   $last_url = '';
@@ -283,7 +284,7 @@ function xmlsitemap_regenerate_batch(array $smids = array()) {
   );
 
   // Set the regenerate flag in case something fails during file generation.
-  $batch['operations'][] = array('xmlsitemap_batch_variable_set', array(array('xmlsitemap_regenerate_needed' => TRUE)));
+  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('xmlsitemap_regenerate_needed' => TRUE)));
 
   // @todo Get rid of this batch operation.
   $batch['operations'][] = array('_xmlsitemap_regenerate_before', array());
@@ -295,7 +296,7 @@ function xmlsitemap_regenerate_batch(array $smids = array()) {
   }
 
   // Clear the regeneration flag.
-  $batch['operations'][] = array('xmlsitemap_batch_variable_set', array(array('xmlsitemap_regenerate_needed' => FALSE)));
+  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('xmlsitemap_regenerate_needed' => FALSE)));
 
   return $batch;
 }
@@ -358,9 +359,10 @@ function xmlsitemap_regenerate_batch_generate_index($smid, array &$context) {
  * Batch callback; sitemap regeneration finished.
  */
 function xmlsitemap_regenerate_batch_finished($success, $results, $operations, $elapsed) {
-  if ($success && !variable_get('xmlsitemap_regenerate_needed', FALSE)) {
-    variable_set('xmlsitemap_generated_last', REQUEST_TIME);
-    //backdrop_set_message(t('The sitemaps were regenerated.'));
+  $config = config('xmlsitemap.settings');
+  if ($success && !$config->get('regenerate_needed', FALSE)) {
+    $config->set('generated_last', REQUEST_TIME);
+
     // Show a watchdog message that the sitemap was regenerated.
     watchdog('xmlsitemap',
       'Finished XML sitemap generation in @elapsed. Memory usage: @memory-peak.',
@@ -388,7 +390,7 @@ function xmlsitemap_rebuild_batch(array $entities, $save_custom = FALSE) {
   );
 
   // Set the rebuild flag in case something fails during the rebuild.
-  $batch['operations'][] = array('xmlsitemap_batch_variable_set', array(array('xmlsitemap_rebuild_needed' => TRUE)));
+  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('xmlsitemap_rebuild_needed' => TRUE)));
 
   // Purge any links first.
   $batch['operations'][] = array('xmlsitemap_rebuild_batch_clear', array($entities, (bool) $save_custom));
@@ -400,7 +402,7 @@ function xmlsitemap_rebuild_batch(array $entities, $save_custom = FALSE) {
   }
 
   // Clear the rebuild flag.
-  $batch['operations'][] = array('xmlsitemap_batch_variable_set', array(array('xmlsitemap_rebuild_needed' => FALSE)));
+  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('xmlsitemap_rebuild_needed' => FALSE)));
 
   // Add the regeneration batch.
   $regenerate_batch = xmlsitemap_regenerate_batch();
@@ -412,10 +414,12 @@ function xmlsitemap_rebuild_batch(array $entities, $save_custom = FALSE) {
 /**
  * Batch callback; set an array of variables and their values.
  */
-function xmlsitemap_batch_variable_set(array $variables) {
+function xmlsitemap_batch_config_set(array $variables) {
+  $config = config('xmlsitemap.settings');
   foreach ($variables as $variable => $value) {
-    variable_set($variable, $value);
+    $config->set($variable, $value);
   }
+  $config->save();
 }
 
 /**
@@ -481,7 +485,8 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   // PostgreSQL cannot have the ORDERED BY in the count query.
   $query->entityOrderBy('entity_id');
 
-  $limit = 20; //variable_get('xmlsitemap_batch_limit', 100)
+  $limit = 20;
+  //config_get('xmlsitemap.setings', 'batch_limit', 100); // @todo why comment?
   $query->range(0, $limit);
 
   $result = $query->execute();
@@ -504,7 +509,7 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
  * Batch callback; sitemap rebuild finished.
  */
 function xmlsitemap_rebuild_batch_finished($success, $results, $operations, $elapsed) {
-  if ($success && !variable_get('xmlsitemap_rebuild_needed', FALSE)) {
+  if ($success && !config_get('xmlsitemap.settings', 'rebuild_needed', FALSE)) {
     backdrop_set_message(t('The sitemap links were rebuilt.'));
   }
   else {

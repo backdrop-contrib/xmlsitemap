@@ -10,6 +10,8 @@
  * Implements hook_requirements().
  */
 function xmlsitemap_requirements($phase) {
+  $config = config('xmlsitemap.settings');
+  $system_config = config('system.core');
   $requirements = array();
   $t = get_t();
 
@@ -32,7 +34,7 @@ function xmlsitemap_requirements($phase) {
   if ($phase == 'runtime') {
     // If clean URLs are disabled there must not be an actual sitemap.xml in
     // the root directory.
-    if (variable_get('clean_url', 0) && file_exists(DRUPAL_ROOT . '/sitemap.xml')) {
+    if ($system_config->get('clean_url') && file_exists(BACKDROP_ROOT . '/sitemap.xml')) {
       $requirements['xmlsitemap_file'] = array(
         'title' => $t('XML sitemap'),
         'value' => $t('Existing sitemap.xml file found.'),
@@ -101,31 +103,31 @@ function xmlsitemap_requirements($phase) {
       $requirements['xmlsitemap_file_size']['description'] = $t('You have exceeded the maximum sitemap file size of @size. If possible, decrease the number of links per sitemap page.', array('@size' => format_size(XMLSITEMAP_MAX_SITEMAP_FILESIZE)));
       $requirements['xmlsitemap_file_size']['severity'] = REQUIREMENT_ERROR;
     }
-    elseif (!variable_get('xmlsitemap_developer_mode', 0)) {
+    elseif (!$config->get('developer_mode')) {
       unset($requirements['xmlsitemap_file_size']);
     }
 
     // Check when the cached files were last generated.
-    $generated_last = variable_get('xmlsitemap_generated_last', 0);
+    $generated_last = $config->get('generated_last');
     $generated_ago = REQUEST_TIME - $generated_last;
     $requirements['xmlsitemap_generated'] = array(
       'title' => $t('XML sitemap'),
       'value' => $generated_last ? $t('Last attempted generation on !date (!interval ago).', array('!date' => format_date($generated_last, 'small'), '!interval' => format_interval($generated_ago))) : $t('Cached files have not been generated yet.'),
       'severity' => REQUIREMENT_OK,
     );
-    if (variable_get('xmlsitemap_rebuild_needed', FALSE) && _xmlsitemap_rebuild_form_access()) {
+    if ($config->get('rebuild_needed') && _xmlsitemap_rebuild_form_access()) {
       $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
       $requirements['xmlsitemap_generated']['description'] = $t('The XML sitemap data is out of sync and needs to be <a href="@link-rebuild">completely rebuilt<a>.', array('@link-rebuild' => url('admin/config/search/xmlsitemap/rebuild')));
     }
-    elseif (variable_get('xmlsitemap_regenerate_needed', FALSE)) {
+    elseif ($config->get('regenerate_needed')) {
       if ($max_filesize == 0) {
         // A maximum sitemap file size of 0 indicates an error in generation.
         $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
       }
-      elseif ($generated_ago >= variable_get('cron_threshold_error', 1209600)) {
+      elseif ($generated_ago >= $system_config->get('cron_threshold_error')) {
         $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
       }
-      elseif ($generated_ago >= variable_get('cron_threshold_warning', 172800)) {
+      elseif ($generated_ago >= $system_config->get('cron_threshold_warning')) {
         $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_WARNING;
       }
       if ($requirements['xmlsitemap_generated']['severity']) {
@@ -303,6 +305,10 @@ function xmlsitemap_schema() {
  * Implements hook_install().
  */
 function xmlsitemap_install() {
+  $config = config('xmlsitemap.settings');
+  // Set the xmlsitemap_base_url variale to $GLOBALS['base_url'].
+  $config->set('base_url', $GLOBALS['base_url']);
+
   // Set this module's weight to 1 so xmlsitemap_cron() runs after all other
   // xmlsitemap_x_cron() runs.
   db_update('system')
@@ -321,8 +327,8 @@ function xmlsitemap_install() {
       'type' => 'frontpage',
       'id' => 0,
       'loc' => '',
-      'priority' => variable_get('xmlsitemap_frontpage_priority', 1.0),
-      'changefreq' => variable_get('xmlsitemap_frontpage_changefreq', XMLSITEMAP_FREQUENCY_DAILY),
+      'priority' => $config->get('frontpage_priority'),
+      'changefreq' => $config->get('frontpage_changefreq'),
       'language' => LANGUAGE_NONE,
     ))
     ->execute();
@@ -351,21 +357,15 @@ function xmlsitemap_enable() {
   // Ensure the file cache directory is available and ready.
   xmlsitemap_check_directory();
 
-  variable_set('xmlsitemap_regenerate_needed', TRUE);
+  config_set('xmlsitemap.settings', 'regenerate_needed', TRUE);
 }
 
 /**
  * Implements hook_uninstall().
  */
 function xmlsitemap_uninstall() {
-  // Remove variables.
-  backdrop_load('module', 'xmlsitemap');
-  $variables = array_keys(xmlsitemap_variables());
-  foreach ($variables as $variable) {
-    variable_del($variable);
-  }
-
   // Remove the file cache directory.
+  backdrop_load('module', 'xmlsitemap');
   xmlsitemap_clear_directory(NULL, TRUE);
 
   // Remove the queue.
@@ -379,4 +379,59 @@ function xmlsitemap_uninstall() {
  */
 function xmlsitemap_update_last_removed() {
   return 7203;
+}
+
+/**
+ * Upgrade from Drupal 7 to Backdrop CMS. Convert variables to config.
+ */
+function xmlsitemap_update_1000() {
+  $delete = array(
+    'xmlsitemap_regenerate_last',
+    'xmlsitemap_custom_links',
+    'xmlsitemap_priority_default',
+    'xmlsitemap_languages',
+    'xmlsitemap_max_chunks',
+    'xmlsitemap_max_filesize',
+  );
+  foreach ($delete as $name) {
+    update_variable_del($name);
+  }
+
+  // Make sure all the default config values are set.
+  config_install_default_config('xmlsitemap', 'xmlsitemap.settings');
+
+  // Set the xmlsitemap_base_url variale to $GLOBALS['base_url'].
+  $config = config('xmlsitemap.settings');
+  $config->set('base_url', $GLOBALS['base_url']);
+
+  // Convert any overridden variables to config.
+  $convert = array(
+    'xmlsitemap_rebuild_needed',
+    'xmlsitemap_regenerate_needed',
+    'xmlsitemap_minimum_lifetime',
+    'xmlsitemap_generated_last',
+    'xmlsitemap_xsl',
+    'xmlsitemap_prefetch_aliases',
+    'xmlsitemap_chunk_size',
+    'xmlsitemap_batch_limit',
+    'xmlsitemap_path',
+    'xmlsitemap_base_url',
+    'xmlsitemap_developer_mode',
+    'xmlsitemap_frontpage_priority',
+    'xmlsitemap_frontpage_changefreq',
+    'xmlsitemap_lastmod_format',
+    'xmlsitemap_gz',
+    'xmlsitemap_disable_cron_regeneration',
+    'xmlsitemap_output_elements',
+  );
+  foreach ($convert as $name) {
+    $value = variable_get($name, FALSE);
+    if ($value) {
+      $new_key = substr($name, 11);
+      $config->set($new_key, $value);
+    }
+  }
+
+  // Save all these config changes.
+  $config->save();
 }

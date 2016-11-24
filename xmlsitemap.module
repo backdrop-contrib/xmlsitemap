@@ -50,6 +50,16 @@ define('XMLSITEMAP_STATUS_DEFAULT', 0);
  */
 define('XMLSITEMAP_PRIORITY_DEFAULT', 0.5);
 
+/**
+ * Implements hook_config_info().
+ */
+function xmlsitemap_config_info() {
+  $prefixes['xmlsitemap.settings'] = array(
+    'label' => t('XML Sitemap Settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
 
 /**
  * Implements hook_autoload_info().
@@ -218,18 +228,19 @@ function _xmlsitemap_rebuild_form_access() {
  * @todo Regenerate one at a time?
  */
 function xmlsitemap_cron() {
+  $config = config('xmlsitemap.settings');
   // If there were no new or changed links, skip.
-  if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {
+  if (!$config->get('regenerate_needed')) {
     return;
   }
   // If cron sitemap file regeneration is disabled, stop.
-  if (variable_get('xmlsitemap_disable_cron_regeneration', 0)) {
+  if ($config->get('disable_cron_regeneration')) {
     return;
   }
 
   // If the minimum sitemap lifetime hasn't been passed, skip.
-  $lifetime = REQUEST_TIME - variable_get('xmlsitemap_generated_last', 0);
-  if ($lifetime < variable_get('xmlsitemap_minimum_lifetime', 0)) {
+  $lifetime = REQUEST_TIME - $config->get('generated_last');
+  if ($lifetime < $config->get('minimum_lifetime')) {
     return;
   }
 
@@ -263,54 +274,18 @@ function xmlsitemap_robotstxt() {
 }
 
 /**
- * Internal default variables for xmlsitemap_var().
- */
-function xmlsitemap_variables() {
-  return array(
-    'xmlsitemap_rebuild_needed' => FALSE,
-    'xmlsitemap_regenerate_needed' => FALSE,
-    'xmlsitemap_minimum_lifetime' => 0,
-    'xmlsitemap_generated_last' => 0,
-    'xmlsitemap_xsl' => 1,
-    'xmlsitemap_prefetch_aliases' => 1,
-    'xmlsitemap_chunk_size' => 'auto',
-    'xmlsitemap_batch_limit' => 100,
-    'xmlsitemap_path' => 'xmlsitemap',
-    'xmlsitemap_base_url' => $GLOBALS['base_url'],
-    'xmlsitemap_developer_mode' => 0,
-    'xmlsitemap_frontpage_priority' => 1.0,
-    'xmlsitemap_frontpage_changefreq' => XMLSITEMAP_FREQUENCY_DAILY,
-    'xmlsitemap_lastmod_format' => XMLSITEMAP_LASTMOD_MEDIUM,
-    'xmlsitemap_gz' => FALSE,
-    'xmlsitemap_disable_cron_regeneration' => 0,
-    'xmlsitemap_output_elements' => array('lastmod', 'changefreq', 'priority'),
-    // Removed variables are set to NULL so they can still be deleted.
-    'xmlsitemap_regenerate_last' => NULL,
-    'xmlsitemap_custom_links' => NULL,
-    'xmlsitemap_priority_default' => NULL,
-    'xmlsitemap_languages' => NULL,
-    'xmlsitemap_max_chunks' => NULL,
-    'xmlsitemap_max_filesize' => NULL,
-  );
-}
-
-/**
  * Internal implementation of variable_get().
+ *
+ * @todo Remove this. In Backdrop we can add `"_config_static": true,` to the
+ *       config file to have the file always statically cached.
  */
 function xmlsitemap_var($name, $default = NULL) {
   $defaults = &backdrop_static(__FUNCTION__);
   if (!isset($defaults)) {
-    $defaults = xmlsitemap_variables();
+    $defaults = config('xmlsitemap.settings');
   }
 
-  $name = 'xmlsitemap_' . $name;
-
-  // @todo Remove when stable.
-  if (!isset($defaults[$name])) {
-    trigger_error(strtr('Default variable for %variable not found.', array('%variable' => backdrop_placeholder($name))));
-  }
-
-  return variable_get($name, isset($default) || !isset($defaults[$name]) ? $default : $defaults[$name]);
+  return $defaults->get($name);
 }
 
 /**
@@ -417,7 +392,7 @@ function xmlsitemap_sitemap_save(stdClass $sitemap) {
       ->execute();
 
     // Mark the sitemaps as needing regeneration.
-    variable_set('xmlsitemap_regenerate_needed', TRUE);
+    config_set('xmlsitemap.settings', 'xmlsitemap_regenerate_needed', TRUE);
   }
 
   if ($sitemap->is_new) {
@@ -509,7 +484,7 @@ function xmlsitemap_sitemap_uri(stdClass $sitemap) {
   backdrop_alter('xmlsitemap_context_url_options', $uri['options'], $sitemap->context);
   $uri['options'] += array(
     'absolute' => TRUE,
-    'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+    'base_url' => config_get('xmlsitemap.settings', 'xmlsitemap_base_url'),
   );
   return $uri;
 }
@@ -591,7 +566,7 @@ function xmlsitemap_link_save(array $link, array $context = array()) {
   $existing = db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = :type AND id = :id", 0, 1, array(':type' => $link['type'], ':id' => $link['id']))->fetchAssoc();
 
   // Check if this is a changed link and set the regenerate flag if necessary.
-  if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {
+  if (!config_get('xmlsitemap.settings', 'regenerate_needed')) {
     _xmlsitemap_check_changed_link($link, $existing, TRUE);
   }
 
@@ -624,7 +599,7 @@ function xmlsitemap_link_save(array $link, array $context = array()) {
 function xmlsitemap_link_update_multiple($updates = array(), $conditions = array(), $check_flag = TRUE) {
   // If we are going to modify a visible sitemap link, we will need to set
   // the regenerate needed flag.
-  if ($check_flag && !variable_get('xmlsitemap_regenerate_needed', FALSE)) {
+  if ($check_flag && !configget('xmlsitemap.settings', 'regenerate_needed', FALSE)) {
     _xmlsitemap_check_changed_links($conditions, $updates, TRUE);
   }
 
@@ -677,7 +652,7 @@ function xmlsitemap_link_delete_multiple(array $conditions) {
     return FALSE;
   }
 
-  if (!variable_get('xmlsitemap_regenerate_needed', TRUE)) {
+  if (!config_get('xmlsitemap.settings', 'regenerate_needed')) {
     _xmlsitemap_check_changed_links($conditions, array(), TRUE);
   }
 
@@ -716,7 +691,7 @@ function _xmlsitemap_check_changed_links(array $conditions = array(), array $upd
   $changed = $query->execute()->fetchField();
 
   if ($changed && $flag) {
-    variable_set('xmlsitemap_regenerate_needed', TRUE);
+    config_set('xmlsitemap.settings', 'regenerate_needed', TRUE);
   }
 
   return $changed;
@@ -763,7 +738,7 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
   }
 
   if ($changed && $flag) {
-    variable_set('xmlsitemap_regenerate_needed', TRUE);
+    config_set('xmlsitemap.settings', 'regenerate_needed', TRUE);
   }
 
   return $changed;
@@ -777,7 +752,7 @@ function xmlsitemap_get_directory(stdClass $sitemap = NULL) {
   $directory = &backdrop_static(__FUNCTION__);
 
   if (!isset($directory)) {
-    $directory = variable_get('xmlsitemap_path', 'xmlsitemap');
+    $directory = config_get('xmlsitemap.settings', 'path');
   }
 
   if (!empty($sitemap->smid)) {
@@ -1013,15 +988,16 @@ function xmlsitemap_link_bundle_settings_save($entity, $bundle, array $settings,
     }
   }
 
-  variable_set("xmlsitemap_settings_{$entity}_{$bundle}", $settings);
+  config_set('xmlsitemap.settings', "settings_{$entity}_{$bundle}", $settings);
   cache_clear_all('xmlsitemap:link_info:', 'cache', TRUE);
-  //xmlsitemap_get_link_info(NULL, TRUE);
 }
 
 function xmlsitemap_link_bundle_rename($entity, $bundle_old, $bundle_new) {
   if ($bundle_old != $bundle_new) {
     $settings = xmlsitemap_link_bundle_load($entity, $bundle_old);
-    variable_del("xmlsitemap_settings_{$entity}_{$bundle_old}");
+    $config = config('xmlsitemap.settings');
+    $config->clear("settings_{$entity}_{$bundle_old}");
+    $config->save();
     xmlsitemap_link_bundle_settings_save($entity, $bundle_new, $settings, FALSE);
     xmlsitemap_link_update_multiple(array('subtype' => $bundle_new), array('type' => $entity, 'subtype' => $bundle_old));
   }
@@ -1031,15 +1007,25 @@ function xmlsitemap_link_bundle_rename($entity, $bundle_old, $bundle_new) {
  * Rename a link type.
  */
 function xmlsitemap_link_type_rename($entity_old, $entity_new, $bundles = NULL) {
-  $variables = db_query("SELECT name FROM {variable} WHERE name LIKE :pattern", array(':pattern' => db_like('xmlsitemap_settings_' . $entity_old . '_') . '%'))->fetchCol();
-  foreach ($variables as $variable) {
-    $value = variable_get($variable);
-    variable_del($variable);
-    if (isset($value)) {
-      $variable_new = str_replace('xmlsitemap_settings_' . $entity_old, 'xmlsitemap_settings_' . $entity_new, $variable);
-      variable_set($variable_new, $value);
+  // Load the config.
+  $config = ('xmlsitemap.settings');
+
+  // Get all the bundles for the old entity.
+  $entity_info = entity_get_info($entity_old);
+
+  // Loop over bundles and rename to new entity.
+  if (array_key_exists('bundles', $entity_info) && is_array($entity_info['bundles'])) {
+    foreach ($entity_info['bundles'] as $bundle) {
+      $key = 'settings_' . $entity_old . '_' . $bundle;
+      $value = $config->get($key);
+      $config->clear($key);
+      if (isset($value)) {
+        $key_new = str_replace('settings_' . $entity_old, 'settings_' . $entity_new, $key);
+        $config->set($key_new, $value);
+      }
     }
   }
+  $config->save();
 
   xmlsitemap_link_update_multiple(array('type' => $entity_new), array('type' => $entity_old), FALSE);
   xmlsitemap_get_link_info(NULL, TRUE);
@@ -1056,21 +1042,26 @@ function xmlsitemap_link_bundle_load($entity, $bundle, $load_bundle_info = TRUE)
       $info['info'] = $entity_info['bundles'][$bundle];
     }
   }
-  $info += variable_get("xmlsitemap_settings_{$entity}_{$bundle}", array());
-  $info += array(
+  $settings = config_get('xmlsitemap.settings', "settings_{$entity}_{$bundle}");
+  if (is_array($settings)) {
+    $info = array_merge($info, $settings);
+  }
+  $defaults = array(
     'status' => XMLSITEMAP_STATUS_DEFAULT,
     'priority' => XMLSITEMAP_PRIORITY_DEFAULT,
   );
+  $info = array_merge($info, $defaults);
   return $info;
 }
 
 function xmlsitemap_link_bundle_delete($entity, $bundle, $delete_links = TRUE) {
-  variable_del("xmlsitemap_settings_{$entity}_{$bundle}");
+  $config = config('xmlsitemap.settings');
+  $config->clear("settings_{$entity}_{$bundle}");
+  $config->save();
   if ($delete_links) {
     xmlsitemap_link_delete_multiple(array('type' => $entity, 'subtype' => $bundle));
   }
   cache_clear_all('xmlsitemap:link_info:', 'cache', TRUE);
-  //xmlsitemap_get_link_info(NULL, TRUE);
 }
 
 function xmlsitemap_link_bundle_access($entity, $bundle = NULL) {
@@ -1230,17 +1221,18 @@ function xmlsitemap_calculate_changefreq($timestamps) {
 /**
  * Submit handler; Set the regenerate needed flag if variables have changed.
  *
- * This function needs to be called before system_settings_form_submit() or any
- * calls to variable_set().
+ * This function needs to be called before system_settings_form_submit().
  */
 function xmlsitemap_form_submit_flag_regenerate($form, $form_state) {
+  $config = config('xmlsitemap.settings');
   foreach ($form_state['values'] as $variable => $value) {
-    $stored_value = variable_get($variable, 'not_a_variable');
     if (is_array($value) && !empty($form_state['values']['array_filter'])) {
       $value = array_keys(array_filter($value));
     }
-    if ($stored_value != 'not_a_variable' && $stored_value != $value) {
-      variable_set('xmlsitemap_regenerate_needed', TRUE);
+    $stored_value = $config->get($variable);
+    // @todo add a check here for if the value wasn't in config.
+    if ($stored_value != $value) {
+      $config->set('regenerate_needed', TRUE);
       backdrop_set_message(t('XML sitemap settings have been modified and the files should be regenerated. You can <a href="@run-cron">run cron manually</a> to regenerate the cached files.', array('@run-cron' => url('admin/reports/status/run-cron', array('query' => backdrop_get_destination())))), 'warning', FALSE);
       return;
     }
