@@ -155,4 +155,6 @@ function xmlsitemap_output_xsl() {
   backdrop_add_http_header('Content-type', 'application/xml; charset=utf-8');
   backdrop_add_http_header('X-Robots-Tag', 'noindex, follow');
   print $xsl_content;
+
+  backdrop_exit();
 }
