@@ -202,6 +202,7 @@ function xmlsitemap_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'xmlsitemap.pages.inc',
   );
+
   $items['sitemap.xsl'] = array(
     'page callback' => 'xmlsitemap_output_xsl',
     'access callback' => TRUE,
@@ -392,7 +393,7 @@ function xmlsitemap_sitemap_save(stdClass $sitemap) {
       ->execute();
 
     // Mark the sitemaps as needing regeneration.
-    config_set('xmlsitemap.settings', 'xmlsitemap_regenerate_needed', TRUE);
+    config_set('xmlsitemap.settings', 'regenerate_needed', TRUE);
   }
 
   if ($sitemap->is_new) {
@@ -599,7 +600,7 @@ function xmlsitemap_link_save(array $link, array $context = array()) {
 function xmlsitemap_link_update_multiple($updates = array(), $conditions = array(), $check_flag = TRUE) {
   // If we are going to modify a visible sitemap link, we will need to set
   // the regenerate needed flag.
-  if ($check_flag && !configget('xmlsitemap.settings', 'regenerate_needed', FALSE)) {
+  if ($check_flag && !config_get('xmlsitemap.settings', 'regenerate_needed')) {
     _xmlsitemap_check_changed_links($conditions, $updates, TRUE);
   }
 
@@ -1042,15 +1043,18 @@ function xmlsitemap_link_bundle_load($entity, $bundle, $load_bundle_info = TRUE)
       $info['info'] = $entity_info['bundles'][$bundle];
     }
   }
-  $settings = config_get('xmlsitemap.settings', "settings_{$entity}_{$bundle}");
-  if (is_array($settings)) {
-    $info = array_merge($info, $settings);
-  }
+
   $defaults = array(
     'status' => XMLSITEMAP_STATUS_DEFAULT,
     'priority' => XMLSITEMAP_PRIORITY_DEFAULT,
   );
   $info = array_merge($info, $defaults);
+
+  $settings = config_get('xmlsitemap.settings', "settings_{$entity}_{$bundle}");
+  if (is_array($settings)) {
+    $info = array_merge($info, $settings);
+  }
+
   return $info;
 }
 

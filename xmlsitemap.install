@@ -406,26 +406,26 @@ function xmlsitemap_update_1000() {
 
   // Convert any overridden variables to config.
   $convert = array(
-    'xmlsitemap_rebuild_needed',
-    'xmlsitemap_regenerate_needed',
-    'xmlsitemap_minimum_lifetime',
-    'xmlsitemap_generated_last',
-    'xmlsitemap_xsl',
-    'xmlsitemap_prefetch_aliases',
-    'xmlsitemap_chunk_size',
-    'xmlsitemap_batch_limit',
-    'xmlsitemap_path',
-    'xmlsitemap_base_url',
-    'xmlsitemap_developer_mode',
-    'xmlsitemap_frontpage_priority',
-    'xmlsitemap_frontpage_changefreq',
-    'xmlsitemap_lastmod_format',
-    'xmlsitemap_gz',
-    'xmlsitemap_disable_cron_regeneration',
-    'xmlsitemap_output_elements',
+    'rebuild_needed',
+    'regenerate_needed',
+    'minimum_lifetime',
+    'generated_last',
+    'xsl',
+    'prefetch_aliases',
+    'chunk_size',
+    'batch_limit',
+    'path',
+    'base_url',
+    'developer_mode',
+    'frontpage_priority',
+    'frontpage_changefreq',
+    'lastmod_format',
+    'gz',
+    'disable_cron_regeneration',
+    'output_elements',
   );
   foreach ($convert as $name) {
-    $value = variable_get($name, FALSE);
+    $value = $config->get($name, FALSE);
     if ($value) {
       $new_key = substr($name, 11);
       $config->set($new_key, $value);

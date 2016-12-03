@@ -56,16 +56,22 @@ class XMLSitemapWriter extends XMLWriter {
   }
 
   public function getSitemapUrl($path, array $options = array()) {
+
     $options += $this->sitemap->uri['options'];
     $options += array(
       'absolute' => TRUE,
-      'base_url' => config_get('xmlsitemap.settings', 'base_url', $GLOBALS['base_url']),
+      //'base_url' => config_get('xmlsitemap.settings', 'base_url', $GLOBALS['base_url']),
       'language' => language_default(),
       'alias' => TRUE,
     );
+
+    // Add base_url here since using the addition operator above results in blank string.
+    $options['base_url'] = config_get('xmlsitemap.settings', 'base_url', $GLOBALS['base_url']);
+
     if (!empty($options['protocol_relative'])) {
       $options['base_url'] = preg_replace('~^https?:~', '', $options['base_url']);
     }
+
     return url($path, $options);
   }
 

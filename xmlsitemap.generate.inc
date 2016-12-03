@@ -284,7 +284,7 @@ function xmlsitemap_regenerate_batch(array $smids = array()) {
   );
 
   // Set the regenerate flag in case something fails during file generation.
-  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('xmlsitemap_regenerate_needed' => TRUE)));
+  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('regenerate_needed' => TRUE)));
 
   // @todo Get rid of this batch operation.
   $batch['operations'][] = array('_xmlsitemap_regenerate_before', array());
@@ -296,7 +296,7 @@ function xmlsitemap_regenerate_batch(array $smids = array()) {
   }
 
   // Clear the regeneration flag.
-  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('xmlsitemap_regenerate_needed' => FALSE)));
+  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('regenerate_needed' => FALSE)));
 
   return $batch;
 }
