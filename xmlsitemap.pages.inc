@@ -42,7 +42,7 @@ function xmlsitemap_output_chunk() {
   $file = xmlsitemap_sitemap_get_file($sitemap, $chunk);
 
   // Provide debugging information if enabled.
-  if (variable_get('xmlsitemap_developer_mode', 0) && isset($_GET['debug'])) {
+  if (config_get('xmlsitemap.settings', 'developer_mode') && isset($_GET['debug'])) {
     $output = array();
     $context = xmlsitemap_get_current_context();
     $output[] = "Current context: " . print_r($context, TRUE);
@@ -83,7 +83,7 @@ function xmlsitemap_output_file($file, array $headers = array()) {
     //'Content-length' => filesize($file),
     'Last-modified' => $last_modified,
     'Etag' => $etag,
-    'Expires' => gmdate(DATE_RFC1123, $mtime + variable_get('xmlsitemap_minimum_lifetime', 0)),
+    'Expires' => gmdate(DATE_RFC1123, $mtime + config_get('xmlsitemap.settings', 'minimum_lifetime')),
     'Cache-Control' => 'must-revalidate',
     'X-Robots-Tag' => 'noindex, follow',
   );
@@ -110,7 +110,7 @@ function xmlsitemap_file_transfer($uri, $headers) {
   // Attempt to increase time to transfer file.
   backdrop_set_time_limit(240);
 
-  $scheme = variable_get('file_default_scheme', 'public');
+  $scheme = config_get('system.core', 'file_default_scheme');
   // Transfer file in 16 KB chunks to save memory usage.
   if ($scheme && file_stream_wrapper_valid_scheme($scheme) && $fd = fopen($uri, 'rb')) {
     while (!feof($fd)) {

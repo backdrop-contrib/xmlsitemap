@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Administrative page callbacks for the xmlsitemap module.
@@ -261,40 +260,36 @@ function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
  * @see xmlsitemap_settings_form_validate()
  */
 function xmlsitemap_settings_form($form, &$form_state) {
-  $form['xmlsitemap_minimum_lifetime'] = array(
+  $config = config('xmlsitemap.settings');
+
+  $form['minimum_lifetime'] = array(
     '#type' => 'select',
     '#title' => t('Minimum sitemap lifetime'),
     '#options' => array(0 => t('No minimum')) + backdrop_map_assoc(array(300, 900, 1800, 3600, 10800, 21600, 43200, 86400, 172800, 259200, 604800), 'format_interval'),
     '#description' => t('The minimum amount of time that will elapse before the sitemaps are regenerated. The sitemaps will also only be regenerated on cron if any links have been added, updated, or deleted.') . '<br />' . t('Recommended value: %value.', array('%value' => t('1 day'))),
-    '#default_value' => variable_get('xmlsitemap_minimum_lifetime', 0),
+    '#default_value' => $config->get('minimum_lifetime'),
   );
-  $form['xmlsitemap_xsl'] = array(
+  $form['xsl'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include a stylesheet in the sitemaps for humans.'),
     '#description' => t('When enabled, this will add formatting and tables with sorting to make it easier to view the XML sitemap data instead of viewing raw XML output. Search engines will ignore this.'),
-    '#default_value' => variable_get('xmlsitemap_xsl', 1),
+    '#default_value' => $config->get('xsl'),
   );
-  $form['xmlsitemap_prefetch_aliases'] = array(
+  $form['prefetch_aliases'] = array(
     '#type' => 'checkbox',
     '#title' => t('Prefetch URL aliases during sitemap generation.'),
     '#description' => t('When enabled, this will fetch all URL aliases at once instead of one at a time during sitemap generation. For medium or large sites, it is recommended to disable this feature as it uses a lot of memory.'),
-    '#default_value' => variable_get('xmlsitemap_prefetch_aliases', 1),
+    '#default_value' => $config->get('prefetch_aliases', 1),
   );
 
   $form['advanced'] = array(
     '#type' => 'fieldset',
     '#title' => t('Advanced settings'),
     '#collapsible' => TRUE,
-    '#collapsed' => !variable_get('xmlsitemap_developer_mode', 0),
+    '#collapsed' => !$config->get('developer_mode'),
     '#weight' => 10,
   );
-  //$form['advanced']['xmlsitemap_gz'] = array(
-  //  '#type' => 'checkbox',
-  //  '#title' => t('Generate additional compressed sitemaps using gzip.'),
-  //  '#default_value' => xmlsitemap_var('gz'),
-  //  '#disabled' => !function_exists('gzencode'),
-  //);
-  $form['advanced']['xmlsitemap_chunk_size'] = array(
+  $form['advanced']['chunk_size'] = array(
     '#type' => 'select',
     '#title' => t('Number of links in each sitemap page'),
     '#options' => array('auto' => t('Automatic (recommended)')) + backdrop_map_assoc(array(100, 500, 1000, 2500, 5000, 10000, 25000, XMLSITEMAP_MAX_SITEMAP_LINKS)),
@@ -302,7 +297,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
     // @todo This description is not clear.
     '#description' => t('If there are problems with rebuilding the sitemap, you may want to manually set this value. If you have more than @max links, an index with multiple sitemap pages will be generated. There is a maximum of @max sitemap pages.', array('@max' => XMLSITEMAP_MAX_SITEMAP_LINKS)),
   );
-  $form['advanced']['xmlsitemap_batch_limit'] = array(
+  $form['advanced']['batch_limit'] = array(
     '#type' => 'select',
     '#title' => t('Maximum number of sitemap links to process at once'),
     '#options' => backdrop_map_assoc(array(5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000)),
@@ -312,25 +307,25 @@ function xmlsitemap_settings_form($form, &$form_state) {
   if (!xmlsitemap_check_directory()) {
     form_set_error('xmlsitemap_path', t('The directory %directory does not exist or is not writable.', array('%directory' => xmlsitemap_get_directory())));
   }
-  $form['advanced']['xmlsitemap_path'] = array(
+  $form['advanced']['path'] = array(
     '#type' => 'textfield',
     '#title' => t('Sitemap cache directory'),
-    '#default_value' => variable_get('xmlsitemap_path', 'xmlsitemap'),
+    '#default_value' => $config->get('path'),
     '#size' => 30,
     '#maxlength' => 255,
     '#description' => t('Subdirectory where the sitemap data will be stored. This folder <strong>must not be shared</strong> with any other Backdrop site or install using XML sitemap.'),
     '#field_prefix' => file_build_uri(''),
     '#required' => TRUE,
   );
-  $form['advanced']['xmlsitemap_base_url'] = array(
+  $form['advanced']['base_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Default base URL'),
-    '#default_value' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+    '#default_value' => $config->get('base_url', $GLOBALS['base_url']),
     '#size' => 30,
     '#description' => t('This is the default base URL used for sitemaps and sitemap links.'),
     '#required' => TRUE,
   );
-  $form['advanced']['xmlsitemap_lastmod_format'] = array(
+  $form['advanced']['lastmod_format'] = array(
     '#type' => 'select',
     '#title' => t('Last modification date format'),
     '#options' => array(
@@ -338,23 +333,23 @@ function xmlsitemap_settings_form($form, &$form_state) {
       XMLSITEMAP_LASTMOD_MEDIUM => t('Medium'),
       XMLSITEMAP_LASTMOD_LONG => t('Long'),
     ),
-    '#default_value' => variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM),
+    '#default_value' => $config->get('lastmod_format'),
   );
-  foreach ($form['advanced']['xmlsitemap_lastmod_format']['#options'] as $key => &$label) {
+  foreach ($form['advanced']['lastmod_format']['#options'] as $key => &$label) {
     $label .= ' (' . gmdate($key, REQUEST_TIME) . ')';
   }
-  $form['advanced']['xmlsitemap_developer_mode'] = array(
+  $form['advanced']['developer_mode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable developer mode to expose additional settings.'),
-    '#default_value' => variable_get('xmlsitemap_developer_mode', 0),
+    '#default_value' => $config->get('developer_mode'),
   );
-  $form['advanced']['xmlsitemap_disable_cron_regeneration'] = array(
+  $form['advanced']['disable_cron_regeneration'] = array(
     '#type' => 'checkbox',
     '#title' => t('Disable cron generation of sitemap files.'),
-    '#default_value' => variable_get('xmlsitemap_disable_cron_regeneration', 0),
+    '#default_value' => $config->get('disable_cron_regeneration', 0),
     '#description' => t('This can be disabled if other methods are being used to generate the sitemap files, like <em>drush xmlsitemap-regenerate</em>.'),
   );
-  $form['advanced']['xmlsitemap_output_elements'] = array(
+  $form['advanced']['output_elements'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Enable or disable the individual @loc elements from output', array('@loc' => '<loc>')),
     '#options' => array(
@@ -362,7 +357,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
       'changefreq' => t('Change frequency: @changfreq', array('@changfreq' => '<changefreq>')),
       'priority' => t('Priority: @priority', array('@priority' => '<priority>')),
     ),
-    '#default_value' => backdrop_map_assoc(variable_get('xmlsitemap_output_elements', array('lastmod', 'changefreq', 'priority'))),
+    '#default_value' => backdrop_map_assoc($config->get('output_elements')),
   );
 
   $form['xmlsitemap_settings'] = array(
@@ -401,7 +396,12 @@ function xmlsitemap_settings_form($form, &$form_state) {
   array_unshift($form['#submit'], 'xmlsitemap_form_submit_flag_regenerate');
   $form['array_filter'] = array('#type' => 'value', '#value' => TRUE);
 
-  $form = system_settings_form($form);
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration'),
+  );
+
   return $form;
 }
 
@@ -412,12 +412,12 @@ function xmlsitemap_settings_form($form, &$form_state) {
  */
 function xmlsitemap_settings_form_validate($form, &$form_state) {
   // Check that the chunk size will not create more than 1000 chunks.
-  $chunk_size = $form_state['values']['xmlsitemap_chunk_size'];
+  $chunk_size = $form_state['values']['chunk_size'];
   if ($chunk_size != 'auto' && $chunk_size != 50000 && (xmlsitemap_get_link_count() / $chunk_size) > 1000) {
     form_set_error('xmlsitemap_chunk_size', t('The sitemap page link count of @size will create more than 1,000 sitemap pages. Please increase the link count.', array('@size' => $chunk_size)));
   }
 
-  $base_url = &$form_state['values']['xmlsitemap_base_url'];
+  $base_url = &$form_state['values']['base_url'];
   $base_url = rtrim($base_url, '/');
   if ($base_url != '' && !valid_url($base_url, TRUE)) {
     form_set_error('xmlsitemap_base_url', t('Invalid base URL.'));
@@ -430,8 +430,15 @@ function xmlsitemap_settings_form_validate($form, &$form_state) {
  * @see xmlsitemap_settings_form()
  */
 function xmlsitemap_settings_form_submit($form, $form_state) {
+  $config = config('xmlsitemap.settings');
+  foreach ($form_state['values'] as $key => $value) {
+    $config->set($key, $value);
+  }
+  $config->save();
+
   // Save any changes to the frontpage link.
   xmlsitemap_link_save(array('type' => 'frontpage', 'id' => 0, 'loc' => ''));
+  backdrop_set_message(t('The configuration options have been saved.'));
 }
 
 /**
@@ -440,8 +447,12 @@ function xmlsitemap_settings_form_submit($form, $form_state) {
  * @see xmlsitemap_rebuild_form_submit()
  */
 function xmlsitemap_rebuild_form() {
-  if (!$_POST && !variable_get('xmlsitemap_rebuild_needed', FALSE)) {
-    if (!variable_get('xmlsitemap_regenerate_needed', FALSE)) {
+  $settings = config('xmlsitemap.settings');
+  $rebuild_needed = $settings->get('rebuild_needed');
+  $developer_mode = $settings->get('developer_mode');
+
+  if (!$_POST && !$rebuild_needed) {
+    if (!$settings->get('regenerate_needed')) {
       backdrop_set_message(t('Your sitemap is up to date and does not need to be rebuilt.'), 'error');
     }
     else {
@@ -460,8 +471,8 @@ function xmlsitemap_rebuild_form() {
     '#description' => t('If no link types are selected, the sitemap files will just be regenerated.'),
     '#multiple' => TRUE,
     '#options' => backdrop_map_assoc($rebuild_types),
-    '#default_value' => variable_get('xmlsitemap_rebuild_needed', FALSE) || !variable_get('xmlsitemap_developer_mode', 0) ? $rebuild_types : array(),
-    '#access' => variable_get('xmlsitemap_developer_mode', 0),
+    '#default_value' => $rebuild_needed || !$developer_mode ? $rebuild_types : array(),
+    '#access' => $developer_mode,
   );
   $form['save_custom'] = array(
     '#type' => 'checkbox',
@@ -592,7 +603,7 @@ function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $
     '#group' => 'additional_settings',
     '#attached' => array(
       'js' => array(
-        'vertical-tabs' => backdrop_get_path('module', 'xmlsitemap') . '/xmlsitemap.js',
+        'vertical-tabs' => backdrop_get_path('module', 'xmlsitemap') . '/js/xmlsitemap.js',
       ),
     ),
     '#tree' => TRUE,
@@ -711,7 +722,7 @@ function xmlsitemap_add_form_link_options(array &$form, $entity, $bundle, $id) {
     '#group' => 'additional_settings',
     '#attached' => array(
       'js' => array(
-        'vertical-tabs' => backdrop_get_path('module', 'xmlsitemap') . '/xmlsitemap.js',
+        'vertical-tabs' => backdrop_get_path('module', 'xmlsitemap') . '/js/xmlsitemap.js',
       ),
     ),
   );

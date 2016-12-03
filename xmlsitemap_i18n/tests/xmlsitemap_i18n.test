@@ -22,10 +22,10 @@ class XMLSitemapI18nWebTestCase extends XMLSitemapTestHelper {
     parent::setUp($modules);
 
     // Add predefined language and reset the locale cache.
-    require_once DRUPAL_ROOT . '/includes/locale.inc';
+    require_once BACKDROP_ROOT . '/includes/locale.inc';
     locale_add_language('fr', NULL, NULL, LANGUAGE_LTR, '', 'fr');
     backdrop_language_initialize();
-    variable_set('language_negotiation', LOCALE_LANGUAGE_NEGOTIATION_URL_PREFIX);
+    config_set('xmlsitemap.settings', 'language_negotiation', LOCALE_LANGUAGE_NEGOTIATION_URL_PREFIX);
 
     // Create the two different language-context sitemaps.
     db_query("DELETE FROM {xmlsitemap_sitemap}");
@@ -41,6 +41,9 @@ class XMLSitemapI18nWebTestCase extends XMLSitemapTestHelper {
 class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
 
   function testLanguageSelection() {
+    // @todo check config file name.
+    $config = config('i18n.settings');
+
     // Create our three different language nodes.
     $node = $this->addSitemapLink(array('type' => 'node', 'language' => LANGUAGE_NONE));
     $node_en = $this->addSitemapLink(array('type' => 'node', 'language' => 'en'));
@@ -51,14 +54,16 @@ class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
     $link_en = $this->addSitemapLink(array('language' => 'en'));
     $link_fr = $this->addSitemapLink(array('language' => 'fr'));
 
-    variable_set('i18n_selection_mode', 'off');
+    $config->set('i18n_selection_mode', 'off');
+    $config->save();
     $this->regenerateSitemap();
     $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node, $node_en, $node_fr, $link, $link_en, $link_fr);
     $this->backdropGetSitemap(array('language' => 'fr'));
     $this->assertRawSitemapLinks($node, $node_en, $node_fr, $link, $link_en, $link_fr);
 
-    variable_set('i18n_selection_mode', 'simple');
+    $config->set('i18n_selection_mode', 'simple');
+    $config->save();
     $this->regenerateSitemap();
     $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node, $node_en, $link, $link_en);
@@ -67,7 +72,8 @@ class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
     $this->assertRawSitemapLinks($node, $node_fr, $link, $link_fr);
     $this->assertNoRawSitemapLinks($node_en, $link_en);
 
-    variable_set('i18n_selection_mode', 'mixed');
+    $config->set('i18n_selection_mode', 'mixed');
+    $config->save();
     $this->regenerateSitemap();
     $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node, $node_en, $link, $link_en);
@@ -75,7 +81,8 @@ class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
     $this->backdropGetSitemap(array('language' => 'fr'));
     $this->assertRawSitemapLinks($node, $node_en, $node_fr, $link, $link_en, $link_fr);
 
-    variable_set('i18n_selection_mode', 'default');
+    $config->set('i18n_selection_mode', 'default');
+    $config->save();
     $this->regenerateSitemap();
     $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node, $node_en, $link, $link_en);
@@ -86,7 +93,8 @@ class XMLSitemapI18nTest extends XMLSitemapI18nWebTestCase {
 
     // With strict mode, the language neutral node should not be found, but the
     // language neutral non-node should be.
-    variable_set('i18n_selection_mode', 'strict');
+    $config->set('i18n_selection_mode', 'strict');
+    $config->save();
     $this->regenerateSitemap();
     $this->backdropGetSitemap(array('language' => 'en'));
     $this->assertRawSitemapLinks($node_en, $link, $link_en);
@@ -103,7 +111,8 @@ class XMLSitemapI18nNodeTest extends XMLSitemapI18nWebTestCase {
     $modules[] = 'xmlsitemap_node';
     parent::setUp($modules);
 
-    variable_set('language_content_type_page', 1);
+    // @todo check config file name.
+    config_set('i18n.settings', 'language_content_type_page', 1);
     $this->admin_user = $this->backdropCreateUser(array('administer nodes'));
     $this->backdropLogin($this->admin_user);
   }
