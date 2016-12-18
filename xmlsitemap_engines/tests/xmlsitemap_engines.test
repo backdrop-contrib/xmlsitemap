@@ -28,9 +28,10 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $config->set('engines_submit_last', REQUEST_TIME - 10000);
     $config->set('generated_last', REQUEST_TIME - 100);
     $config->set('engines_minimum_lifetime', 0);
+    $config->set('engines_submit_updated', FALSE);
     $config->save();
     xmlsitemap_engines_cron();
-    $this->assertTrue($config->get('xmlsitemap_engines_submit_last', 0) > (REQUEST_TIME - 100), 'Submitted the sitemaps to search engines.');
+    $this->assertTrue($config->get('engines_submit_last', 0) > (REQUEST_TIME - 100), 'Submitted the sitemaps to search engines. ' . $config->get('engines_submit_last', 0) . ' greater than ' . (REQUEST_TIME - 100));
   }
 
   function testPrepareURL() {
@@ -61,7 +62,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
   }
 
   function testPing() {
-    $edit = array('xmlsitemap_engines_engines[simpletest]' => TRUE);
+    $edit = array('engines[simpletest]' => TRUE);
     $this->backdropPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
@@ -71,13 +72,13 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
   }
 
   function testCustomURL() {
-    $edit = array('xmlsitemap_engines_custom_urls' => 'an-invalid-url');
+    $edit = array('engines_custom_urls' => 'an-invalid-url');
     $this->backdropPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText('Invalid URL an-invalid-url.');
     $this->assertNoText('The configuration options have been saved.');
 
     $url = url('ping', array('absolute' => TRUE));
-    $edit = array('xmlsitemap_engines_custom_urls' => $url);
+    $edit = array('engines_custom_urls' => $url);
     $this->backdropPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
@@ -86,7 +87,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $this->assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'No valid sitemap parameter provided.'));
     $this->assertWatchdogMessage(array('type' => 'page not found', 'message' => 'ping'));
 
-    $edit = array('xmlsitemap_engines_custom_urls' => $this->submit_url);
+    $edit = array('engines_custom_urls' => $this->submit_url);
     $this->backdropPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
