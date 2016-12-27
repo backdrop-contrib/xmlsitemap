@@ -1,8 +1,8 @@
-type = module
-name = XML sitemap internationalization
-description = Enables multilingual XML sitemaps.
-package = XML sitemap
-backdrop = 1.x
+;type = module
+;name = XML sitemap internationalization
+;description = Enables multilingual XML sitemaps.
+;package = XML sitemap
+;backdrop = 1.x
 
-dependencies[] = xmlsitemap
-dependencies[] = i18n
+;dependencies[] = xmlsitemap
+;dependencies[] = i18n
