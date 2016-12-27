@@ -686,19 +686,19 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
    * Test base URL functionality.
    */
   function testBaseURL() {
-    $edit = array('xmlsitemap_base_url' => '');
+    $edit = array('base_url' => '');
     $this->backdropPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
     $this->assertText(t('Default base URL field is required.'));
 
-    $edit = array('xmlsitemap_base_url' => 'invalid');
+    $edit = array('base_url' => 'invalid');
     $this->backdropPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
     $this->assertText(t('Invalid base URL.'));
 
-    $edit = array('xmlsitemap_base_url' => 'http://example.com/ ');
+    $edit = array('base_url' => 'http://example.com/ ');
     $this->backdropPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
     $this->assertText(t('Invalid base URL.'));
 
-    $edit = array('xmlsitemap_base_url' => 'http://example.com/');
+    $edit = array('base_url' => 'http://example.com/');
     $this->backdropPost('admin/config/search/xmlsitemap/settings', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'));
 
