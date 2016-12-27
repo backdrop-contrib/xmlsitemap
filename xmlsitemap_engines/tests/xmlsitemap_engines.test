@@ -31,7 +31,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $config->set('engines_submit_updated', FALSE);
     $config->save();
     xmlsitemap_engines_cron();
-    $this->assertTrue($config->get('engines_submit_last', 0) > (REQUEST_TIME - 100), 'Submitted the sitemaps to search engines. ' . $config->get('engines_submit_last', 0) . ' greater than ' . (REQUEST_TIME - 100));
+    $this->assertTrue($config->get('engines_submit_last', 0) > (REQUEST_TIME - 100), 'Submitted the sitemaps to search engines.');
   }
 
   function testPrepareURL() {
