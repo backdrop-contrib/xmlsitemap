@@ -3,7 +3,6 @@ description = Creates an XML sitemap conforming to the <a href="http://sitemaps.
 package = XML sitemap
 type = module
 backdrop = 1.x
-core = 7.x
 
 configure = admin/config/search/xmlsitemap
 
