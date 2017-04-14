@@ -3,7 +3,7 @@
 
 Backdrop.behaviors.xmlsitemapFieldsetSummaries = {
   attach: function (context) {
-    $('fieldset#edit-xmlsitemap', context).drupalSetSummary(function (context) {
+    $('fieldset#edit-xmlsitemap', context).backdropSetSummary(function (context) {
       var vals = [];
 
       // Inclusion select field.
