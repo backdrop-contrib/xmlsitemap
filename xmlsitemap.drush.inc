@@ -8,7 +8,7 @@
 
 /**
  * Implements hook_drush_command().
- */
+
 function xmlsitemap_drush_command() {
   $items['xmlsitemap-regenerate'] = array(
     'description' => 'Regenerate the XML sitemap files.',
@@ -36,6 +36,7 @@ function xmlsitemap_drush_command() {
   );
   return $items;
 }
+*/
 
 /**
  * Regenerate the sitemap files from existing data.
