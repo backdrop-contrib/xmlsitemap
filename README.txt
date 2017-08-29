@@ -1,40 +1,53 @@
-
 CONTENTS OF THIS FILE
 ---------------------
 
  * Introduction
- * Installing
+ * Requirements
+ * Installation
+ * Configuration
  * Uninstalling
  * Frequently Asked Questions (FAQ)
  * Known Issues
  * More Information
  * How Can You Contribute?
+ * Maintainers
 
 
 INTRODUCTION
 ------------
 
-Current Maintainer: Dave Reid <http://drupal.org/user/53892>
-Co-maintainer: Kiam <http://drupal.org/user/55077>
-Co-maintainer: Earnie <http://drupal.org/user/86710>
-Co-maintainer: Darren Oh <http://drupal.org/user/30772>
-Original Author: Matthew Loar <http://drupal.org/user/24879>
-
 XML Sitemap automatically creates a sitemap that conforms to the sitemaps.org
 specification. This helps search engines keep their search results up to date.
 
 
-INSTALLING
-----------
+REQUIREMENTS
+------------
 
-See http://drupal.org/getting-started/install-contrib for instructions on
-how to install or update Drupal modules.
+No special requirements
+
+
+INSTALLATION
+------------
+
+Install as you would normally install a contributed Drupal module. See:
+https://drupal.org/documentation/install/modules-themes/modules-7 for further
+information.
 
 Once XML Sitemap is installed and enabled, you can adjust the settings for your
 site's sitemap at admin/config/search/xmlsitemap. Your can view your site's
 sitemap at http://yoursite.com/sitemap.xml.
 
-It is highly recommended that you have clean URLs enabled for this module.
+It is highly recommended that you have clean URLs enabled for this project.
+
+
+CONFIGURATION
+-------------
+
+ * Configure your XML sitemap in:
+   Configuration » Search and metadata »XML sitemap
+
+   - Check your XML site
+   - Click in Update for update the XML values.
 
 
 UNINSTALLING
@@ -84,3 +97,15 @@ HOW CAN YOU CONTRIBUTE?
 
 - Help keep development active by dontating to the developer.
   http://davereid.chipin.com/
+
+
+MAINTAINERS
+-----------
+
+Current maintainers:
+ * Current Maintainer: Dave Reid <http://drupal.org/user/53892>
+ * Co-maintainer: Renato Gonçalves (RenatoG) <http://drupal.org/user/3326031>
+ * Co-maintainer: Kiam <http://drupal.org/user/55077>
+ * Co-maintainer: Earnie <http://drupal.org/user/86710>
+ * Co-maintainer: Darren Oh <http://drupal.org/user/30772>
+ * Original Author: Matthew Loar <http://drupal.org/user/24879>
