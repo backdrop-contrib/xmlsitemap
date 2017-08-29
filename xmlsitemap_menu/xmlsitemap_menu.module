@@ -54,6 +54,9 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
         'process callback' => 'xmlsitemap_menu_xmlsitemap_process_menu_links',
       ),
     );
+    if (!isset($info['menu_link']['bundle label'])) {
+      $info['menu_link']['bundle label'] = t('Menu');
+    }
   }
 }
 
