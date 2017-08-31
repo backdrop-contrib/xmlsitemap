@@ -1339,6 +1339,9 @@ function xmlsitemap_process_form_link_options($form, &$form_state) {
   $link = &$form_state['values']['xmlsitemap'];
   $fields = array('status' => XMLSITEMAP_STATUS_DEFAULT, 'priority' => XMLSITEMAP_PRIORITY_DEFAULT);
 
+  if (empty($link)) {
+    return;
+  }
   foreach ($fields as $field => $default) {
     if ($link[$field] === 'default') {
       $link[$field] = isset($link[$field . '_default']) ? $link[$field . '_default'] : $default;
