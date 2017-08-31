@@ -11,6 +11,8 @@
  * Implements hook_drush_command().
  */
 function xmlsitemap_drush_command() {
+  drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES);
+
   $items['xmlsitemap-regenerate'] = array(
     'description' => 'Regenerate the XML sitemap files.',
     'callback' => 'drush_xmlsitemap_regenerate',
