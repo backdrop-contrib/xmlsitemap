@@ -74,14 +74,15 @@ function xmlsitemap_output_file($file, array $headers = array()) {
   $if_none_match = isset($_SERVER['HTTP_IF_NONE_MATCH']) ? stripslashes($_SERVER['HTTP_IF_NONE_MATCH']) : FALSE;
   if ($if_modified_since && $if_none_match && $if_none_match == $etag && $if_modified_since == $last_modified) {
     header('HTTP/1.1 304 Not Modified');
-    // All 304 responses must send an etag if the 200 response for the same object contained an etag
+    // All 304 responses must send an etag if the 200 response for the same
+    // object contained an etag.
     header('Etag: ' . $etag);
     exit;
   }
 
   $headers += array(
     'Content-type' => 'text/xml; charset=utf-8',
-    //'Content-length' => filesize($file),
+    // 'Content-length' => filesize($file),
     'Last-modified' => $last_modified,
     'Etag' => $etag,
     'Expires' => gmdate(DATE_RFC1123, $mtime + variable_get('xmlsitemap_minimum_lifetime', 0)),
@@ -115,7 +116,7 @@ function xmlsitemap_file_transfer($uri, $headers) {
   // Transfer file in 16 KB chunks to save memory usage.
   if ($scheme && file_stream_wrapper_valid_scheme($scheme) && $fd = fopen($uri, 'rb')) {
     while (!feof($fd)) {
-      print fread($fd, 1024*16);
+      print fread($fd, 1024 * 16);
     }
     fclose($fd);
   }

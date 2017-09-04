@@ -129,8 +129,9 @@ function xmlsitemap_node_form_node_type_form_alter(array &$form, array $form_sta
 }
 
 /**
- * @codingStandardsIgnoreLine
  * Implements hook_form_alter().
+ *
+ * @codingStandardsIgnoreLine
  *
  * Add the XML sitemap individual link options for a node.
  *

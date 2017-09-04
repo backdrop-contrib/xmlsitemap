@@ -214,8 +214,8 @@ function xmlsitemap_schema() {
         'type' => 'float',
         'default' => NULL,
         // @todo Convert this field to non-nullable.
-        //'default' => 0.5,
-        //'not null' => NULL,
+        // 'default' => 0.5,
+        // 'not null' => NULL,
       ),
       'priority_override' => array(
         'description' => 'A boolean that if TRUE means that the priority field has been overridden from its default value.',
@@ -286,13 +286,13 @@ function xmlsitemap_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      //'queued' => array(
+      // 'queued' => array(
       //  'type' => 'int',
       //  'unsigned' => TRUE,
       //  'not null' => TRUE,
       //  'default' => 0,
       //  'description' => 'Time when this sitemap was queued for regeneration, 0 if not queued.',
-      //),
+      // ),.
     ),
     'primary key' => array('smid'),
   );
@@ -554,6 +554,9 @@ function xmlsitemap_update_7203() {
   _xmlsitemap_sitemap_rehash_all();
 }
 
+/**
+ *
+ */
 function _xmlsitemap_sitemap_rehash_all() {
   // Reload the schema cache and reprocess all sitemap hashes into smids.
   drupal_load('module', 'xmlsitemap');

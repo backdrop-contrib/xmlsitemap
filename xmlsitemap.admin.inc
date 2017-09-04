@@ -35,8 +35,8 @@ function xmlsitemap_sitemap_list_form() {
   $form['operations']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Update'),
-    //'#validate' => array('xmlsitemap_sitemap_list_form_validate'),
-    //'#submit' => array('xmlsitemap_sitemap_list_form_submit'),
+    // '#validate' => array('xmlsitemap_sitemap_list_form_validate'),
+    // '#submit' => array('xmlsitemap_sitemap_list_form_submit'),.
   );
 
   $contexts = xmlsitemap_get_context_info();
@@ -82,8 +82,7 @@ function xmlsitemap_sitemap_list_form() {
     $options[$smid]['chunks'] = $sitemap->updated ? $sitemap->chunks : '-';
 
     // @todo Highlight sitemaps that need updating.
-    //$options[$smid]['#attributes']['class'][] = 'warning';
-
+    // $options[$smid]['#attributes']['class'][] = 'warning';
     $operations = array();
     $operations['edit'] = xmlsitemap_get_operation_link('admin/config/search/xmlsitemap/edit/' . $smid, array('title' => t('Edit'), 'modal' => TRUE));
     $operations['delete'] = xmlsitemap_get_operation_link('admin/config/search/xmlsitemap/delete/' . $smid, array('title' => t('Delete'), 'modal' => TRUE));
@@ -151,12 +150,15 @@ function xmlsitemap_sitemap_list_form_submit($form, &$form_state) {
     call_user_func_array($function, $args);
 
     $count = count($form_state['values']['sitemaps']);
-    //watchdog('xmlsitemap', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count));
+    // watchdog('xmlsitemap', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count));.
     drupal_set_message(format_plural(count($sitemaps), '@action @count XML sitemap.', '@action @count XML sitemaps.', array('@action' => $operation['action past'], '@count' => $count)));
-    //$form_state['redirect'] = 'admin/config/search/xmlsitemap';
+    // $form_state['redirect'] = 'admin/config/search/xmlsitemap';.
   }
 }
 
+/**
+ *
+ */
 function xmlsitemap_sitemap_edit_form(array $form, array &$form_state, stdClass $sitemap = NULL) {
   _xmlsitemap_set_breadcrumb();
 
@@ -196,6 +198,9 @@ function xmlsitemap_sitemap_edit_form(array $form, array &$form_state, stdClass 
   return $form;
 }
 
+/**
+ *
+ */
 function xmlsitemap_sitemap_edit_form_pre_render($form) {
   $visible_children = element_get_visible_children($form['context']);
   if (empty($visible_children)) {
@@ -207,6 +212,9 @@ function xmlsitemap_sitemap_edit_form_pre_render($form) {
   return $form;
 }
 
+/**
+ *
+ */
 function xmlsitemap_sitemap_edit_form_validate($form, &$form_state) {
   // If there are no context options, the $form_state['values']['context']
   // disappears.
@@ -217,6 +225,9 @@ function xmlsitemap_sitemap_edit_form_validate($form, &$form_state) {
   }
 }
 
+/**
+ *
+ */
 function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   form_state_values_clean($form_state);
   $sitemap = (object) $form_state['values'];
@@ -225,6 +236,9 @@ function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
   $form_state['redirect'] = 'admin/config/search/xmlsitemap';
 }
 
+/**
+ *
+ */
 function xmlsitemap_sitemap_delete_form(array $form, array &$form_state, stdClass $sitemap) {
   _xmlsitemap_set_breadcrumb();
 
@@ -248,6 +262,9 @@ function xmlsitemap_sitemap_delete_form(array $form, array &$form_state, stdClas
   );
 }
 
+/**
+ *
+ */
 function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
   xmlsitemap_sitemap_delete($form_state['values']['smid']);
   drupal_set_message(t('The sitemap has been deleted.'));
@@ -288,12 +305,12 @@ function xmlsitemap_settings_form($form, &$form_state) {
     '#collapsed' => !variable_get('xmlsitemap_developer_mode', 0),
     '#weight' => 10,
   );
-  //$form['advanced']['xmlsitemap_gz'] = array(
+  // $form['advanced']['xmlsitemap_gz'] = array(
   //  '#type' => 'checkbox',
   //  '#title' => t('Generate additional compressed sitemaps using gzip.'),
   //  '#default_value' => xmlsitemap_var('gz'),
   //  '#disabled' => !function_exists('gzencode'),
-  //);
+  // );.
   $form['advanced']['xmlsitemap_chunk_size'] = array(
     '#type' => 'select',
     '#title' => t('Number of links in each sitemap page'),
@@ -425,7 +442,7 @@ function xmlsitemap_settings_form_validate($form, &$form_state) {
 }
 
 /**
- * Submit handler;
+ * Submit handler;.
  *
  * @see xmlsitemap_settings_form()
  */
@@ -571,7 +588,7 @@ function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info)
 function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $entity, $bundle) {
   $entity_info = xmlsitemap_get_link_info($entity);
 
-  //if (!isset($bundle) && isset($entity_info['bundle keys']['bundle'])) {
+  // If (!isset($bundle) && isset($entity_info['bundle keys']['bundle'])) {
   //  $bundle_key = $entity_info['bundle keys']['bundle'];
   //  if (isset($form[$bundle_key]['#value'])) {
   //    $bundle = $form[$bundle_key]['#value'];
@@ -579,8 +596,7 @@ function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $
   //  elseif (isset($form[$bundle_key]['#default_value'])) {
   //    $bundle = $form[$bundle_key]['#default_value'];
   //  }
-  //}
-
+  // }.
   $bundle_info = xmlsitemap_link_bundle_load($entity, $bundle);
 
   $form['xmlsitemap'] = array(
@@ -641,6 +657,9 @@ function xmlsitemap_add_link_bundle_settings(array &$form, array &$form_state, $
   }
 }
 
+/**
+ *
+ */
 function xmlsitemap_link_bundle_settings_form(array $form, array &$form_state, array $bundle) {
   if (empty($form_state['ajax']) && $admin_path = xmlsitemap_get_bundle_path($bundle['entity'], $bundle['bundle'])) {
     // If this is a non-ajax form, redirect to the bundle administration page.
@@ -649,7 +668,7 @@ function xmlsitemap_link_bundle_settings_form(array $form, array &$form_state, a
     drupal_goto($admin_path, array('query' => $destination));
   }
   else {
-    drupal_set_title( t('@bundle XML sitemap settings', array('@bundle' => $bundle['info']['label'])));
+    drupal_set_title(t('@bundle XML sitemap settings', array('@bundle' => $bundle['info']['label'])));
   }
 
   $form = array();
@@ -756,7 +775,7 @@ function xmlsitemap_add_form_link_options(array &$form, $entity, $bundle, $id) {
     '#value' => $link['status_override'],
   );
 
-  // Priority field
+  // Priority field.
   $form['xmlsitemap']['priority'] = array(
     '#type' => 'select',
     '#title' => t('Priority'),
@@ -786,19 +805,18 @@ function xmlsitemap_add_form_link_options(array &$form, $entity, $bundle, $id) {
   );
 
   // Other persistent fields.
-  //$form['xmlsitemap']['lastmod'] = array(
+  // $form['xmlsitemap']['lastmod'] = array(
   //  '#type' => 'value',
   //  '#value' => $node->xmlsitemap['lastmod'],
-  //);
-  //$form['xmlsitemap']['changefreq'] = array(
+  // );
+  // $form['xmlsitemap']['changefreq'] = array(
   //  '#type' => 'value',
   //  '#value' => $node->xmlsitemap['changefreq'],
-  //);
-  //$form['xmlsitemap']['changecount'] = array(
+  // );
+  // $form['xmlsitemap']['changecount'] = array(
   //  '#type' => 'value',
   //  '#value' => $node->xmlsitemap['changecount'],
-  //);
-
+  // );
   // Add the submit handler to adjust the default values if selected.
   $form += array('#submit' => array());
   if (!in_array('xmlsitemap_process_form_link_options', $form['#submit'])) {
@@ -813,6 +831,7 @@ function xmlsitemap_add_form_link_options(array &$form, $entity, $bundle, $id) {
  *   Include a 'default' option.
  * @param $guides
  *   Add helpful indicators for the highest, middle and lowest values.
+ *
  * @return
  *   An array of options.
  */
@@ -854,6 +873,7 @@ function xmlsitemap_get_priority_options($default = NULL, $guides = TRUE) {
  *
  * @param $default
  *   Include a 'default' option.
+ *
  * @return
  *   An array of options.
  *

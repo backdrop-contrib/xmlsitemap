@@ -70,13 +70,16 @@ function _xmlsitemap_regenerate_before() {
 
   if (variable_get('xmlsitemap_developer_mode', 0)) {
     watchdog('xmlsitemap', 'Starting XML sitemap generation. Memory usage: @memory-peak.', array(
-        '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
-      ),
+      '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
+    ),
       WATCHDOG_DEBUG
     );
   }
 }
 
+/**
+ *
+ */
 function _xmlsitemap_get_memory_usage($start = FALSE) {
   static $memory_start;
   $current = memory_get_peak_usage(TRUE);
@@ -153,6 +156,9 @@ function xmlsitemap_generate_page(stdClass $sitemap, $page) {
   return $writer->getSitemapElementCount();
 }
 
+/**
+ *
+ */
 function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, $chunk) {
   $output_elements = drupal_map_assoc(variable_get('xmlsitemap_output_elements', array('lastmod', 'changefreq', 'priority')));
   $lastmod_format = variable_get('xmlsitemap_lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
@@ -260,8 +266,7 @@ function xmlsitemap_generate_index(stdClass $sitemap) {
   return $writer->getSitemapElementCount();
 }
 
-// BATCH OPERATIONS ------------------------------------------------------------
-
+// BATCH OPERATIONS ------------------------------------------------------------.
 /**
  * Batch information callback for regenerating the sitemap files.
  *
@@ -269,15 +274,16 @@ function xmlsitemap_generate_index(stdClass $sitemap) {
  *   An optional array of XML sitemap IDs. If not provided, it will load all
  *   existing XML sitemaps.
  */
+
 function xmlsitemap_regenerate_batch(array $smids = array()) {
   if (empty($smids)) {
     $smids = db_query("SELECT smid FROM {xmlsitemap_sitemap}")->fetchCol();
   }
 
-  //$t = get_t();
+  // $t = get_t();
   $batch = array(
     'operations' => array(),
-    //'error_message' => $t('An error has occurred.'),
+    // 'error_message' => $t('An error has occurred.'),.
     'finished' => 'xmlsitemap_regenerate_batch_finished',
     'title' => t('Regenerating Sitemap'),
     'file' => drupal_get_path('module', 'xmlsitemap') . '/xmlsitemap.generate.inc',
@@ -361,7 +367,7 @@ function xmlsitemap_regenerate_batch_generate_index($smid, array &$context) {
 function xmlsitemap_regenerate_batch_finished($success, $results, $operations, $elapsed) {
   if ($success && !variable_get('xmlsitemap_regenerate_needed', FALSE)) {
     variable_set('xmlsitemap_generated_last', REQUEST_TIME);
-    //drupal_set_message(t('The sitemaps were regenerated.'));
+    // drupal_set_message(t('The sitemaps were regenerated.'));
     // Show a watchdog message that the sitemap was regenerated.
     watchdog('xmlsitemap',
       'Finished XML sitemap generation in @elapsed. Memory usage: @memory-peak.',
@@ -468,7 +474,8 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
   // PostgreSQL cannot have the ORDERED BY in the count query.
   $query->entityOrderBy('entity_id');
 
-  $limit = 20; //variable_get('xmlsitemap_batch_limit', 100)
+  // variable_get('xmlsitemap_batch_limit', 100)
+  $limit = 20;
   $query->range(0, $limit);
 
   $result = $query->execute();
@@ -499,6 +506,9 @@ function xmlsitemap_rebuild_batch_finished($success, $results, $operations, $ela
   }
 }
 
+/**
+ *
+ */
 function xmlsitemap_get_rebuildable_link_types() {
   $rebuild_types = array();
   $entities = xmlsitemap_get_link_info();

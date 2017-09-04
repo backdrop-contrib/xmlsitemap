@@ -24,9 +24,9 @@ function hook_xmlsitemap_link_info() {
       'label' => 'My module',
       'base table' => 'mymodule',
       'entity keys' => array(
-        // Primary ID key on {base table}
+        // Primary ID key on {base table}.
         'id' => 'myid',
-        // Subtype key on {base table}
+        // Subtype key on {base table}.
         'bundle' => 'mysubtype',
       ),
       'path callback' => 'mymodule_path',
@@ -52,7 +52,7 @@ function hook_xmlsitemap_link_info() {
         'rebuild callback' => '',
         // Callback function called from the XML sitemap settings page.
         'settings callback' => '',
-      )
+      ),
     ),
   );
 }
@@ -136,7 +136,7 @@ function hook_xmlsitemap_index_links($limit) {
 /**
  * Provide information about contexts available to XML sitemap.
  *
- * @see hook_xmlsitemap_context_info_alter().
+ * @see hook_xmlsitemap_context_info_alter()
  */
 function hook_xmlsitemap_context_info() {
   $info['vocabulary'] = array(
@@ -150,7 +150,7 @@ function hook_xmlsitemap_context_info() {
 /**
  * Alter XML sitemap context info.
  *
- * @see hook_xmlsitemap_context_info().
+ * @see hook_xmlsitemap_context_info()
  */
 function hook_xmlsitemap_context_info_alter(&$info) {
   $info['vocabulary']['label'] = t('Site vocabularies');
