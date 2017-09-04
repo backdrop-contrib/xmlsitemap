@@ -4,6 +4,4 @@ package = XML sitemap
 core = 7.x
 dependencies[] = xmlsitemap
 dependencies[] = taxonomy
-files[] = xmlsitemap_taxonomy.module
-files[] = xmlsitemap_taxonomy.install
 files[] = xmlsitemap_taxonomy.test
