@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Main file for XML sitemap menu.
+ */
+
+/**
  * Implements hook_entity_info_alter().
  *
  * Adds support for the menu link entity if it doesn't already exist.
@@ -90,7 +95,7 @@ function xmlsitemap_menu_xmlsitemap_index_links($limit) {
 /**
  * Process menu sitemap links.
  *
- * @param $mlids
+ * @param array $mlids
  *   An array of menu link IDs.
  */
 function xmlsitemap_menu_xmlsitemap_process_menu_links(array $mlids, array $xmlsitemap = array()) {
@@ -125,19 +130,23 @@ function xmlsitemap_menu_form_menu_edit_menu_alter(&$form, $form_state) {
   xmlsitemap_add_link_bundle_settings($form, $form_state, 'menu_link', $menu);
 }
 
-//function xmlsitemap_menu_form_menu_overview_form_alter(&$form, $form_state) {
-//  $form['#submit'][] = 'xmlsitemap_menu_menu_overview_form_submit';
-//}
-//
-//function xmlsitemap_menu_menu_overview_form_submit($form, $form_state) {
-//  $mlids = array();
-//  foreach (element_children($form) as $mlid) {
-//    if (isset($form[$mlid]['#item'])) {
-//      $mlids[] = $form[$mlid]['#item']['mlid'];
-//    }
-//  }
-//  xmlsitemap_menu_xmlsitemap_process_menu_links($mlids);
-//}
+/**
+ * Example functions.
+ *
+ * Function xmlsitemap_menu_form_menu_overview_form_alter(&$form, $form_state) {
+ *  $form['#submit'][] = 'xmlsitemap_menu_menu_overview_form_submit';
+ * }
+ *
+ * Function xmlsitemap_menu_menu_overview_form_submit($form, $form_state) {
+ *  $mlids = array();
+ *  foreach (element_children($form) as $mlid) {
+ *    if (isset($form[$mlid]['#item'])) {
+ *      $mlids[] = $form[$mlid]['#item']['mlid'];
+ *    }
+ *  }
+ *  xmlsitemap_menu_xmlsitemap_process_menu_links($mlids);
+ * }
+ */
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -205,8 +214,9 @@ function xmlsitemap_menu_menu_link_insert(array $link) {
  * @see hook_menu_link_alter()
  */
 function xmlsitemap_menu_menu_link_update(array $link) {
-  //$link += array('xmlsitemap' => array());
-  //xmlsitemap_menu_xmlsitemap_process_menu_links(array($link['mlid']), $link['xmlsitemap']);
+  // $link += array('xmlsitemap' => array());
+  // @codingStandardsIgnoreLine
+  // xmlsitemap_menu_xmlsitemap_process_menu_links(array($link['mlid']), $link['xmlsitemap']);.
 }
 
 /**
@@ -235,7 +245,7 @@ function xmlsitemap_menu_menu_link_delete(array $link) {
 /**
  * Create a sitemap link from a menu item.
  *
- * @param $menu_item
+ * @param array $menu_item
  *   A loaded menu item.
  */
 function xmlsitemap_menu_create_link(array $menu_item) {
