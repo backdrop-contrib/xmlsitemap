@@ -119,6 +119,8 @@ function xmlsitemap_file_transfer($uri, $headers) {
       print fread($fd, 1024 * 16);
     }
     fclose($fd);
+    // Disable session manipulation if PHP transfered a file.
+    drupal_save_session(FALSE);
   }
   else {
     drupal_not_found();
