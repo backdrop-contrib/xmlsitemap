@@ -164,7 +164,11 @@ function drush_xmlsitemap_queue_rebuild() {
   }
 
   if ($link_count) {
-    drush_log(dt('Queued @link_count links for rebuild processing in the xmlsitemap_link_process (in @chunk_count chunks of up to @chunk_size links each).', array('@link_count' => $link_count, '@chunk_count' => $chunk_count, '@chunk_size' => $chunk_size)), 'success');
+    drush_log(dt('Queued @link_count links for rebuild processing in the xmlsitemap_link_process (in @chunk_count chunks of up to @chunk_size links each).', array(
+      '@link_count' => $link_count,
+      '@chunk_count' => $chunk_count,
+      '@chunk_size' => $chunk_size,
+    )), 'success');
   }
   else {
     drush_log(dt('No links to queue for rebuild processing.'), 'ok');

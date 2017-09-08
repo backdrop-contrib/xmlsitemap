@@ -62,7 +62,11 @@ function xmlsitemap_requirements($phase) {
       if (!empty($directories)) {
         $requirements['xmlsitemap_directory']['value'] = $t('Not found or not writable');
         $requirements['xmlsitemap_directory']['severity'] = REQUIREMENT_ERROR;
-        $requirements['xmlsitemap_directory']['description'] = $t('The following directories were not found or are not writable by the server. See <a href="@docpage">@docpage</a> for more information. !directories', array('!directories' => theme('item_list', array('items' => array_keys($directories))), '@docpage' => 'http://drupal.org/node/34025'));
+        $requirements['xmlsitemap_directory']['description'] = $t('The following directories were not found or are not writable by the server. See <a href="@docpage">@docpage</a> for more information. !directories', array(
+          '!directories' => theme('item_list', array(
+            'items' => array_keys($directories),
+          )), '@docpage' => 'http://drupal.org/node/34025',
+        ));
       }
     }
 
@@ -111,7 +115,10 @@ function xmlsitemap_requirements($phase) {
     $generated_ago = REQUEST_TIME - $generated_last;
     $requirements['xmlsitemap_generated'] = array(
       'title' => $t('XML sitemap'),
-      'value' => $generated_last ? $t('Last attempted generation on !date (!interval ago).', array('!date' => format_date($generated_last, 'small'), '!interval' => format_interval($generated_ago))) : $t('Cached files have not been generated yet.'),
+      'value' => $generated_last ? $t('Last attempted generation on !date (!interval ago).', array(
+        '!date' => format_date($generated_last, 'small'),
+        '!interval' => format_interval($generated_ago),
+      )) : $t('Cached files have not been generated yet.'),
       'severity' => REQUIREMENT_OK,
     );
     if (variable_get('xmlsitemap_rebuild_needed', FALSE) && _xmlsitemap_rebuild_form_access()) {
@@ -286,6 +293,7 @@ function xmlsitemap_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      // @codingStandardsIgnoreStart
       // 'queued' => array(
       //  'type' => 'int',
       //  'unsigned' => TRUE,
@@ -293,6 +301,7 @@ function xmlsitemap_schema() {
       //  'default' => 0,
       //  'description' => 'Time when this sitemap was queued for regeneration, 0 if not queued.',
       // ),.
+      // @codingStandardsIgnoreEnd
     ),
     'primary key' => array('smid'),
   );
@@ -463,6 +472,8 @@ function xmlsitemap_update_6202() {
 }
 
 /**
+ * Implements hook_update_N().
+ *
  * Convert the xmlsitemap_max_filesize variable to a max_filesize column
  * per-sitemap.
  */
@@ -539,6 +550,8 @@ function xmlsitemap_update_7201() {
 }
 
 /**
+ * Implements hook_update_N().
+ *
  * Convert the xmlsitemap_max_filesize variable to a max_filesize column
  * per-sitemap.
  */
@@ -555,7 +568,7 @@ function xmlsitemap_update_7203() {
 }
 
 /**
- *
+ * Rehash all.
  */
 function _xmlsitemap_sitemap_rehash_all() {
   // Reload the schema cache and reprocess all sitemap hashes into smids.

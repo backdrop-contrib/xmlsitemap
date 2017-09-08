@@ -74,7 +74,7 @@ function hook_xmlsitemap_link_alter(array &$link, array $context) {
 /**
  * Inform modules that an XML sitemap link has been created.
  *
- * @param $link
+ * @param array $link
  *   Associative array defining an XML sitemap link as passed into
  *   xmlsitemap_link_save().
  * @param array $context
@@ -95,7 +95,7 @@ function hook_xmlsitemap_link_insert(array $link, array $context) {
 /**
  * Inform modules that an XML sitemap link has been updated.
  *
- * @param $link
+ * @param array $link
  *   Associative array defining an XML sitemap link as passed into
  *   xmlsitemap_link_save().
  * @param array $context
@@ -230,6 +230,8 @@ function hook_xmlsitemap_element_alter(array &$element, array $link, $sitemap) {
  * Alter the attributes used for the root element of the XML sitemap.
  *
  * For example add an xmlns:video attribute:
+ *
+ * @codingStandardsIgnoreStart
  * <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
  *
  * @param array $attributes
@@ -239,13 +241,14 @@ function hook_xmlsitemap_element_alter(array &$element, array $link, $sitemap) {
  *   The sitemap that is currently being generated.
  */
 function hook_xmlsitemap_root_attributes_alter(&$attributes, $sitemap) {
+  // @codingStandardsIgnoreEnd
   $attributes['xmlns:video'] = 'http://www.google.com/schemas/sitemap-video/1.1';
 }
 
 /**
  * Alter the query selecting data from {xmlsitemap} during sitemap generation.
  *
- * @param $query
+ * @param QueryAlterableInterface $query
  *   A Query object describing the composite parts of a SQL query.
  *
  * @see hook_query_TAG_alter()
@@ -277,7 +280,7 @@ function hook_xmlsitemap_sitemap_operations() {
  * This hook is invoked from xmlsitemap_sitemap_delete_multiple() after the XML
  * sitemap has been removed from the table in the database.
  *
- * @param $sitemap
+ * @param object $sitemap
  *   The XML sitemap object that was deleted.
  */
 function hook_xmlsitemap_sitemap_delete(stdClass $sitemap) {
