@@ -232,7 +232,7 @@ function hook_xmlsitemap_element_alter(array &$element, array $link, $sitemap) {
  * For example add an xmlns:video attribute:
  *
  * @codingStandardsIgnoreStart
- * <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+ * <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="https://www.google.com/schemas/sitemap-video/1.1">
  *
  * @param array $attributes
  *   An associative array of attributes to use in the root element of an XML
@@ -242,7 +242,7 @@ function hook_xmlsitemap_element_alter(array &$element, array $link, $sitemap) {
  */
 function hook_xmlsitemap_root_attributes_alter(&$attributes, $sitemap) {
   // @codingStandardsIgnoreEnd
-  $attributes['xmlns:video'] = 'http://www.google.com/schemas/sitemap-video/1.1';
+  $attributes['xmlns:video'] = 'https://www.google.com/schemas/sitemap-video/1.1';
 }
 
 /**
