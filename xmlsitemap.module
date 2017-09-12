@@ -131,7 +131,11 @@ function xmlsitemap_help($path, $arg) {
  */
 function xmlsitemap_permission() {
   $permissions['administer xmlsitemap'] = array(
-    'title' => t('Administer XML sitemap settings.'),
+    'title' => t('Administer XML sitemap settings'),
+  );
+  $permissions['use xmlsitemap'] = array(
+    'title' => t('Use XML sitemap'),
+    'description' => t('Users can change individually the default XML Sitemap settings.'),
   );
   return $permissions;
 }
