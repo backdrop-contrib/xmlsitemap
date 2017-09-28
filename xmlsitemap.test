@@ -524,7 +524,8 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $this->assertEqual(xmlsitemap_get_link_count(), 0);
 
     // Delete all links. The chunk count should be 1 not 0.
-    db_query("DELETE FROM {xmlsitemap}");
+    db_delete('xmlsitemap')->execute();
+
     $this->assertEqual(db_query("SELECT COUNT(id) FROM {xmlsitemap}")->fetchField(), 0);
     $this->assertEqual(xmlsitemap_get_chunk_count(TRUE), 1);
   }

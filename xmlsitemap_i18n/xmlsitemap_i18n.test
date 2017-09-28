@@ -39,7 +39,7 @@ class XMLSitemapI18nWebTestCase extends XMLSitemapTestHelper {
     variable_set('language_negotiation', LOCALE_LANGUAGE_NEGOTIATION_URL_PREFIX);
 
     // Create the two different language-context sitemaps.
-    db_query("DELETE FROM {xmlsitemap_sitemap}");
+    db_delete('xmlsitemap_sitemap')->execute();
 
     $sitemap = new stdClass();
     $sitemap->context = array('language' => 'en');
