@@ -385,7 +385,7 @@ class XMLSitemapTestHelper extends DrupalWebTestCase {
    * Format a watchdog message in a one-line summary.
    *
    * @param object $message
-   *   A watchdog messsage object.
+   *   A watchdog message object.
    *
    * @return string
    *   A string containing the watchdog message's timestamp, severity, type,
