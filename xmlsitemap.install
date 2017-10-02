@@ -50,7 +50,7 @@ function xmlsitemap_requirements($phase) {
     if (!xmlsitemap_check_directory()) {
       $requirements['xmlsitemap_directory']['value'] = $t('Not found or not writable');
       $requirements['xmlsitemap_directory']['severity'] = REQUIREMENT_ERROR;
-      $requirements['xmlsitemap_directory']['description'] = $t('The directory %directory was not found or is not writable by the server. See <a href="@docpage">@docpage</a> for more information.', array('%directory' => xmlsitemap_get_directory(), '@docpage' => 'http://drupal.org/node/34025'));
+      $requirements['xmlsitemap_directory']['description'] = $t('The directory %directory was not found or is not writable by the server. See <a href="@docpage">@docpage</a> for more information.', array('%directory' => xmlsitemap_get_directory(), '@docpage' => 'http://drupal.org/node/244924'));
     }
     else {
       $directories = xmlsitemap_check_all_directories();
@@ -65,7 +65,7 @@ function xmlsitemap_requirements($phase) {
         $requirements['xmlsitemap_directory']['description'] = $t('The following directories were not found or are not writable by the server. See <a href="@docpage">@docpage</a> for more information. !directories', array(
           '!directories' => theme('item_list', array(
             'items' => array_keys($directories),
-          )), '@docpage' => 'http://drupal.org/node/34025',
+          )), '@docpage' => 'http://drupal.org/node/244924',
         ));
       }
     }
