@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 
-<!-- Copyright (c) 2010  Dave Reid <http://drupal.org/user/53892>
+<!-- Copyright (c) 2010  Dave Reid <https://www.drupal.org/user/53892>
 
      This file is free software: you may copy, redistribute and/or modify it
      under the terms of the GNU General Public License as published by the

@@ -226,7 +226,7 @@ function xmlsitemap_menu_menu_link_update(array $link) {
  * hook is not always called if the user does not edit the core menu item
  * fields.
  *
- * @see http://drupal.org/node/1013856
+ * @see https://www.drupal.org/node/1013856
  */
 function xmlsitemap_menu_menu_link_alter(array &$link) {
   if (!empty($link['mlid'])) {

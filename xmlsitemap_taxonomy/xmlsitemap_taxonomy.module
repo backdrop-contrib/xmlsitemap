@@ -246,7 +246,7 @@ function xmlsitemap_taxonomy_get_node_count(stdClass $term) {
 /**
  * Implements hook_entity_query_alter().
  *
- * @todo Remove when http://drupal.org/node/1054162 is fixed.
+ * @todo Remove when https://www.drupal.org/node/1054162 is fixed.
  */
 function xmlsitemap_taxonomy_entity_query_alter($query) {
   $conditions = &$query->entityConditions;

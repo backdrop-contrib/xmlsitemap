@@ -185,7 +185,7 @@ function xmlsitemap_custom_edit_link_form_submit($form, &$form_state) {
  * Delete Link Form.
  */
 function xmlsitemap_custom_delete_link_form($form, &$form_state, array $link) {
-  // @todo Remove when http://drupal.org/node/576290 is fixed.
+  // @todo Remove when https://www.drupal.org/node/576290 is fixed.
   _xmlsitemap_set_breadcrumb('admin/config/search/xmlsitemap/custom');
 
   $form['#link'] = $link;
