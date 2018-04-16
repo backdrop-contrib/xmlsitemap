@@ -125,8 +125,12 @@ function xmlsitemap_user_form_user_profile_form_alter(&$form, $form_state) {
 function xmlsitemap_user_form_user_admin_settings_alter(&$form, $form_state) {
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
   xmlsitemap_add_link_bundle_settings($form, $form_state, 'user', 'user');
-  $form['email_title'] += array('#weight' => 10);
-  $form['email'] += array('#weight' => 10);
+
+  // @todo Figure out what this was supposed to do.
+  // The array += operator causes a fatal error since both of those arrays can be missing.
+  // I don't see anything about an email on admin/config/people/settings.
+  // $form['email_title'] += array('#weight' => 10);
+  // $form['email'] += array('#weight' => 10);
 }
 
 /**
