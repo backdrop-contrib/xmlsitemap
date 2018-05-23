@@ -25,6 +25,19 @@ function xmlsitemap_user_entity_info_alter(&$entity_info) {
 }
 
 /**
+ * Implements hook_xmlsitemap_link_info().
+ */
+function xmlsitemap_user_xmlsitemap_link_info() {
+  $info = array();
+  $entity_info = entity_get_info();
+  if (isset($entity_info['user'])) {
+    $info['user'] = $entity_info['user'];
+  }
+
+  return $info;
+}
+
+/**
  * Implements hook_cron().
  *
  * Process old users not found in the {xmlsitemap} table.

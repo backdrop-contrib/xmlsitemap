@@ -26,6 +26,19 @@ function xmlsitemap_node_entity_info_alter(array &$entity_info) {
 }
 
 /**
+ * Implements hook_xmlsitemap_link_info().
+ */
+function xmlsitemap_node_xmlsitemap_link_info() {
+  $info = array();
+  $entity_info = entity_get_info();
+  if (isset($entity_info['node'])) {
+    $info['node'] = $entity_info['node'];
+  }
+
+  return $info;
+}
+
+/**
  * Implements hook_cron().
  *
  * Process old nodes not found in the {xmlsitemap} table.
