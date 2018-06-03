@@ -42,7 +42,7 @@ function xmlsitemap_node_xmlsitemap_index_links($limit) {
  *   An array of node IDs.
  */
 function xmlsitemap_node_xmlsitemap_process_node_links(array $nids) {
-  $nodes = node_load_multiple($nids);
+  $nodes = node_load_multiple($nids, array(), TRUE);
   foreach ($nodes as $node) {
     $link = xmlsitemap_node_create_link($node);
     xmlsitemap_link_save($link, array($link['type'] => $node));
