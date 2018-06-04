@@ -11,7 +11,6 @@
  * Implements hook_drush_command().
  */
 function xmlsitemap_drush_command() {
-  drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES);
 
   $items['xmlsitemap-regenerate'] = array(
     'description' => 'Regenerate the XML sitemap files.',
@@ -31,7 +30,7 @@ function xmlsitemap_drush_command() {
     'callback' => 'drush_xmlsitemap_index',
     'drupal dependencies' => array('xmlsitemap'),
     'options' => array(
-      'limit' => 'The limit of links of each type to process. Default value: ' . variable_get('xmlsitemap_batch_limit', 100),
+      'limit' => 'The limit of links of each type to process. Default value: ' . variable_get('xmlsitemap_batch_limit', XMLSITEMAP_BATCH_LIMIT),
     ),
   );
   $items['xmlsitemap-queue-rebuild'] = array(
@@ -95,7 +94,7 @@ function drush_xmlsitemap_rebuild() {
  * Process un-indexed XML sitemap links.
  */
 function drush_xmlsitemap_index() {
-  $limit = (int) drush_get_option('limit', variable_get('xmlsitemap_batch_limit', 100));
+  $limit = (int) drush_get_option('limit', variable_get('xmlsitemap_batch_limit', XMLSITEMAP_BATCH_LIMIT));
   $count_before = db_query("SELECT COUNT(id) FROM {xmlsitemap}")->fetchField();
 
   module_invoke_all('xmlsitemap_index_links', $limit);
@@ -131,7 +130,7 @@ function drush_xmlsitemap_queue_rebuild() {
 
   $link_count = 0;
   $chunk_count = 0;
-  $chunk_size = (int) drush_get_option('limit', variable_get('xmlsitemap_batch_limit', 100));
+  $chunk_size = (int) drush_get_option('limit', variable_get('xmlsitemap_batch_limit', XMLSITEMAP_BATCH_LIMIT));
 
   // @todo Figure out how to re-use this code with xmlsitemap_rebuild_batch_fetch()
   foreach ($types as $type) {
