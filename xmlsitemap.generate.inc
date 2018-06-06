@@ -206,7 +206,8 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
   while ($link = $links->fetchAssoc()) {
     $link['language'] = $link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $url_options['language'];
     if ($url_options['alias']) {
-      $link['loc'] = xmlsitemap_get_path_alias($link['loc'], $link['language']->language);
+      $link['language'] = is_object($link['language']) ? $link['language']->language : $link['language'];
+      $link['loc'] = xmlsitemap_get_path_alias($link['loc'], $link['language']);
     }
     $link_options = array(
       'language' => $link['language'],
