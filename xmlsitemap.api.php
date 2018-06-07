@@ -128,6 +128,12 @@ function hook_xmlsitemap_rebuild_clear(array $types, $save_custom) {
 }
 
 /**
+ * Respond to XML sitemap regeneration.
+ */
+function hook_xmlsitemap_regenerate_finished() {
+}
+
+/**
  * Index links for the XML sitemaps.
  */
 function hook_xmlsitemap_index_links($limit) {

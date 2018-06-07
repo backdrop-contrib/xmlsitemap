@@ -392,6 +392,7 @@ function xmlsitemap_regenerate_batch_finished($success, $results, $operations, $
       ),
       WATCHDOG_NOTICE
     );
+    module_invoke_all('xmlsitemap_regenerate_finished');
   }
   else {
     drupal_set_message(t('The sitemaps were not successfully regenerated.'), 'error');
