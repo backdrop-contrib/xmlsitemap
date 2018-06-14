@@ -16,7 +16,7 @@ function xmlsitemap_user_requirements($phase) {
       $requirements['xmlsitemap_user_anonymous_permission'] = array(
         'title' => $t('XML sitemap user'),
         'value' => $t('Anonymous access to user profiles'),
-        'description' => $t('In order to list user profile links in the sitemap, the anonymous user must have the <a href="@perm-link"><em>View user profiles</em> permission</a>.', array('@perm-link' => url('admin/config/people/permissions/' . BACKDROP_ANONYMOUS_RID, array('fragment' => 'module-user')))),
+        'description' => $t('In order to list user profile links in the sitemap, the anonymous user must have the <a href="@perm-link"><em>View user profiles</em> permission</a>.', array('@perm-link' => url('admin/config/people/permissions/' . BACKDROP_ANONYMOUS_ROLE, array('fragment' => 'module-user')))),
         'severity' => REQUIREMENT_ERROR,
       );
     }
