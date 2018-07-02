@@ -205,6 +205,9 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
 
   while ($link = $links->fetchAssoc()) {
     $link['language'] = $link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $url_options['language'];
+    $parsed_url = drupal_parse_url($link['loc']);
+    // Remove query or fragment.
+    $link['loc'] = $parsed_url['path'];
     if ($url_options['alias']) {
       $link['language'] = is_object($link['language']) ? $link['language']->language : $link['language'];
       $link['loc'] = xmlsitemap_get_path_alias($link['loc'], $link['language']);
@@ -213,6 +216,8 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
       'language' => $link['language'],
       'xmlsitemap_link' => $link,
       'xmlsitemap_sitemap' => $sitemap,
+      'query' => $parsed_url['query'],
+      'fragment' => $parsed_url['fragment'],
     );
     // @todo Add a separate hook_xmlsitemap_link_url_alter() here?
     $link_url = url($link['loc'], $link_options + $url_options);
