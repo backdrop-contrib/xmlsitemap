@@ -218,7 +218,7 @@ class XMLSitemapIndexWriter extends XMLSitemapWriter {
  * Implements hook_xmlsitemap_link_info().
  */
 function xmlsitemap_xmlsitemap_link_info() {
-  return array(
+  $info = array(
     'frontpage' => array(
       'label' => t('Frontpage'),
       'xmlsitemap' => array(
@@ -226,6 +226,8 @@ function xmlsitemap_xmlsitemap_link_info() {
       ),
     ),
   );
+
+  return $info;
 }
 
 /**

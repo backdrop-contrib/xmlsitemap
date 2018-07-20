@@ -25,6 +25,20 @@ function xmlsitemap_taxonomy_entity_info_alter(&$entity_info) {
 }
 
 /**
+ * Implements hook_xmlsitemap_link_info().
+ */
+function xmlsitemap_taxonomy_xmlsitemap_link_info() {
+  $info = array();
+  $entity_info = entity_get_info();
+  if (isset($entity_info['taxonomy_term'])) {
+    $info['taxonomy_term'] = $entity_info['taxonomy_term'];
+  }
+
+  return $info;
+}
+
+
+/**
  * Implements hook_xmlsitemap_link_info_alter().
  */
 function xmlsitemap_taxonomy_xmlsitemap_link_info_alter(&$link_info) {
@@ -244,4 +258,3 @@ function xmlsitemap_taxonomy_get_node_count($term) {
   // @todo Use db_rewrite_sql() w/ switch user.
   return db_query_range("SELECT COUNT(ti.nid) FROM {taxonomy_index} ti LEFT JOIN {node n} USING (nid) WHERE ti.tid = :tid AND n.status = 1", 0, 1, array(':tid' => $term->tid))->fetchField();
 }
-

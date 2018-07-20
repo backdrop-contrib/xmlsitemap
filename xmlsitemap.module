@@ -895,11 +895,8 @@ function xmlsitemap_get_link_info($type = NULL, $reset = FALSE) {
     }
     else {
       entity_info_cache_clear();
-      $link_info = array_merge(entity_get_info(), module_invoke_all('xmlsitemap_link_info'));
-      // Remove the entity types we know we don't want to support.
-        // @todo maybe
-      unset($link_info['file']);
-      unset($link_info['comment']);
+      // Only include the entity types we know we want to support.
+      $link_info = module_invoke_all('xmlsitemap_link_info');
       foreach ($link_info as $key => &$info) {
         $info += array(
           'type' => $key,
