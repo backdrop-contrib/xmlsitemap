@@ -91,12 +91,32 @@ function xmlsitemap_node_node_insert(stdClass $node) {
  * Implements hook_node_update().
  */
 function xmlsitemap_node_node_update(stdClass $node) {
+  $link = xmlsitemap_node_create_link($node);
+  xmlsitemap_node_deny_access($link, array($link['type'] => $node));
+
   // Node access can not be accurately determined in hook_node_update() because
   // node grants have not yet been written to the table, so we defer creation of
   // a sitemap link and process during cron.
   $queue = BackdropQueue::get('xmlsitemap_node');
   $queue->createItem($node->nid);
 }
+
+/**
+ * Default sitemap links to not allow access until cron queue runs.
+ *
+ * @param array $link
+ * @param array $context
+ */
+function xmlsitemap_node_deny_access(array $link, array $context = []) {
+    // Force link access to 0.
+    $link['access'] = 0;
+
+    // Allow other modules to alter the sitemap link presave.
+    backdrop_alter('xmlsitemap_link_presave', $link, $context);
+
+    // Save or update a sitemap link which will be overwritten in Drupal cron job.
+    xmlsitemap_link_save($link, $context);
+  }
 
 /**
  * Implements hook_node_delete().
