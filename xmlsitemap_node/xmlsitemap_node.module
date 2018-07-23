@@ -74,8 +74,11 @@ function xmlsitemap_node_cron() {
 function xmlsitemap_node_xmlsitemap_index_links($limit) {
   if ($types = xmlsitemap_get_link_type_enabled_bundles('node')) {
     $nids = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {xmlsitemap} x ON x.type = 'node' AND n.nid = x.id WHERE x.id IS NULL AND n.type IN (:types) ORDER BY n.nid DESC", 0, $limit, array(':types' => $types))->fetchCol();
-    debug($nids);
-    xmlsitemap_node_xmlsitemap_process_node_links($nids);
+    if ($nids) {
+      debug($nids);
+      xmlsitemap_node_xmlsitemap_process_node_links($nids);
+    }
+
   }
 }
 
