@@ -78,7 +78,6 @@ function xmlsitemap_node_xmlsitemap_index_links($limit) {
       debug($nids);
       xmlsitemap_node_xmlsitemap_process_node_links($nids);
     }
-
   }
 }
 
