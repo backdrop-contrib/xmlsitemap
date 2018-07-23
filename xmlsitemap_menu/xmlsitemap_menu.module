@@ -52,9 +52,9 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
       $info['menu_link']['bundles'][$type] = array(
         'label' => $name,
         'admin' => array(
-          'path' => 'admin/structure/menu/manage/%menu/edit',
+          'path' => 'admin/structure/menu/manage/%menu/configure',
           'bundle argument' => 4,
-          'real path' => 'admin/structure/menu/manage/' . $type . '/edit',
+          'real path' => 'admin/structure/menu/manage/' . $type . '/configure',
           'access arguments' => array('administer menus'),
         ),
       );
@@ -68,7 +68,28 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
         'process callback' => 'xmlsitemap_menu_xmlsitemap_process_menu_links',
       ),
     );
+
+    // Change menu edit link to got to configure instead of list.
+    foreach (menu_get_menus() as $type => $name) {
+      if (isset($info['menu_link']['bundles'][$type])) {
+        $info['menu_link']['bundles'][$type]['admin']['path'] = 'admin/structure/menu/manage/%menu/configure';
+        $info['menu_link']['bundles'][$type]['admin']['real path'] = 'admin/structure/menu/manage/' . $type . '/configure';
+      }
+    }
   }
+}
+
+/**
+ * Implements hook_xmlsitemap_link_info().
+ */
+function xmlsitemap_menu_xmlsitemap_link_info() {
+  $info = array();
+  $entity_info = entity_get_info();
+  if (isset($entity_info['menu_link'])) {
+    $info['menu_link'] = $entity_info['menu_link'];
+  }
+
+  return $info;
 }
 
 /**
