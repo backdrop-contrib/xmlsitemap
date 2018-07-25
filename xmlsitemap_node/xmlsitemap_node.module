@@ -91,6 +91,8 @@ function xmlsitemap_node_node_insert(stdClass $node) {
  * Implements hook_node_update().
  */
 function xmlsitemap_node_node_update(stdClass $node) {
+  // We create a link and then set access to zero so the node setting can
+  // override the default per entity.
   $link = xmlsitemap_node_create_link($node);
   xmlsitemap_node_deny_access($link, array($link['type'] => $node));
 
@@ -102,21 +104,21 @@ function xmlsitemap_node_node_update(stdClass $node) {
 }
 
 /**
- * Default sitemap links to not allow access until cron queue runs.
+ * Default site map links to not allow access until cron queue runs.
  *
- * @param array $link
- * @param array $context
+ * @param array $link The link having access set toro.
+ * @param array $context The context sent in backdrop_alter().
  */
 function xmlsitemap_node_deny_access(array $link, array $context = []) {
-    // Force link access to 0.
-    $link['access'] = 0;
+  // Force link access to 0.
+  $link['access'] = 0;
 
-    // Allow other modules to alter the sitemap link presave.
-    backdrop_alter('xmlsitemap_link_presave', $link, $context);
+  // Allow other modules to alter the site map link presave.
+  backdrop_alter('xmlsitemap_link_presave', $link, $context);
 
-    // Save or update a sitemap link which will be overwritten in Drupal cron job.
-    xmlsitemap_link_save($link, $context);
-  }
+  // Save or update a site map link which will be overwritten in Drupal cron job.
+  xmlsitemap_link_save($link, $context);
+}
 
 /**
  * Implements hook_node_delete().
