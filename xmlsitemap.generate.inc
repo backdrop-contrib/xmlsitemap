@@ -209,8 +209,7 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
     // Remove query or fragment.
     $link['loc'] = $parsed_url['path'];
     if ($url_options['alias']) {
-      $link['language'] = is_object($link['language']) ? $link['language']->language : $link['language'];
-      $link['loc'] = xmlsitemap_get_path_alias($link['loc'], $link['language']);
+      $link['loc'] = xmlsitemap_get_path_alias($link['loc'], $link['language']->language);
     }
     $link_options = array(
       'language' => $link['language'],
