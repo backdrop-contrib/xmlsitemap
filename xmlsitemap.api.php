@@ -282,7 +282,11 @@ function hook_xmlsitemap_sitemap_operations() {
  *               the entity settings.
  */
 function hook_xmlsitemap_operation_link_alter(&$link) {
-
+  // The XML Sitemap settings for the user entity are stored in a different place
+  // than entity_get_info() returns.
+  if ($link['href'] === 'admin/config/search/xmlsitemap/settings/user/user') {
+    $link['href'] = 'admin/config/people/settings';
+  }
 }
 
 /**
