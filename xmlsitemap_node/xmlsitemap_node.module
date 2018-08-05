@@ -103,7 +103,7 @@ function xmlsitemap_node_node_delete(stdClass $node) {
  * Implements hook_comment_update().
  */
 function xmlsitemap_node_comment_update(stdClass $comment) {
-  if ($node = node_load($comment->nid, NULL, TRUE)) {
+  if ($node = entity_load_unchanged('node', $comment->nid)) {
     xmlsitemap_node_node_update($node);
   }
 }
