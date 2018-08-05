@@ -58,6 +58,24 @@ function hook_xmlsitemap_link_info() {
 }
 
 /**
+ * Act on a sitemap link being inserted or updated.
+ *
+ * This hook is currently invoked from xmlsitemap_node_node_update() before
+ * the node sitemap link is saved to the database with revoked access until
+ * the node permissions are checked in the cron.
+ *
+ * @param array $link
+ *   An array with the data of the sitemap link.
+ * @param array $context
+ *   An optional context array containing data related to the link.
+ */
+function hook_xmlsitemap_link_presave_alter(array &$link, array $context) {
+  if ($link['type'] == 'mymodule') {
+    $link['priority'] += 0.5;
+  }
+}
+
+/**
  * Alter the data of a sitemap link before the link is saved.
  *
  * @param array $link
