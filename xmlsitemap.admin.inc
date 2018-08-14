@@ -283,6 +283,7 @@ function xmlsitemap_sitemap_delete_form_submit($form, $form_state) {
  * @see xmlsitemap_settings_form_validate()
  */
 function xmlsitemap_settings_form($form, &$form_state) {
+  global $base_url;
   $form['xmlsitemap_minimum_lifetime'] = array(
     '#type' => 'select',
     '#title' => t('Minimum sitemap lifetime'),
@@ -380,7 +381,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
   $form['advanced']['xmlsitemap_base_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Default base URL'),
-    '#default_value' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+    '#default_value' => variable_get('xmlsitemap_base_url', $base_url),
     '#size' => 30,
     '#description' => t('This is the default base URL used for sitemaps and sitemap links.'),
     '#required' => TRUE,
@@ -866,7 +867,7 @@ function xmlsitemap_add_form_link_options(array &$form, $entity, $bundle, $id) {
   //  '#type' => 'value',
   //  '#value' => $node->xmlsitemap['changecount'],
   // );
-  // @codingStandardsIgnoreEnd 
+  // @codingStandardsIgnoreEnd
   // Add the submit handler to adjust the default values if selected.
   $form += array('#submit' => array());
   if (!in_array('xmlsitemap_process_form_link_options', $form['#submit'])) {

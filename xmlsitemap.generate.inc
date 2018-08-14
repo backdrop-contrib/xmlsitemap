@@ -159,6 +159,7 @@ function xmlsitemap_generate_page(stdClass $sitemap, $page) {
  * Generate chunk.
  */
 function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, $chunk) {
+  global $base_url;
   $output_elements = drupal_map_assoc(variable_get('xmlsitemap_output_elements', array(
     'lastmod',
     'changefreq',
@@ -169,7 +170,7 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
   $url_options = $sitemap->uri['options'];
   $url_options += array(
     'absolute' => TRUE,
-    'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+    'base_url' => variable_get('xmlsitemap_base_url', $base_url),
     'language' => language_default(),
     'alias' => variable_get('xmlsitemap_prefetch_aliases', TRUE),
   );

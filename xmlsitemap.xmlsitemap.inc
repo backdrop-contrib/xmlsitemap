@@ -96,10 +96,11 @@ class XMLSitemapWriter extends XMLWriter {
    * Get Sitemap URL.
    */
   public function getSitemapUrl($path, array $options = array()) {
+    global $base_url;
     $options += $this->sitemap->uri['options'];
     $options += array(
       'absolute' => TRUE,
-      'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+      'base_url' => variable_get('xmlsitemap_base_url', $base_url),
       'language' => language_default(),
       'alias' => TRUE,
     );
@@ -115,7 +116,7 @@ class XMLSitemapWriter extends XMLWriter {
    * @codingStandardsIgnoreStart
    */
   public function writeXSL() {
-    // @codingStandardsIgnoreEnd 
+    // @codingStandardsIgnoreEnd
     $this->writePi('xml-stylesheet', 'type="text/xsl" href="' . $this->getSitemapUrl('sitemap.xsl', array('protocol_relative' => TRUE)) . '"');
     $this->writeRaw(PHP_EOL);
   }
@@ -206,7 +207,7 @@ class XMLSitemapWriter extends XMLWriter {
   /**
    * Get URI.
    *
-   * @codingStandardsIgnoreStart 
+   * @codingStandardsIgnoreStart
    */
   public function getURI() {
     // @codingStandardsIgnoreEnd

@@ -299,6 +299,7 @@ function xmlsitemap_robotstxt() {
  * Internal default variables for xmlsitemap_var().
  */
 function xmlsitemap_variables() {
+  global $base_url;
   return array(
     'xmlsitemap_rebuild_needed' => FALSE,
     'xmlsitemap_regenerate_needed' => FALSE,
@@ -309,7 +310,7 @@ function xmlsitemap_variables() {
     'xmlsitemap_chunk_size' => 'auto',
     'xmlsitemap_batch_limit' => 100,
     'xmlsitemap_path' => 'xmlsitemap',
-    'xmlsitemap_base_url' => $GLOBALS['base_url'],
+    'xmlsitemap_base_url' => $base_url,
     'xmlsitemap_developer_mode' => 0,
     'xmlsitemap_frontpage_priority' => 1.0,
     'xmlsitemap_frontpage_changefreq' => XMLSITEMAP_FREQUENCY_DAILY,
@@ -550,12 +551,13 @@ function xmlsitemap_sitemap_get_context_hash(array &$context) {
  *   the XML sitemap, and matching the signature of url().
  */
 function xmlsitemap_sitemap_uri(stdClass $sitemap) {
+  global $base_url;
   $uri['path'] = 'sitemap.xml';
   $uri['options'] = module_invoke_all('xmlsitemap_context_url_options', $sitemap->context);
   drupal_alter('xmlsitemap_context_url_options', $uri['options'], $sitemap->context);
   $uri['options'] += array(
     'absolute' => TRUE,
-    'base_url' => variable_get('xmlsitemap_base_url', $GLOBALS['base_url']),
+    'base_url' => variable_get('xmlsitemap_base_url', $base_url),
   );
   return $uri;
 }
