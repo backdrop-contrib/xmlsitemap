@@ -67,6 +67,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     $body_field = 'body[' . LANGUAGE_NONE . '][0][value]';
 
     $node = $this->drupalCreateNode(array('status' => FALSE, 'uid' => $this->normal_user->uid));
+    $this->cronRun();
     $this->assertSitemapLinkValues('node', $node->nid, array(
       'access' => 0,
       'status' => 1,
@@ -86,6 +87,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     );
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
     $this->assertText('Basic page Test node title has been updated.');
+    $this->cronRun();
     $this->assertSitemapLinkValues('node', $node->nid, array(
       'access' => 0,
       'status' => 1,
@@ -106,6 +108,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     );
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
     $this->assertText('Basic page Test node title has been updated.');
+    $this->cronRun();
     $this->assertSitemapLinkValues('node', $node->nid, array(
       'access' => 1,
       'status' => 0,
@@ -121,6 +124,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     );
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
     $this->assertText('Basic page Test node title has been updated.');
+    $this->cronRun();
     $this->assertSitemapLinkValues('node', $node->nid, array(
       'access' => 0,
       'status' => 1,
@@ -137,6 +141,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     $this->drupalLogin($this->admin_user);
 
     $node_old = $this->drupalCreateNode();
+    $this->cronRun();
     $this->assertSitemapLinkValues('node', $node_old->nid, array('status' => 1, 'priority' => 0.5));
 
     $edit = array(
@@ -147,6 +152,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     $this->assertText('The content type Basic page has been updated.');
 
     $node = $this->drupalCreateNode();
+    $this->cronRun();
     $this->assertSitemapLinkValues('node', $node->nid, array('status' => 0, 'priority' => 0.0));
     $this->assertSitemapLinkValues('node', $node_old->nid, array('status' => 0, 'priority' => 0.0));
 
@@ -158,6 +164,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
     $this->assertText('Changed the content type of 2 posts from page to page2.');
     $this->assertText('The content type Basic page has been updated.');
+    $this->cronRun();
 
     $this->assertSitemapLinkValues('node', $node->nid, array(
       'subtype' => 'page2',
@@ -202,7 +209,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     xmlsitemap_node_cron();
 
     for ($i = 1; $i <= ($limit + 1); $i++) {
-      $node = array_pop($nodes);
+      $node = array_shift($nodes);
       if ($i <= $limit) {
         // The first $limit nodes should be inserted.
         $this->assertSitemapLinkValues('node', $node->nid, array(
