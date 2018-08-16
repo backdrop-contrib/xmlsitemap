@@ -67,10 +67,19 @@ function xmlsitemap_node_xmlsitemap_index_links($limit) {
  *   An array of node IDs.
  */
 function xmlsitemap_node_xmlsitemap_process_node_links(array $nids) {
-  $nodes = node_load_multiple($nids, array(), TRUE);
-  foreach ($nodes as $node) {
-    $link = xmlsitemap_node_create_link($node);
-    xmlsitemap_link_save($link, array($link['type'] => $node));
+  // Load no more than 15 nodes at a time.
+  if (count($nids) >= 1) {
+    $nids_chunks = array_chunk($nids, 15);
+    foreach ($nids_chunks as $chunk) {
+      $nodes = node_load_multiple($chunk);
+      foreach ($nodes as $node) {
+        $link = xmlsitemap_node_create_link($node);
+        xmlsitemap_link_save($link, array($link['type'] => $node));
+      }
+      // Flush each entity from the load cache after processing, to avoid
+      // exceeding PHP memory limits if $nids is large.
+      entity_get_controller('node')->resetCache($chunk);
+    }
   }
 }
 
