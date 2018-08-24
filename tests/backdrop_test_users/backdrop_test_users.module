@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks for backdrop_test_users module.
+ */
+
+/**
+ * Implements hook_config_info().
+ */
+function backdrop_test_users_config_info() {
+  $prefixes = array();
+
+  $prefixes['user.role.developer'] = array(
+    'name_key' => 'name',
+    'label_key' => 'label',
+    'group' => t('User roles'),
+  );
+  $prefixes['user.role.site_owner'] = array(
+    'name_key' => 'name',
+    'label_key' => 'label',
+    'group' => t('User roles'),
+  );
+  return $prefixes;
+}

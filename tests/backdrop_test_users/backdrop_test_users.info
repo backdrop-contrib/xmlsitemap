@@ -1,0 +1,6 @@
+name = Backdrop test Users
+description = Installs test users so that Behat can use them to login.
+type = module
+backdrop = 1.x
+version = 7.x-1.0
+package = Testing
