@@ -1,0 +1,81 @@
+language: php
+# We want to avoid sudo. This allow us to use Travis docker infrastructure, which means builds start faster and have more CPU available.
+sudo: false
+
+git:
+  depth: 1
+
+php:
+  - '7.2'
+
+branches:
+  only:
+   - 1.x-1.x
+
+addons:
+  # The username and access key are stored in the Travis settings.
+  sauce_connect: true
+
+services:
+ - mysql
+
+# Cache Composer and db export.
+# I removed caching of Drush since you have to clear Drush cache to get new Drupal versions.
+cache:
+  directories:
+    - $HOME/.composer/cache/files
+    - $HOME/cache
+
+install:
+
+  # Export variables used later on in the bash scripts.
+  - cd "${TRAVIS_BUILD_DIR}" && cd ../ && export ROOT_DIR=$(pwd)
+  - export HOME
+  - export TRAVIS_EVENT_TYPE
+
+  # This variable is used later on to determine if the testing starter template project has been updated.
+  - export TESTING_STARTER_TEMPLATE_VERSION="0.1.0"
+
+  # Name of bundle used as a placeholder in scripts.
+  - export MODULE_NAME="xmlsitemap"
+  - export ADD_CUSTOM_MODULES="backdrop_test_users"
+  # - export ADD_CONTRIB_MODULES=""
+
+  # Behat tags. Allows you to include/exclude tags per bundle as needed.
+  - export HEADLESS_BEHAT_TAGS="~@broken&&~@javascript"
+  - export JS_BEHAT_TAGS="~@broken&&@javascript"
+
+  # SimpleTest group.
+  - export SIMPLETEST_CLASSES="XMLSitemapUnitTest XMLSitemapFunctionalTest"
+
+  # Copy starter kit scripts to root for cleaner syntax.
+  - cd "${ROOT_DIR}"
+  - git clone https://github.com/alexfinnarn/testing-starter-scripts.git testing
+  - cp -R "${ROOT_DIR}"/testing/tests/travis-ci/* "${ROOT_DIR}"
+
+  # Pulls in any helper functions used later in scripts.
+  - source "${ROOT_DIR}"/helper-functions.sh
+
+  # Install and build dependencies.
+  - echo "Running install script..."
+  - "${ROOT_DIR}"/build-code.sh
+
+before_script:
+
+  # Setup config for PHP/MySQL, settings.php, and install database.
+  - echo "Running setup script..."
+  - "${ROOT_DIR}"/setup-config.sh
+
+  # Perform the site install after removing Xdebug since it seems faster.
+  - echo "Running build script..."
+  - "{$ROOT_DIR}"/install-backdrop.sh
+
+script:
+
+  # Run Behat tests.
+  - echo "Running Behat tests..."
+  - "${ROOT_DIR}"/run-behat-tests.sh
+
+  # Run SimpleTests.
+  - echo "Running SimpleTest tests..."
+  - "${ROOT_DIR}"/run-simpletests.sh
