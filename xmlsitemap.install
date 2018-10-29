@@ -568,6 +568,13 @@ function xmlsitemap_update_7203() {
 }
 
 /**
+ * Rehash all sitemaps according to new context sorting.
+ */
+function xmlsitemap_update_7204() {
+  _xmlsitemap_sitemap_rehash_all();
+}
+
+/**
  * Rehash all.
  */
 function _xmlsitemap_sitemap_rehash_all() {

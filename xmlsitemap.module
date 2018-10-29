@@ -531,7 +531,7 @@ function xmlsitemap_sitemap_get_max_filesize(stdClass $sitemap) {
  * Get context.
  */
 function xmlsitemap_sitemap_get_context_hash(array &$context) {
-  asort($context);
+  ksort($context);
   return drupal_hash_base64(serialize($context));
 }
 
@@ -1591,7 +1591,7 @@ function xmlsitemap_get_current_context() {
   if (!isset($context)) {
     $context = module_invoke_all('xmlsitemap_context');
     drupal_alter('xmlsitemap_context', $context);
-    asort($context);
+    ksort($context);
   }
 
   return $context;
