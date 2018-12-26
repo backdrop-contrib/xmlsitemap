@@ -369,7 +369,9 @@ function xmlsitemap_enable() {
  */
 function xmlsitemap_uninstall() {
   // Remove the file cache directory.
-  xmlsitemap_clear_directory(NULL, TRUE);
+  if(function_exists('xmlsitemap_clear_directory')) {
+    xmlsitemap_clear_directory(NULL, TRUE);
+  }
 
   // Remove variables.
   drupal_load('module', 'xmlsitemap');
