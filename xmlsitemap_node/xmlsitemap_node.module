@@ -127,7 +127,7 @@ function xmlsitemap_node_node_update(stdClass $node) {
  * @param array $link The link having access set toro.
  * @param array $context The context sent in backdrop_alter().
  */
-function xmlsitemap_node_deny_access(array $link, array $context = []) {
+function xmlsitemap_node_deny_access(array $link, array $context = array()) {
   // Force link access to 0.
   $link['access'] = 0;
 
