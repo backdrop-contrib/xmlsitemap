@@ -235,7 +235,7 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
     }
 
     $element = array();
-    $element['loc'] = $link_url;
+    $element['loc'] = urldecode($link_url);
     if ($link['lastmod']) {
       if (!empty($output_elements['lastmod'])) {
         $element['lastmod'] = gmdate($lastmod_format, $link['lastmod']);
