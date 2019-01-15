@@ -259,7 +259,9 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
     // @todo Should this be moved to XMLSitemapWritier::writeSitemapElement()?
     drupal_alter('xmlsitemap_element', $element, $link, $sitemap);
 
-    $writer->writeSitemapElement('url', $element);
+    if (!empty($element)) {
+      $writer->writeSitemapElement('url', $element);
+    }
   }
 
   return $link_count;
