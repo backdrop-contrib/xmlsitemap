@@ -272,6 +272,24 @@ function hook_xmlsitemap_sitemap_operations() {
 }
 
 /**
+ * Alter the edit link for users to include or exclude an entity.
+ *
+ * @param array $link The link to alter.
+ *   ['href'] - The URI the user is sent to when clicking the link.
+ *   ['title'] - The title of the link.
+ *   ['modal'] - Whether or not the edit link shows up in a modal.
+ *   ['query'] - A destination query parameter to send user back to after updating
+ *               the entity settings.
+ */
+function hook_xmlsitemap_operation_link_alter(&$link) {
+  // The XML Sitemap settings for the user entity are stored in a different place
+  // than entity_get_info() returns.
+  if ($link['href'] === 'admin/config/search/xmlsitemap/settings/user/user') {
+    $link['href'] = 'admin/config/people/settings';
+  }
+}
+
+/**
  * Respond to XML sitemap deletion.
  *
  * This hook is invoked from xmlsitemap_sitemap_delete_multiple() after the XML

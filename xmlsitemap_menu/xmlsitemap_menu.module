@@ -85,6 +85,7 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
 function xmlsitemap_menu_xmlsitemap_link_info() {
   $info = array();
   $entity_info = entity_get_info();
+
   if (isset($entity_info['menu_link'])) {
     $info['menu_link'] = $entity_info['menu_link'];
   }
