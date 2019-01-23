@@ -284,9 +284,11 @@ function xmlsitemap_modules_disabled(array $modules) {
  * Implements hook_robotstxt().
  */
 function xmlsitemap_robotstxt() {
-  if ($sitemap = xmlsitemap_sitemap_load_by_context()) {
-    $robotstxt[] = 'Sitemap: ' . url($sitemap->uri['path'], $sitemap->uri['options']);
-    return $robotstxt;
+  if (variable_get('xmlsitemap_robotstxt', 1)) {
+    if ($sitemap = xmlsitemap_sitemap_load_by_context()) {
+      $robotstxt[] = 'Sitemap: ' . url($sitemap->uri['path'], $sitemap->uri['options']);
+      return $robotstxt;
+    }
   }
 }
 
@@ -302,6 +304,7 @@ function xmlsitemap_variables() {
     'xmlsitemap_generated_last' => 0,
     'xmlsitemap_xsl' => 1,
     'xmlsitemap_prefetch_aliases' => 1,
+    'xmlsitemap_robotstxt' => 1,
     'xmlsitemap_chunk_size' => 'auto',
     'xmlsitemap_batch_limit' => 100,
     'xmlsitemap_path' => 'xmlsitemap',
