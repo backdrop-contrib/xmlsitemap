@@ -292,6 +292,16 @@ function xmlsitemap_robotstxt() {
   }
 }
 
+
+/**
+ * Implements hook_views_api().
+ */
+function xmlsitemap_views_api() {
+  return array(
+    'api' => 3,
+  );
+}
+
 /**
  * Internal default variables for xmlsitemap_var().
  */
