@@ -43,8 +43,7 @@ https://github.com/backdrop-contrib/xmlsitemap/issues
 Current Maintainers
 -------------------
 
-- Alex Finnarn (https://github.com/alexfinnarn)
-- Seeking additional maintainers
+- Seeking maintainers
 
 
 Credits
