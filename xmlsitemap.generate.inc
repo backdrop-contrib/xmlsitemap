@@ -219,9 +219,7 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
       'query' => $parsed_url['query'],
       'fragment' => $parsed_url['fragment'],
     );
-    // Give other projects a chance to adjust the links that will be output.
-    drupal_alter('xmlsitemap_link', $link, $link_options);
-
+    // @todo Add a separate hook_xmlsitemap_link_url_alter() here?
     $link_url = url($link['loc'], $link_options + $url_options);
 
     // Skip this link if it was a duplicate of the last one.
