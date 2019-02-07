@@ -259,6 +259,11 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
     // @todo Should this be moved to XMLSitemapWritier::writeSitemapElement()?
     drupal_alter('xmlsitemap_element', $element, $link, $sitemap);
 
+    // If the setting to skip unaliased nodes is enabled, and there is no alias
+    // for the node, don't write it to the sitemap.
+    if (variable_get('xmlsitemap_skip_unaliased', 0) && strpos($element['loc'], "node") !== FALSE) {
+      $element = "";
+    }
     if (!empty($element)) {
       $writer->writeSitemapElement('url', $element);
     }

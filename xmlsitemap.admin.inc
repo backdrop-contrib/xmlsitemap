@@ -408,6 +408,11 @@ function xmlsitemap_settings_form($form, &$form_state) {
     '#default_value' => variable_get('xmlsitemap_disable_cron_regeneration', 0),
     '#description' => t('This can be disabled if other methods are being used to generate the sitemap files, like <em>drush xmlsitemap-regenerate</em>.'),
   );
+  $form['advanced']['xmlsitemap_skip_unaliased'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Skip unaliased nodes when generating sitemap.'),
+    '#default_value' => variable_get('xmlsitemap_skip_unaliased', 0),
+  );
   $form['advanced']['xmlsitemap_output_elements'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Enable or disable the individual @loc elements from output', array('@loc' => '<loc>')),
