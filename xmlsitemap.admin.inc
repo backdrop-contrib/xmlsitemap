@@ -11,8 +11,6 @@
  * Render a tableselect list of XML sitemaps for the main admin page.
  */
 function xmlsitemap_sitemap_list_form() {
-  $destination = drupal_get_destination();
-
   // Build the 'Update options' form.
   $form['#operations'] = module_invoke_all('xmlsitemap_sitemap_operations');
   $operations = array();
@@ -556,8 +554,6 @@ function xmlsitemap_rebuild_form_submit($form, &$form_state) {
 function xmlsitemap_add_form_entity_summary(&$form, $entity, array $entity_info) {
   $priorities = xmlsitemap_get_priority_options(NULL, FALSE);
   $statuses = xmlsitemap_get_status_options(NULL);
-  $destination = drupal_get_destination();
-
   $rows = array();
   $totals = array('total' => 0, 'indexed' => 0, 'visible' => 0);
   foreach ($entity_info['bundles'] as $bundle => $bundle_info) {
