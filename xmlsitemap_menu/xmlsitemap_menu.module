@@ -23,7 +23,7 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
   if (!isset($info['menu_link'])) {
     $info['menu_link'] = array(
       'label' => t('Menu link'),
-      'controller class' => 'BackdropDefaultEntityController',
+      'controller class' => 'DefaultEntityController',
       'base table' => 'menu_links',
       'uri callback' => 'xmlsitemap_menu_menu_link_uri',
       'fieldable' => FALSE,
