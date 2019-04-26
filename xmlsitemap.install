@@ -108,18 +108,18 @@ function xmlsitemap_requirements($phase) {
     }
 
     // Check when the cached files were last generated.
-    $generated_last = $config->get('generated_last');
+    $generated_last = state_get('xmlsitemap_generated_last');
     $generated_ago = REQUEST_TIME - $generated_last;
     $requirements['xmlsitemap_generated'] = array(
       'title' => $t('XML sitemap'),
       'value' => $generated_last ? $t('Last attempted generation on !date (!interval ago).', array('!date' => format_date($generated_last, 'small'), '!interval' => format_interval($generated_ago))) : $t('Cached files have not been generated yet.'),
       'severity' => REQUIREMENT_OK,
     );
-    if ($config->get('rebuild_needed') && _xmlsitemap_rebuild_form_access()) {
+    if (state_get('xmlsitemap_rebuild_needed', FALSE) && _xmlsitemap_rebuild_form_access()) {
       $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
       $requirements['xmlsitemap_generated']['description'] = $t('The XML sitemap data is out of sync and needs to be <a href="@link-rebuild">completely rebuilt<a>.', array('@link-rebuild' => url('admin/config/search/xmlsitemap/rebuild')));
     }
-    elseif ($config->get('regenerate_needed')) {
+    elseif (state_get('xmlsitemap_regenerate_needed', TRUE)) {
       if ($max_filesize == 0) {
         // A maximum sitemap file size of 0 indicates an error in generation.
         $requirements['xmlsitemap_generated']['severity'] = REQUIREMENT_ERROR;
@@ -357,7 +357,7 @@ function xmlsitemap_enable() {
   // Ensure the file cache directory is available and ready.
   xmlsitemap_check_directory();
 
-  config_set('xmlsitemap.settings', 'regenerate_needed', TRUE);
+  state_set('xmlsitemap_regenerate_needed', TRUE);
 }
 
 /**
@@ -433,5 +433,19 @@ function xmlsitemap_update_1000() {
   }
 
   // Save all these config changes.
+  $config->save();
+}
+
+/**
+ * Convert config that should be state.
+ */
+function xmlsitemap_update_1001() {
+  $config = config('xmlsitemap.settings');
+  state_set('xmlsitemap_generated_last', $config->get('generated_last'), 0);
+  state_set('xmlsitemap_regenerate_needed', $config->get('regenerate_needed', TRUE));
+  state_set('xmlsitemap_rebuild_needed', $config->get('rebuild_needed', TRUE));
+  $config->clear('generated_last');
+  $config->clear('regenerate_needed');
+  $config->clear('rebuild_needed');
   $config->save();
 }

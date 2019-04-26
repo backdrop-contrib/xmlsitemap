@@ -57,7 +57,7 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
    * Retrieves an XML sitemap.
    *
    * @param $context
-   *   An optional array of the XML sitemap's context.
+   *   An optional array of the XML sitemap context.
    * @param $options
    *   Options to be forwarded to url(). These values will be merged with, but
    *   always override $sitemap->uri['options'].
@@ -79,11 +79,10 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
    * Regenerate the sitemap by setting the regenerate flag and running cron.
    */
   protected function regenerateSitemap() {
-    $config = config('xmlsitemap.settings');
-    $config->set('regenerate_needed', TRUE);
-    $config->set('generated_last', 0);
+    state_set('xmlsitemap_regenerate_needed', TRUE);
+    state_set('xmlsitemap_generated_last', 0);
     $this->cronRun();
-    $this->assertTrue($config->get('generated_last', 0) && !$config->get('regenerate_needed', FALSE), t('XML sitemaps regenerated and flag cleared.'));
+    $this->assertTrue(state_get('xmlsitemap_generated_last', 0) && !state_get('xmlsitemap_regenerate_needed', FALSE), t('XML sitemaps regenerated and flag cleared.'));
   }
 
   protected function assertSitemapLink($entity_type, $entity_id = NULL) {
@@ -193,10 +192,10 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
   }
 
   protected function assertFlag($variable, $assert_value = TRUE, $reset_if_true = TRUE) {
-    $value = xmlsitemap_var($variable);
+    $value = state_get($variable);
 
     if ($reset_if_true && $value) {
-      config_set('xmlsitemap.settings', $variable, FALSE);
+      state_set($variable, FALSE);
     }
 
     return $this->assertEqual($value, $assert_value, "$variable is " . ($assert_value ? 'TRUE' : 'FALSE'));
@@ -328,14 +327,14 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
 class XMLSitemapUnitTest extends XMLSitemapTestHelper {
 
   function testAssertFlag() {
-    config_set('xmlsitemap.settings', 'rebuild_needed', TRUE);
-    $this->assertTrue(xmlsitemap_var('rebuild_needed'));
-    $this->assertTrue($this->assertFlag('rebuild_needed', TRUE, FALSE));
-    $this->assertTrue(xmlsitemap_var('rebuild_needed'));
-    $this->assertTrue($this->assertFlag('rebuild_needed', TRUE, TRUE));
-    $this->assertFalse(xmlsitemap_var('rebuild_needed'));
-    $this->assertTrue($this->assertFlag('rebuild_needed', FALSE, FALSE));
-    $this->assertFalse(xmlsitemap_var('rebuild_needed'));
+    state_set('xmlsitemap_rebuild_needed', TRUE);
+    $this->assertTrue(state_get('xmlsitemap_rebuild_needed'));
+    $this->assertTrue($this->assertFlag('xmlsitemap_rebuild_needed', TRUE, FALSE));
+    $this->assertTrue(state_get('xmlsitemap_rebuild_needed'));
+    $this->assertTrue($this->assertFlag('xmlsitemap_rebuild_needed', TRUE, TRUE));
+    $this->assertFalse(state_get('xmlsitemap_rebuild_needed'));
+    $this->assertTrue($this->assertFlag('xmlsitemap_rebuild_needed', FALSE, FALSE));
+    $this->assertFalse(state_get('xmlsitemap_rebuild_needed'));
   }
 
   /**
@@ -551,7 +550,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $link1 = $this->addSitemapLink(array('loc' => 'testing1', 'status' => 0));
     $link2 = $this->addSitemapLink(array('loc' => 'testing1', 'status' => 1));
     $link3 = $this->addSitemapLink(array('status' => 0));
-    config_set('xmlsitemap.settings', 'regenerate_needed', FALSE);
+    state_set('xmlsitemap_regenerate_needed', FALSE);
 
     // Test delete multiple links.
     // Test that the regenerate flag is set when visible links are deleted.
@@ -577,7 +576,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $links[1] = $this->addSitemapLink(array('subtype' => 'group1'));
     $links[2] = $this->addSitemapLink(array('subtype' => 'group1'));
     $links[3] = $this->addSitemapLink(array('subtype' => 'group2'));
-    config_set('xmlsitemap.settings', 'regenerate_needed', FALSE);
+    state_set('xmlsitemap_regenerate_needed', FALSE);
     // id | type    | subtype | language | access | status | priority
     // 1  | testing | group1  | ''       | 1      | 1      | 0.5
     // 2  | testing | group1  | ''       | 1      | 1      | 0.5
@@ -714,21 +713,17 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
 
   function testStatusReport() {
     // Test the rebuild flag.
-    $config = config('xmlsitemap.settings');
-    $config->set('generated_last', REQUEST_TIME);
-    $config->set('rebuild_needed', TRUE);
-    $config->save();
+    state_set('xmlsitemap_generated_last', REQUEST_TIME);
+    state_set('xmlsitemap_rebuild_needed', TRUE);
     $this->assertXMLSitemapProblems(t('The XML sitemap data is out of sync and needs to be completely rebuilt.'));
     $this->clickLink(t('completely rebuilt'));
     $this->assertResponse(200);
-    $config->set('rebuild_needed', FALSE);
-    $config->save();
+    state_set('xmlsitemap_rebuild_needed', FALSE);
     $this->assertNoXMLSitemapProblems();
 
     // Test the regenerate flag (and cron hasn't run in a while).
-    $config->set('regenerate_needed', TRUE);
-    $config->set('generated_last', REQUEST_TIME - $config->get('cron_threshold_warning', 172800) - 100);
-    $config->save();
+    state_set('xmlsitemap_regenerate_needed', TRUE);
+    state_set('xmlsitemap_generated_last', REQUEST_TIME - config_get('system.core', 'cron_threshold_warning') - 100);
     $this->assertXMLSitemapProblems(t('The XML cached files are out of date and need to be regenerated. You can run cron manually to regenerate the sitemap files.'));
     $this->clickLink(t('run cron manually'));
     $this->assertResponse(200);

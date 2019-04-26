@@ -231,7 +231,7 @@ function _xmlsitemap_rebuild_form_access() {
 function xmlsitemap_cron() {
   $config = config('xmlsitemap.settings');
   // If there were no new or changed links, skip.
-  if (!$config->get('regenerate_needed')) {
+  if (!state_get('xmlsitemap_regenerate_needed', TRUE)) {
     return;
   }
   // If cron sitemap file regeneration is disabled, stop.
@@ -240,7 +240,7 @@ function xmlsitemap_cron() {
   }
 
   // If the minimum sitemap lifetime hasn't been passed, skip.
-  $lifetime = REQUEST_TIME - $config->get('generated_last');
+  $lifetime = REQUEST_TIME - state_get('xmlsitemap_generated_last', 0);
   if ($lifetime < $config->get('minimum_lifetime')) {
     return;
   }
@@ -272,21 +272,6 @@ function xmlsitemap_robotstxt() {
     $robotstxt[] = 'Sitemap: ' . url($sitemap->uri['path'], $sitemap->uri['options']);
     return $robotstxt;
   }
-}
-
-/**
- * Internal implementation of variable_get().
- *
- * @todo Remove this. In Backdrop we can add `"_config_static": true,` to the
- *       config file to have the file always statically cached.
- */
-function xmlsitemap_var($name, $default = NULL) {
-  $defaults = &backdrop_static(__FUNCTION__);
-  if (!isset($defaults)) {
-    $defaults = config('xmlsitemap.settings');
-  }
-
-  return $defaults->get($name);
 }
 
 /**
@@ -393,7 +378,7 @@ function xmlsitemap_sitemap_save(stdClass $sitemap) {
       ->execute();
 
     // Mark the sitemaps as needing regeneration.
-    config_set('xmlsitemap.settings', 'regenerate_needed', TRUE);
+    state_set('xmlsitemap_regenerate_needed', TRUE);
   }
 
   if ($sitemap->is_new) {
@@ -567,7 +552,7 @@ function xmlsitemap_link_save(array $link, array $context = array()) {
   $existing = db_query_range("SELECT loc, access, status, lastmod, priority, changefreq, changecount, language FROM {xmlsitemap} WHERE type = :type AND id = :id", 0, 1, array(':type' => $link['type'], ':id' => $link['id']))->fetchAssoc();
 
   // Check if this is a changed link and set the regenerate flag if necessary.
-  if (!config_get('xmlsitemap.settings', 'regenerate_needed')) {
+  if (!state_get('xmlsitemap_regenerate_needed', TRUE)) {
     _xmlsitemap_check_changed_link($link, $existing, TRUE);
   }
 
@@ -600,7 +585,7 @@ function xmlsitemap_link_save(array $link, array $context = array()) {
 function xmlsitemap_link_update_multiple($updates = array(), $conditions = array(), $check_flag = TRUE) {
   // If we are going to modify a visible sitemap link, we will need to set
   // the regenerate needed flag.
-  if ($check_flag && !config_get('xmlsitemap.settings', 'regenerate_needed')) {
+  if ($check_flag && !state_get('xmlsitemap_regenerate_needed', TRUE)) {
     _xmlsitemap_check_changed_links($conditions, $updates, TRUE);
   }
 
@@ -653,7 +638,7 @@ function xmlsitemap_link_delete_multiple(array $conditions) {
     return FALSE;
   }
 
-  if (!config_get('xmlsitemap.settings', 'regenerate_needed')) {
+  if (!state_get('xmlsitemap_regenerate_needed', TRUE)) {
     _xmlsitemap_check_changed_links($conditions, array(), TRUE);
   }
 
@@ -692,7 +677,7 @@ function _xmlsitemap_check_changed_links(array $conditions = array(), array $upd
   $changed = $query->execute()->fetchField();
 
   if ($changed && $flag) {
-    config_set('xmlsitemap.settings', 'regenerate_needed', TRUE);
+    state_set('xmlsitemap_regenerate_needed', TRUE);
   }
 
   return $changed;
@@ -739,7 +724,7 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
   }
 
   if ($changed && $flag) {
-    config_set('xmlsitemap.settings', 'regenerate_needed', TRUE);
+    state_set('xmlsitemap_regenerate_needed', TRUE);
   }
 
   return $changed;
@@ -1168,7 +1153,8 @@ function xmlsitemap_get_link_count($reset = FALSE) {
  *
  * This function is useful with the chunk size is set to automatic as it will
  * calculate the appropriate value. Use this function instead of @code
- * xmlsitemap_var('chunk_size') @endcode when the actual value is needed.
+ * config_get('xmlsitemap.settings', 'chunk_size') @endcode when the actual
+ * value is needed.
  *
  * @param $reset
  *   A boolean to reset the saved, static result. Defaults to FALSE.
@@ -1178,7 +1164,7 @@ function xmlsitemap_get_link_count($reset = FALSE) {
 function xmlsitemap_get_chunk_size($reset = FALSE) {
   static $size;
   if (!isset($size) || $reset) {
-    $size = xmlsitemap_var('chunk_size');
+    $size = config_get('xmlsitemap.settings', 'chunk_size');
     if ($size === 'auto') {
       $count = max(xmlsitemap_get_link_count($reset), 1); // Prevent divide by zero.
       $size = min(ceil($count / 10000) * 5000, XMLSITEMAP_MAX_SITEMAP_LINKS);
@@ -1233,7 +1219,7 @@ function xmlsitemap_form_submit_flag_regenerate($form, $form_state) {
     $stored_value = $config->get($variable);
     // @todo add a check here for if the value wasn't in config.
     if ($stored_value != $value) {
-      $config->set('regenerate_needed', TRUE);
+      state_set('xmlsitemap_regenerate_needed', TRUE);
       backdrop_set_message(t('XML sitemap settings have been modified and the files should be regenerated. You can <a href="@run-cron">run cron manually</a> to regenerate the cached files.', array('@run-cron' => url('admin/reports/status/run-cron', array('query' => backdrop_get_destination())))), 'warning', FALSE);
       return;
     }

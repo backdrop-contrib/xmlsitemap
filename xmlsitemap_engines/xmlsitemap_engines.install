@@ -21,7 +21,6 @@ function xmlsitemap_engines_install() {
   $config->set('engines', array());
   $config->set('engines_custom_urls', '');
   $config->set('engines_minimum_lifetime', 86400);
-  $config->set('engines_submit_last', '');
   $config->set('engines_submit_updated', TRUE);
   $config->save();
 }
@@ -35,7 +34,6 @@ function xmlsitemap_engines_uninstall() {
   $config->clear('engines');
   $config->clear('engines_custom_urls');
   $config->clear('engines_minimum_lifetime');
-  $config->clear('engines_submit_last');
   $config->clear('engines_submit_updated');
   $config->save();
 }
@@ -76,4 +74,12 @@ function xmlsitemap_engines_update_1000() {
 
   // Save all these config changes.
   $config->save();
+}
+
+/**
+ * Convert config that should be state.
+ */
+function xmlsitemap_engines_update_1001() {
+  state_set('xmlsitemap_engines_submit_last', config_get('xmlsitemap.settings', 'engines_submit_last'), 0);
+  config_clear('xmlsitemap.settings', 'engines_submit_last');
 }

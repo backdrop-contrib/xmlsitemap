@@ -55,7 +55,7 @@ function xmlsitemap_taxonomy_xmlsitemap_link_info_alter(&$link_info) {
  * Process old taxonomy terms not found in the {xmlsitemap} table.
  */
 function xmlsitemap_taxonomy_cron() {
-  xmlsitemap_taxonomy_xmlsitemap_index_links(xmlsitemap_var('batch_limit'));
+  xmlsitemap_taxonomy_xmlsitemap_index_links(config_get('xmlsitemap.settings', 'batch_limit'));
 }
 
 /**

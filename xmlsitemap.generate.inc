@@ -284,7 +284,7 @@ function xmlsitemap_regenerate_batch(array $smids = array()) {
   );
 
   // Set the regenerate flag in case something fails during file generation.
-  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('regenerate_needed' => TRUE)));
+  $batch['operations'][] = array('xmlsitemap_batch_state_set', array(array('xmlsitemap_regenerate_needed' => TRUE)));
 
   // @todo Get rid of this batch operation.
   $batch['operations'][] = array('_xmlsitemap_regenerate_before', array());
@@ -296,7 +296,7 @@ function xmlsitemap_regenerate_batch(array $smids = array()) {
   }
 
   // Clear the regeneration flag.
-  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('regenerate_needed' => FALSE)));
+  $batch['operations'][] = array('xmlsitemap_batch_state_set', array(array('xmlsitemap_regenerate_needed' => FALSE)));
 
   return $batch;
 }
@@ -359,9 +359,8 @@ function xmlsitemap_regenerate_batch_generate_index($smid, array &$context) {
  * Batch callback; sitemap regeneration finished.
  */
 function xmlsitemap_regenerate_batch_finished($success, $results, $operations, $elapsed) {
-  $config = config('xmlsitemap.settings');
-  if ($success && !$config->get('regenerate_needed', FALSE)) {
-    $config->set('generated_last', REQUEST_TIME);
+  if ($success && !state_get('xmlsitemap_regenerate_needed', FALSE)) {
+    state_set('xmlsitemap_generated_last', REQUEST_TIME);
 
     // Show a watchdog message that the sitemap was regenerated.
     watchdog('xmlsitemap',
@@ -390,7 +389,7 @@ function xmlsitemap_rebuild_batch(array $entities, $save_custom = FALSE) {
   );
 
   // Set the rebuild flag in case something fails during the rebuild.
-  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('xmlsitemap_rebuild_needed' => TRUE)));
+  $batch['operations'][] = array('xmlsitemap_batch_state_set', array(array('xmlsitemap_rebuild_needed' => TRUE)));
 
   // Purge any links first.
   $batch['operations'][] = array('xmlsitemap_rebuild_batch_clear', array($entities, (bool) $save_custom));
@@ -402,7 +401,7 @@ function xmlsitemap_rebuild_batch(array $entities, $save_custom = FALSE) {
   }
 
   // Clear the rebuild flag.
-  $batch['operations'][] = array('xmlsitemap_batch_config_set', array(array('xmlsitemap_rebuild_needed' => FALSE)));
+  $batch['operations'][] = array('xmlsitemap_batch_state_set', array(array('xmlsitemap_rebuild_needed' => FALSE)));
 
   // Add the regeneration batch.
   $regenerate_batch = xmlsitemap_regenerate_batch();
@@ -414,12 +413,10 @@ function xmlsitemap_rebuild_batch(array $entities, $save_custom = FALSE) {
 /**
  * Batch callback; set an array of variables and their values.
  */
-function xmlsitemap_batch_config_set(array $variables) {
-  $config = config('xmlsitemap.settings');
+function xmlsitemap_batch_state_set(array $variables) {
   foreach ($variables as $variable => $value) {
-    $config->set($variable, $value);
+    state_set($variable, $value);
   }
-  $config->save();
 }
 
 /**
@@ -509,7 +506,7 @@ function xmlsitemap_rebuild_batch_fetch($entity, &$context) {
  * Batch callback; sitemap rebuild finished.
  */
 function xmlsitemap_rebuild_batch_finished($success, $results, $operations, $elapsed) {
-  if ($success && !config_get('xmlsitemap.settings', 'rebuild_needed', FALSE)) {
+  if ($success && !state_get('xmlsitemap_rebuild_needed', FALSE)) {
     backdrop_set_message(t('The sitemap links were rebuilt.'));
   }
   else {

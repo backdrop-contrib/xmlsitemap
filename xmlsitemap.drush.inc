@@ -82,7 +82,7 @@ function drush_xmlsitemap_rebuild() {
  * Process un-indexed XML sitemap links.
  */
 function drush_xmlsitemap_index() {
-  $limit = (int) drush_get_option('limit', config_get('xmlsitemap.settings', 'batch_limit', 100));
+  $limit = (int) drush_get_option('limit', config_get('xmlsitemap.settings', 'batch_limit'));
   $count_before = db_query("SELECT COUNT(id) FROM {xmlsitemap}")->fetchField();
 
   module_invoke_all('xmlsitemap_index_links', $limit);
@@ -111,7 +111,7 @@ function drush_xmlsitemap_queue_rebuild() {
 
   $link_count = 0;
   $chunk_count = 0;
-  $chunk_size = (int) drush_get_option('limit', config_get('xmlsitemap.settings', 'batch_limit', 100));
+  $chunk_size = (int) drush_get_option('limit', config_get('xmlsitemap.settings', 'batch_limit'));
 
   // @todo Figure out how to re-use this code with xmlsitemap_rebuild_batch_fetch()
   foreach ($entity_types as $entity_type) {
