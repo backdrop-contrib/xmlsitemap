@@ -283,7 +283,7 @@ function xmlsitemap_node_create_link(stdClass $node) {
   $node->xmlsitemap['loc'] = $uri['path'];
   $node->xmlsitemap['lastmod'] = count($timestamps) ? max($timestamps) : 0;
   $node->xmlsitemap['access'] = $node->nid ? xmlsitemap_node_view_access($node, backdrop_anonymous_user()) : 1;
-  $node->xmlsitemap['language'] = isset($node->language) ? $node->language : LANGUAGE_NONE;
+  $node->xmlsitemap['language'] = isset($node->langcode) ? $node->langcode : LANGUAGE_NONE;
 
   return $node->xmlsitemap;
 }
