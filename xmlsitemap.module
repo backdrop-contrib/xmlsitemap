@@ -1373,7 +1373,7 @@ function xmlsitemap_get_changefreq_options() {
  * @return
  *   A language object.
  */
-function xmlsitemap_language_load($language = LANGUAGE_NONE) {
+function xmlsitemap_language_load($langcode = LANGUAGE_NONE) {
   $languages = &backdrop_static(__FUNCTION__);
 
   if (!isset($languages)) {
