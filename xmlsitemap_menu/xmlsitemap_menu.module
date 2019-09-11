@@ -274,7 +274,7 @@ function xmlsitemap_menu_create_link(array $menu_item) {
   $menu_item['xmlsitemap']['loc'] = $menu_item['href'];
   $menu_item['xmlsitemap']['subtype'] = $menu_item['menu_name'];
   $menu_item['xmlsitemap']['access'] = $menu_item['access'] && !$menu_item['external'] && !$menu_item['hidden'];
-  $menu_item['xmlsitemap']['language'] = isset($menu_item['options']['langcode']) ? $menu_item['options']['langcode'] : LANGUAGE_NONE;
+  $menu_item['xmlsitemap']['language'] = isset($menu_item['langcode']) ? $menu_item['langcode'] : LANGUAGE_NONE;
 
   return $menu_item['xmlsitemap'];
 }
