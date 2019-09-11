@@ -43,7 +43,8 @@ https://github.com/backdrop-contrib/xmlsitemap/issues
 Current Maintainers
 -------------------
 
-- Seeking maintainers
+- [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org)
+- Seeking additional maintainers
 
 
 Credits
