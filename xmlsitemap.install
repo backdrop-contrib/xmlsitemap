@@ -368,13 +368,12 @@ function xmlsitemap_enable() {
  * Implements hook_uninstall().
  */
 function xmlsitemap_uninstall() {
+  drupal_load('module', 'xmlsitemap');
+
   // Remove the file cache directory.
-  if(function_exists('xmlsitemap_clear_directory')) {
-    xmlsitemap_clear_directory(NULL, TRUE);
-  }
+  xmlsitemap_clear_directory(NULL, TRUE);
 
   // Remove variables.
-  drupal_load('module', 'xmlsitemap');
   $variables = array_keys(xmlsitemap_variables());
   foreach ($variables as $variable) {
     variable_del($variable);
