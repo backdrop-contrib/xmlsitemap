@@ -207,6 +207,15 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
   while ($link = $links->fetchAssoc()) {
     $link['language'] = $link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $url_options['language'];
     $parsed_url = drupal_parse_url($link['loc']);
+    // Skip nodes which are 301 redirected.
+    if (variable_get('xmlsitemap_redirect')) {
+      $relative_redirect = redirect_fetch_rids_by_path($link['loc'], $link['language']->language, TRUE);
+      $alias_redirect = redirect_fetch_rids_by_path(ltrim(url($link['loc']), '/'), $link['language']->language, TRUE);
+      // If node contains a 301 redirect we skip it.
+      if (!empty($relative_redirect) || !empty($alias_redirect)) {
+        continue;
+      }
+    }
     // Remove query or fragment.
     $link['loc'] = $parsed_url['path'];
     if ($url_options['alias']) {
