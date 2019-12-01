@@ -24,7 +24,7 @@
  *
  * @see file_scan_directory()
  */
-function xml_custom_scan_directories(array $directories) {
+function xmlsitemap_custom_scan_directories(array $directories) {
   $results = array();
   foreach ($directories as $directory => $mask) {
     $files = file_scan_directory($directory, $mask);
