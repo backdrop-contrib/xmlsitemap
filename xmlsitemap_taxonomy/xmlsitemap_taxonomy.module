@@ -63,7 +63,13 @@ function xmlsitemap_taxonomy_cron() {
  */
 function xmlsitemap_taxonomy_xmlsitemap_index_links($limit) {
   if ($bundles = xmlsitemap_get_link_type_enabled_bundles('taxonomy_term')) {
-    $tids = db_query_range("SELECT t.tid FROM {taxonomy_term_data} t INNER JOIN {taxonomy_vocabulary} tv USING (vocabulary) LEFT JOIN {xmlsitemap} x ON x.type = 'taxonomy_term' AND t.tid = x.id WHERE x.id IS NULL AND tv.machine_name IN (:bundles) ORDER BY t.tid DESC", 0, $limit, array(':bundles' => $bundles))->fetchCol();
+    $tids = db_query_range("SELECT t.tid
+      FROM {taxonomy_term_data} t
+      LEFT JOIN {xmlsitemap} x ON x.type = 'taxonomy_term' AND t.tid = x.id
+      WHERE x.id IS NULL
+        AND t.vocabulary IN (:bundles)
+      ORDER BY t.tid
+      DESC", 0, $limit, array(':bundles' => $bundles))->fetchCol();
     xmlsitemap_taxonomy_xmlsitemap_process_taxonomy_term_links($tids);
   }
 }
