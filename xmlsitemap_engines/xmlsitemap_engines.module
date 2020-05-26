@@ -66,12 +66,12 @@ function xmlsitemap_engines_cron() {
 function xmlsitemap_engines_can_submit() {
   // Skip if the site is offline since search engines will not be able to
   // access the site's content.
-  if (config_get('system.core', 'maintenance_mode', 0) || defined('MAINTENANCE_MODE')) {
+  if (config_get('system.core', 'maintenance_mode') || defined('MAINTENANCE_MODE')) {
     return FALSE;
   }
 
   $config = config('xmlsitemap.settings');
-  if (!$config->get('engines', array()) && !$config->get('engines_custom_urls', '')) {
+  if (!$config->get('engines') && !$config->get('engines_custom_urls')) {
     return FALSE;
   }
 
@@ -85,11 +85,11 @@ function xmlsitemap_engines_submit_access() {
 
   $config = config('xmlsitemap.settings');
   $submit_updated = $config->get('engines_submit_updated', TRUE);
-  $submitted_last = $config->get('engines_submit_last', 0);
+  $submitted_last = state_get('xmlsitemap_engines_submit_last', 0);
   $minimum_lifetime = $config->get('engines_minimum_lifetime', 86400);
 
   // Skip if sitemap data has not been updated since last submission.
-  if ($submit_updated && $config->get('generated_last', 0) <= $submitted_last) {
+  if ($submit_updated && state_get('xmlsitemap_generated_last', 0) <= $submitted_last) {
     return FALSE;
   }
 
@@ -124,14 +124,13 @@ function xmlsitemap_engines_submit_engines(array $smids = array()) {
     }
   }
 
-  $custom_urls = $config->get('engines_custom_urls', '');
+  $custom_urls = $config->get('engines_custom_urls');
   $custom_urls = preg_split('/[\r\n]+/', $custom_urls, -1, PREG_SPLIT_NO_EMPTY);
   foreach ($custom_urls as $custom_url) {
     xmlsitemap_engines_submit_sitemaps($custom_url, $sitemaps);
   }
 
-  $config->set('engines_submit_last', REQUEST_TIME);
-  $config->save();
+  state_set('xmlsitemap_engines_submit_last', REQUEST_TIME);
 }
 
 /**

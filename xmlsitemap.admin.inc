@@ -293,7 +293,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
     '#type' => 'select',
     '#title' => t('Number of links in each sitemap page'),
     '#options' => array('auto' => t('Automatic (recommended)')) + backdrop_map_assoc(array(100, 500, 1000, 2500, 5000, 10000, 25000, XMLSITEMAP_MAX_SITEMAP_LINKS)),
-    '#default_value' => xmlsitemap_var('chunk_size'),
+    '#default_value' => $config->get('chunk_size'),
     // @todo This description is not clear.
     '#description' => t('If there are problems with rebuilding the sitemap, you may want to manually set this value. If you have more than @max links, an index with multiple sitemap pages will be generated. There is a maximum of @max sitemap pages.', array('@max' => XMLSITEMAP_MAX_SITEMAP_LINKS)),
   );
@@ -301,7 +301,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
     '#type' => 'select',
     '#title' => t('Maximum number of sitemap links to process at once'),
     '#options' => backdrop_map_assoc(array(5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000)),
-    '#default_value' => xmlsitemap_var('batch_limit'),
+    '#default_value' => $config->get('batch_limit'),
     '#description' => t('If you have problems running cron or rebuilding the sitemap, you may want to lower this value.'),
   );
   if (!xmlsitemap_check_directory()) {
@@ -448,11 +448,11 @@ function xmlsitemap_settings_form_submit($form, $form_state) {
  */
 function xmlsitemap_rebuild_form() {
   $settings = config('xmlsitemap.settings');
-  $rebuild_needed = $settings->get('rebuild_needed');
+  $rebuild_needed = state_get('xmlsitemap_rebuild_needed');
   $developer_mode = $settings->get('developer_mode');
 
   if (!$_POST && !$rebuild_needed) {
-    if (!$settings->get('regenerate_needed')) {
+    if (!state_get('xmlsitemap_regenerate_needed', TRUE)) {
       backdrop_set_message(t('Your sitemap is up to date and does not need to be rebuilt.'), 'error');
     }
     else {

@@ -44,7 +44,7 @@ function xmlsitemap_node_xmlsitemap_link_info() {
  * Process nodes that need to be added to or updated in the {xmlsitemap} table.
  */
 function xmlsitemap_node_cron() {
-  $limit = xmlsitemap_var('batch_limit');
+  $limit = config_get('xmlsitemap.settings', 'batch_limit');
 
   // Process nodes that have been queued in hook_node_update().
   $queue = BackdropQueue::get('xmlsitemap_node');

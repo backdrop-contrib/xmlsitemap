@@ -54,7 +54,7 @@ function xmlsitemap_user_xmlsitemap_operation_link_alter(&$link) {
  * Process old users not found in the {xmlsitemap} table.
  */
 function xmlsitemap_user_cron() {
-  xmlsitemap_user_xmlsitemap_index_links(xmlsitemap_var('batch_limit'));
+  xmlsitemap_user_xmlsitemap_index_links(config_get('xmlsitemap.settings', 'batch_limit'));
 }
 
 /**
