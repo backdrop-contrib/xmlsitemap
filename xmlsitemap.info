@@ -4,6 +4,4 @@ package = XML sitemap
 type = module
 backdrop = 1.x
 
-configure = admin/config/search/xmlsitemap
-
-
+configure = admin/config/search/xmlsitemap/settings
