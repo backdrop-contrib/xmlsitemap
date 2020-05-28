@@ -5,5 +5,4 @@ package = XML sitemap
 backdrop = 1.x
 
 dependencies[] = xmlsitemap
-
 configure = admin/config/search/xmlsitemap/engines
