@@ -163,7 +163,7 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
     'lastmod',
     'changefreq',
     'priority',
-  )));
+  ));
   $lastmod_format = $config->get('lastmod_format', XMLSITEMAP_LASTMOD_MEDIUM);
 
   $url_options = $sitemap->uri['options'];
