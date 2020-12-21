@@ -33,10 +33,10 @@ table.tablesorter tbody tr.odd td {
   background-color: #EFEFEF;
 }
 table.tablesorter thead tr .headerSortUp {
-  background: url(/misc/arrow-asc.png) no-repeat center right;
+  background: url(/core/misc/arrow-asc.png) no-repeat center right;
 }
 table.tablesorter thead tr .headerSortDown {
-  background: url(/misc/arrow-desc.png) no-repeat center right;
+  background: url(/core/misc/arrow-desc.png) no-repeat center right;
 }
 table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
   background-color: #5050D3;
