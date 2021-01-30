@@ -160,10 +160,12 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
   $url_options = $sitemap->uri['options'];
   $url_options += array(
     'absolute' => TRUE,
-    'base_url' => $config->get('base_url', $GLOBALS['base_url']),
+    //'base_url' => $config->get('base_url', $GLOBALS['base_url']),
     'language' => language_default(),
     'alias' => $config->get('prefetch_aliases', TRUE),
   );
+
+  $url_options['base_url'] = $config->get('base_url', $GLOBALS['base_url']);
 
   $last_url = '';
   $link_count = 0;
