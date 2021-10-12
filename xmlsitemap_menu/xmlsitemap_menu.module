@@ -48,16 +48,19 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
       'token type' => 'menu_link',
     );
 
-    foreach (menu_get_menus() as $type => $name) {
-      $info['menu_link']['bundles'][$type] = array(
-        'label' => $name,
-        'admin' => array(
-          'path' => 'admin/structure/menu/manage/%menu/edit',
-          'bundle argument' => 4,
-          'real path' => 'admin/structure/menu/manage/' . $type . '/edit',
-          'access arguments' => array('administer menus'),
-        ),
-      );
+    $menus = menu_get_menus();
+    if (is_array($menus)) {
+      foreach ($menus as $type => $name) {
+        $info['menu_link']['bundles'][$type] = array(
+          'label' => $name,
+          'admin' => array(
+            'path' => 'admin/structure/menu/manage/%menu/edit',
+            'bundle argument' => 4,
+            'real path' => 'admin/structure/menu/manage/' . $type . '/edit',
+            'access arguments' => array('administer menus'),
+          ),
+        );
+      }
     }
   }
   else {
