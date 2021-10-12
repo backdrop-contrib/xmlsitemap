@@ -5,7 +5,7 @@
  * Functional tests for providing xmlsitemap fields to views.
  */
 
-class XmlsitemapViewsFieldsTest extends DrupalWebTestCase {
+class XmlsitemapViewsFieldsTest extends BackdropWebTestCase {
 
   /**
    * Information about these tests, for the testing UX.
@@ -25,7 +25,7 @@ class XmlsitemapViewsFieldsTest extends DrupalWebTestCase {
   /**
    * Setup before any tests are run.
    *
-   * @see DrupalWebTestCase::setUp()
+   * @see BackdropWebTestCase::setUp()
    */
   protected function setUp($modules = array()) {
     $modules[] = 'views';
@@ -38,12 +38,12 @@ class XmlsitemapViewsFieldsTest extends DrupalWebTestCase {
    */
   public function testNodeSettings() {
     // Create a node.
-    $node = $this->drupalCreateNode();
+    $node = $this->backdropCreateNode();
     // Create view with xmlsitemap fields.
     $view = $this->nodeView();
     $view->save();
     // Load view, check that xmlsitemap fields are not overridden.
-    $this->drupalGet('xmlsitemap-node-fields');
+    $this->backdropGet('xmlsitemap-node-fields');
     $this->assertRaw('<span class="xmlsitemap-priority">0.5</span>');
     $this->assertRaw('<span class="xmlsitemap-priority-override">No</span>');
     $this->assertRaw('<span class="xmlsitemap-inclusion">No</span>');
@@ -55,7 +55,7 @@ class XmlsitemapViewsFieldsTest extends DrupalWebTestCase {
     $node->xmlsitemap['status_override'] = 1;
     node_save($node);
     // Re-load view, check that xmlsitemap fields are overridden.
-    $this->drupalGet('xmlsitemap-node-fields');
+    $this->backdropGet('xmlsitemap-node-fields');
     $this->assertRaw('<span class="xmlsitemap-priority">0.6</span>');
     $this->assertRaw('<span class="xmlsitemap-priority-override">Yes</span>');
     $this->assertRaw('<span class="xmlsitemap-inclusion">Yes</span>');

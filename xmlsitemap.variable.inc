@@ -22,7 +22,7 @@ function xmlsitemap_variable_info() {
     'type' => 'select',
     'title' => t('Maximum number of sitemap links to process at once'),
     'description' => t('If you have problems running cron or rebuilding the sitemap, you may want to lower this value.'),
-    'options' => drupal_map_assoc(array(5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000)),
+    'options' => backdrop_map_assoc(array(5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000)),
     'default' => 100,
     'group' => 'xmlsitemap',
   );
@@ -69,7 +69,7 @@ function xmlsitemap_variable_info() {
   $variable['xmlsitemap_minimum_lifetime'] = array(
     'type' => 'select',
     'title' => t('Minimum sitemap lifetime'),
-    'options' => array(0 => t('No minimum')) + drupal_map_assoc(array(300, 900, 1800, 3600, 10800, 21600, 43200, 86400, 172800, 259200, 604800), 'format_interval'),
+    'options' => array(0 => t('No minimum')) + backdrop_map_assoc(array(300, 900, 1800, 3600, 10800, 21600, 43200, 86400, 172800, 259200, 604800), 'format_interval'),
     'description' => t('The minimum amount of time that will elapse before the sitemaps are regenerated. The sitemaps will also only be regenerated on cron if any links have been added, updated, or deleted.') . '<br />' . t('Recommended value: %value.', array('%value' => t('1 day'))),
     'default' => 0,
     'group' => 'xmlsitemap',
@@ -77,7 +77,7 @@ function xmlsitemap_variable_info() {
 
   $variable['xmlsitemap_path'] = array(
     'title' => t('Sitemap cache directory'),
-    'description' => t('Subdirectory where the sitemap data will be stored. This folder <strong>must not be shared</strong> with any other Drupal site or install using XML sitemap.'),
+    'description' => t('Subdirectory where the sitemap data will be stored. This folder <strong>must not be shared</strong> with any other Backdrop site or install using XML sitemap.'),
     'default' => 'xmlsitemap',
     'required' => TRUE,
     'group' => 'xmlsitemap',

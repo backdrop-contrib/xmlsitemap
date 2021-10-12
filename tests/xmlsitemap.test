@@ -799,7 +799,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
 
     // Set the directory to an empty value.
     variable_set('xmlsitemap_path', '');
-    drupal_static_reset('xmlsitemap_get_directory');
+    backdrop_static_reset('xmlsitemap_get_directory');
 
     // Test that nothing was deleted.
     $result = xmlsitemap_clear_directory(NULL, TRUE);
@@ -810,7 +810,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
 
     // Reset the value back to the default.
     variable_set('xmlsitemap_path', 'xmlsitemap');
-    drupal_static_reset('xmlsitemap_get_directory');
+    backdrop_static_reset('xmlsitemap_get_directory');
 
     // Test that only the xmlsitemap directory was deleted.
     $result = xmlsitemap_clear_directory(NULL, TRUE);
@@ -829,10 +829,10 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
 
     // Update the directory path to a different value.
     variable_set('xmlsitemap_path', 'test');
-    drupal_static_reset('xmlsitemap_get_directory');
+    backdrop_static_reset('xmlsitemap_get_directory');
 
     // Test that running uninstall removes the correct directory (test) and not the default (xmlsitemap)
-    drupal_uninstall_modules(array('xmlsitemap'));
+    backdrop_uninstall_modules(array('xmlsitemap'));
     $this->assertFalse(is_dir('public://test'));
     $this->assertTrue(is_dir('public://xmlsitemap'));
   }

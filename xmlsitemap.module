@@ -564,9 +564,9 @@ function xmlsitemap_link_presave(array $link, array $context = array()) {
   $link['access'] = 0;
 
   // Allow other modules to alter the sitemap link presave.
-  drupal_alter('xmlsitemap_link_presave', $link, $context);
+  backdrop_alter('xmlsitemap_link_presave', $link, $context);
 
-  // Save or update a sitemap link which will be overwritten in Drupal cron job.
+  // Save or update a sitemap link which will be overwritten in Backdrop cron job.
   xmlsitemap_link_save($link, $context);
 }
 
@@ -1614,23 +1614,6 @@ function xmlsitemap_run_unprogressive_batch() {
 
   lock_release($batch_callback);
   return TRUE;
-}
-
-/**
- * Workaround for missing breadcrumbs on callback and action paths.
- *
- * @todo Remove when https://www.drupal.org/node/576290 is fixed.
- */
-function _xmlsitemap_set_breadcrumb($path = 'admin/config/search/xmlsitemap') {
-  $breadcrumb = array();
-  $path = explode('/', $path);
-  do {
-    $menu_path = implode('/', $path);
-    $menu_item = menu_get_item($menu_path);
-    array_unshift($breadcrumb, l($menu_item['title'], $menu_path));
-  } while (array_pop($path) && !empty($path));
-  array_unshift($breadcrumb, l(t('Home'), NULL));
-  backdrop_set_breadcrumb($breadcrumb);
 }
 
 /**

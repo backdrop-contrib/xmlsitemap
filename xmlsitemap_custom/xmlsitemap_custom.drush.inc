@@ -19,7 +19,7 @@ function xmlsitemap_custom_drush_command() {
     ),
     'required-arguments' => TRUE,
     'callback' => 'drush_xmlsitemap_custom_scan',
-    'drupal dependencies' => array('xmlsitemap_custom'),
+    'backdrop dependencies' => array('xmlsitemap_custom'),
   );
   return $items;
 }

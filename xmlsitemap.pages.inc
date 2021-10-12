@@ -118,7 +118,7 @@ function xmlsitemap_file_transfer($uri, $headers) {
     }
     fclose($fd);
     // Disable session manipulation if PHP transferred a file.
-    drupal_save_session(FALSE);
+    backdrop_save_session(FALSE);
   }
   else {
     backdrop_not_found();

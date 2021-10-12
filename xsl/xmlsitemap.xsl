@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-
 <!-- Copyright (c) 2010  Dave Reid <https://www.drupal.org/user/53892>
 
      This file is free software: you may copy, redistribute and/or modify it

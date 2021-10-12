@@ -36,7 +36,7 @@ function xmlsitemap_engines_variable_info() {
   $variable['xmlsitemap_engines_minimum_lifetime'] = array(
     'type' => 'select',
     'title' => t('Do not submit more often than every'),
-    'options' => drupal_map_assoc(array(3600, 10800, 21600, 32400, 43200, 86400, 172800, 259200, 604800, 604800 * 2, 604800 * 4), 'format_interval'),
+    'options' => backdrop_map_assoc(array(3600, 10800, 21600, 32400, 43200, 86400, 172800, 259200, 604800, 604800 * 2, 604800 * 4), 'format_interval'),
     'default' => 86400,
     'group' => 'xmlsitemap',
   );

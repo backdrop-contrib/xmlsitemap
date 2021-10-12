@@ -148,7 +148,7 @@ function xmlsitemap_node_deny_access(array $link, array $context = array()) {
   // Allow other modules to alter the site map link presave.
   backdrop_alter('xmlsitemap_link_presave', $link, $context);
 
-  // Save or update a site map link which will be overwritten in Drupal cron job.
+  // Save or update a site map link which will be overwritten in Backdrop cron job.
   xmlsitemap_link_save($link, $context);
 }
 

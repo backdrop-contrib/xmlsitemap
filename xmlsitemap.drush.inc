@@ -19,12 +19,12 @@ function xmlsitemap_drush_command() {
   $items['xmlsitemap-regenerate'] = array(
     'description' => 'Regenerate the XML sitemap files.',
     'callback' => 'drush_xmlsitemap_regenerate',
-    'drupal dependencies' => array('xmlsitemap'),
+    'backdrop dependencies' => array('xmlsitemap'),
   );
   $items['xmlsitemap-rebuild'] = array(
     'description' => 'Dump and re-process all possible XML sitemap data, and then regenerate the files.',
     'callback' => 'drush_xmlsitemap_rebuild',
-    'drupal dependencies' => array('xmlsitemap'),
+    'backdrop dependencies' => array('xmlsitemap'),
     'options' => array(
       'types' => 'The types of links to rebuild, comma separated. If not provided, all link types will be used.',
     ),
@@ -32,7 +32,7 @@ function xmlsitemap_drush_command() {
   $items['xmlsitemap-index'] = array(
     'description' => 'Process un-indexed XML sitemap links.',
     'callback' => 'drush_xmlsitemap_index',
-    'drupal dependencies' => array('xmlsitemap'),
+    'backdrop dependencies' => array('xmlsitemap'),
     'options' => array(
       'limit' => 'The limit of links of each type to process. Default value: ' . config_get('xmlsitemap.settings', 'batch_limit'),
     ),
