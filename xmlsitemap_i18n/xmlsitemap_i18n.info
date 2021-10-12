@@ -6,5 +6,3 @@ backdrop = 1.x
 
 dependencies[] = xmlsitemap
 dependencies[] = i18n
-
-hidden = TRUE

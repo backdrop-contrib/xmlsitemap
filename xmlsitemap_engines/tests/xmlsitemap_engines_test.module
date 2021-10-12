@@ -5,11 +5,17 @@
  */
 
 /**
+ * @file
+ * Unit tests for the XML sitemap engines project.
+ */
+
+/**
  * Implements hook_menu().
  */
 function xmlsitemap_engines_test_menu() {
   $items['ping'] = array(
     'page callback' => 'xmlsitemap_engines_test_pinged',
+    // @codingStandardsIgnoreLine
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
