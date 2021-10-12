@@ -13,6 +13,7 @@ define('XMLSITEMAP_BATCH_LIMIT', 100);
 
 /**
  * Implements hook_drush_command().
+*/
 
 function xmlsitemap_drush_command() {
 
@@ -46,7 +47,6 @@ function xmlsitemap_drush_command() {
   );
   return $items;
 }
-*/
 
 /**
  * Regenerate the sitemap files from existing data.

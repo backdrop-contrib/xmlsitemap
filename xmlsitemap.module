@@ -806,6 +806,8 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
 }
 
 /**
+ * Get XML Sitemap directory.
+ *
  * @} End of "defgroup xmlsitemap_api"
  */
 function xmlsitemap_get_directory(stdClass $sitemap = NULL) {
@@ -1515,7 +1517,9 @@ function xmlsitemap_language_load($langcode = LANGUAGE_NONE) {
 }
 
 /**
- * @defgroup xmlsitemap_context_api XML sitemap API for sitemap contexts.
+ * XML sitemap API for sitemap contexts.
+ *
+ * @defgroup xmlsitemap_context_api
  * @{
  */
 function xmlsitemap_get_context_info($context = NULL, $reset = FALSE) {

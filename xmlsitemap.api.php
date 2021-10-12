@@ -302,7 +302,8 @@ function hook_xmlsitemap_sitemap_operations() {
 /**
  * Alter the edit link for users to include or exclude an entity.
  *
- * @param array $link The link to alter.
+ * @param array $link
+ *   The link to alter.
  *   ['href'] - The URI the user is sent to when clicking the link.
  *   ['title'] - The title of the link.
  *   ['modal'] - Whether or not the edit link shows up in a modal.

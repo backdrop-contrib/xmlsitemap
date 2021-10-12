@@ -29,7 +29,14 @@ function xmlsitemap_custom_drush_command() {
  */
 function drush_xmlsitemap_custom_scan($directory, $mask) {
   module_load_include('scan.inc', 'xmlsitemap_custom');
-  drush_print(dt('About to scan @directory with @mask.', array('@directory' => $directory, '@mask' => $mask)));
+  drush_print(dt('About to scan @directory with @mask.', array(
+    '@directory' => $directory,
+    '@mask' => $mask,
+  )));
   $results = xmlsitemap_custom_scan_directories(array($directory => $mask));
-  drush_print(dt('Scanned @directory: added @add_count and removed @delete_count.', array('@directory' => $directory, '@add_count' => count($results[$directory]['add']), '@delete_count' => count($results[$directory]['delete']))));
+  drush_print(dt('Scanned @directory: added @add_count and removed @delete_count.', array(
+    '@directory' => $directory,
+    '@add_count' => count($results[$directory]['add']),
+    '@delete_count' => count($results[$directory]['delete']),
+  )));
 }

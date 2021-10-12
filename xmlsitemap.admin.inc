@@ -327,7 +327,7 @@ function xmlsitemap_settings_form($form, &$form_state) {
       '#title' => t('Skip pages that have 301 redirects set.'),
       '#description' => t('Prevents pages which are 301 redirects to be saved in sitemap.'),
       '#default_value' => variable_get('xmlsitemap_redirect', 0),
-      );
+    );
   }
   $form['advanced'] = array(
     '#type' => 'fieldset',
