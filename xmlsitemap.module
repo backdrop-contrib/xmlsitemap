@@ -924,7 +924,7 @@ function _xmlsitemap_delete_recursive($path, $delete_root = FALSE) {
   // Resolve streamwrapper URI to local path.
   $path = backdrop_realpath($path);
   if (is_dir($path)) {
-    $dir = dir($path);
+    $dir = getdir($path);
     while (($entry = $dir->read()) !== FALSE) {
       if ($entry == '.' || $entry == '..') {
         continue;
@@ -1497,7 +1497,7 @@ function xmlsitemap_get_changefreq_options() {
  *
  * @todo Remove when http://drupal.org/node/660736 is fixed in core.
  *
- * @param string $language
+ * @param string $langcode
  *   A language code. If not provided the default language will be returned.
  *
  * @return object
@@ -1675,7 +1675,9 @@ function xmlsitemap_link_enqueue($type, $ids) {
   $data['type'] = $type;
   $data['ids'] = is_array($ids) ? $ids : array($ids);
 
+  // @codingStandardsIgnoreStart
   /** @var BackdropReliableQueueInterface $queue */
+  // @codingStandardsIgnoreEnd
   $queue = BackdropQueue::get('xmlsitemap_link_process');
   $queue->createItem($data);
 }

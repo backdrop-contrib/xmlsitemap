@@ -4,7 +4,7 @@
  * Code for injecting custom XML sitemap entries for legacy stories.
  */
 
-/** 
+/**
  * Scan directories and keep matching subtrees of the custom XML sitemap.
  *
  * This will ensure that there are XML sitemap custom links for every file
@@ -13,7 +13,7 @@
  * directory, the scan might remove custom links that point to existing files
  * (they just don't match the given $mask).
  *
- * $param array $directories
+ * @param array $directories
  *   An associative array keyed by directory names where the values are
  *   preg_match() regular expressions of the files to find.
  *

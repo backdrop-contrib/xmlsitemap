@@ -138,8 +138,10 @@ function xmlsitemap_node_node_update(stdClass $node) {
 /**
  * Default site map links to not allow access until cron queue runs.
  *
- * @param array $link The link having access set toro.
- * @param array $context The context sent in backdrop_alter().
+ * @param array $link
+ *   The link having access set toro.
+ * @param array $context
+ *   The context sent in backdrop_alter().
  */
 function xmlsitemap_node_deny_access(array $link, array $context = array()) {
   // Force link access to 0.

@@ -50,8 +50,8 @@ function xmlsitemap_engines_settings_form() {
     '#type' => 'textarea',
     '#title' => t('Custom submission URLs'),
     '#description' => t('Enter one URL per line. The token [sitemap] will be replaced with the URL to your sitemap. For example: %example-before would become %example-after.', array(
-      '%example-before' => 'http://example.com/ping?[sitemap]',
-      '%example-after' => xmlsitemap_engines_prepare_url('http://example.com/ping?[sitemap]', url('sitemap.xml', array(
+      '%example-before' => 'https://example.com/ping?[sitemap]',
+      '%example-after' => xmlsitemap_engines_prepare_url('https://example.com/ping?[sitemap]', url('sitemap.xml', array(
         'absolute' => TRUE,
       ))),
     )),

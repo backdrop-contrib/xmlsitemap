@@ -1,6 +1,7 @@
 <?php
 /**
  * @file
+ *
  * XML sitemap integration functions for xmlsitemap.module.
  */
 

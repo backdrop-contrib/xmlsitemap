@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Miscellaneous functions for the xmlsitemap module.

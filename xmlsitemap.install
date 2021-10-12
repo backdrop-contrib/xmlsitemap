@@ -93,7 +93,7 @@ function xmlsitemap_requirements($phase) {
         'severity' => REQUIREMENT_ERROR,
       );
       if (!in_array(xmlsitemap_get_chunk_size(), array(50000, 'auto'))) {
-        $requirements['xmlsitemap_chunk_count']['description'] .= ' ' . t('Please increase the number of links per page.');
+        $requirements['xmlsitemap_chunk_count']['description'] .= ' ' . $t('Please increase the number of links per page.');
       }
     }
 
@@ -354,7 +354,9 @@ function xmlsitemap_install() {
   // @todo Does the sitemap show up on first install or is it a 404 page?
 
   // Create the link process the queue.
+  // @codingStandardsIgnoreStart
   /** @var BackdropReliableQueueInterface $queue */
+  // @codingStandardsIgnoreEnd
   $queue = BackdropQueue::get('xmlsitemap_link_process', TRUE);
   $queue->createQueue();
 }
@@ -378,7 +380,9 @@ function xmlsitemap_uninstall() {
   xmlsitemap_clear_directory(NULL, TRUE);
 
   // Remove the queue.
+  // @codingStandardsIgnoreStart
   /** @var BackdropReliableQueueInterface $queue */
+  // @codingStandardsIgnoreEnd
   $queue = BackdropQueue::get('xmlsitemap_link_process', TRUE);
   $queue->deleteQueue();
 }
