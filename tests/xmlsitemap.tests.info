@@ -15,4 +15,4 @@ file = xmlsitemap.test
 ;description = Integration tests for the XML sitemap and robots.txt module.
 ;group = XML sitemap
 ;file = xmlsitemap.test
-;dependancies[] = robotstxt @todo
+;dependencies[] = robotstxt @todo
