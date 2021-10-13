@@ -339,7 +339,7 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
   /**
    * Assert Watchdog Message.
    */
-  protected function assertWatchdogMessage(array $conditions, $message = 'Watchdog message found.') {
+  function assertWatchdogMessage(array $conditions, $message = 'Watchdog message found.') {
     $this->assertTrue($this->getWatchdogMessages($conditions), $message);
   }
 
