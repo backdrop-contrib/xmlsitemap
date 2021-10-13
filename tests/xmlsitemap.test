@@ -427,7 +427,6 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
       $this->error(l($message, $url, array('attributes' => array('target' => '_blank'))), 'User notice');
     }
   }
-
 }
 
 /**
