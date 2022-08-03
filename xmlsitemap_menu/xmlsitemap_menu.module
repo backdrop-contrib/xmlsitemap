@@ -59,9 +59,9 @@ function xmlsitemap_menu_entity_info_alter(&$info) {
         $info['menu_link']['bundles'][$type] = array(
           'label' => $name,
           'admin' => array(
-            'path' => 'admin/structure/menu/manage/%menu/edit',
+            'path' => 'admin/structure/menu/manage/%menu/configure',
             'bundle argument' => 4,
-            'real path' => 'admin/structure/menu/manage/' . $type . '/edit',
+            'real path' => 'admin/structure/menu/manage/' . $type . '/configure',
             'access arguments' => array('administer menus'),
           ),
         );
