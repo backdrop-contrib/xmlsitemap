@@ -26,6 +26,7 @@ profiles.
 ## Current Maintainers
 
  - [Laryn Kragt Bakker](https://github.com/laryn) - [CEDC.org](https://cedc.org)
+ - [Nate Lampton](https://github.com/quicksketch)
  - Collaboration and co-maintainers welcome!
 
 ## Credits
