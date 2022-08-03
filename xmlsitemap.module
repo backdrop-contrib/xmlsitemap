@@ -926,7 +926,8 @@ function _xmlsitemap_delete_recursive($path, $delete_root = FALSE) {
   // Resolve streamwrapper URI to local path.
   $path = backdrop_realpath($path);
   if (is_dir($path)) {
-    $dir = getdir($path);
+    // @codingStandardsIgnoreLine
+    $dir = dir($path);
     while (($entry = $dir->read()) !== FALSE) {
       if ($entry == '.' || $entry == '..') {
         continue;
@@ -1056,7 +1057,7 @@ function xmlsitemap_entity_query_alter($query) {
 }
 
 /**
- * Budle Settings.
+ * Bundle Settings.
  */
 function xmlsitemap_link_bundle_settings_save($entity, $bundle, array $settings, $update_links = TRUE) {
   if ($update_links) {

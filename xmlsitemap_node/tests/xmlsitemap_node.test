@@ -4,6 +4,9 @@
  * Unit tests for the xmlsitemap_node module.
  */
 
+// Temporarily include the parent class until core provides test autoloading.
+include_once(__DIR__ . '/../../tests/xmlsitemap.test');
+
 /**
  * Node Functional Test.
  */
@@ -93,22 +96,30 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
     $edit = array(
       'xmlsitemap[status]' => 0,
       'xmlsitemap[priority]' => 0.9,
-      'status' => TRUE,
+      'status' => 1,
     );
     $this->backdropPost('node/' . $node->nid . '/edit', $edit, t('Save'));
     $this->assertText('Page Test node title has been updated.');
+    // The access starts as 0 immediately, then is updated based on node
+    // grants on cron jobs.
     $this->assertSitemapLinkValues('node', $node->nid, array(
-      'access' => 1,
+      'access' => 0,
       'status' => 0,
       'priority' => 0.9,
       'status_override' => 1,
       'priority_override' => 1,
     ));
 
+    // Run cron to check status is updated after run.
+    $this->cronRun();
+    $this->assertSitemapLinkValues('node', $node->nid, array(
+      'access' => 1,
+    ));
+
     $edit = array(
       'xmlsitemap[status]' => 'default',
       'xmlsitemap[priority]' => 'default',
-      'status' => FALSE,
+      'status' => 0,
     );
     $this->backdropPost('node/' . $node->nid . '/edit', $edit, t('Save'));
     $this->assertText('Page Test node title has been updated.');
@@ -149,7 +160,7 @@ class XMLSitemapNodeFunctionalTest extends XMLSitemapTestHelper {
       'xmlsitemap[priority]' => '0.5',
     );
     $this->backdropPost('admin/structure/types/manage/page', $edit, t('Save content type'));
-    $this->assertText('Changed the content type of 2 posts from page to page2.');
+    $this->assertText('Changed the content type of 2 pieces of content from page to page2.');
     $this->assertText('The content type Page has been updated.');
     $this->cronRun();
 

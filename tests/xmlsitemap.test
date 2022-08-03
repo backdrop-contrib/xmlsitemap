@@ -36,7 +36,8 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
    */
   public function tearDown() {
     // Capture any (remaining) watchdog errors.
-    //$this->assertNoWatchdogErrors();
+    //$this->_assertNoWatchdogErrors();
+    $this->_getWatchdogMessages(array(), TRUE);
 
     parent::tearDown();
   }
@@ -156,7 +157,7 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
    */
   protected function assertSitemapLinkValues($entity_type, $entity_id, array $conditions) {
     $link = xmlsitemap_link_load($entity_type, $entity_id);
-
+debug($link);
     if (!$link) {
       return $this->fail(t('Could not load sitemap link for @type @id.', array(
         '@type' => $entity_type,
@@ -303,7 +304,7 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
    *
    * @todo Add unit tests for this function.
    */
-  protected function getWatchdogMessages(array $conditions = array(), $reset = FALSE) {
+  protected function _getWatchdogMessages(array $conditions = array(), $reset = FALSE) {
     static $seen_ids = array();
 
     if (!module_exists('dblog') || $reset) {
@@ -338,23 +339,29 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
 
   /**
    * Assert Watchdog Message.
+   *
+   * Customized version for XMLSitemap. Differs from core assertWatchdogMessage.
    */
-  protected function assertWatchdogMessage(array $conditions, $message = 'Watchdog message found.') {
-    $this->assertTrue($this->getWatchdogMessages($conditions), $message);
+  protected function _assertWatchdogMessage(array $conditions, $message = NULL) {
+    if (!isset($message)) {
+      $conditions += array('variables' => array());
+      $message = 'Watchdog message found: ' . format_string($conditions['message'], $conditions['variables']);
+    }
+    $this->assertTrue($this->_getWatchdogMessages($conditions), $message);
   }
 
   /**
    * Assert No Watchdog Message.
    */
-  protected function assertNoWatchdogMessage(array $conditions, $message = 'Watchdog message not found.') {
-    $this->assertFalse($this->getWatchdogMessages($conditions), $message);
+  protected function _assertNoWatchdogMessage(array $conditions, $message = 'Watchdog message not found.') {
+    $this->assertFalse($this->_getWatchdogMessages($conditions), $message);
   }
 
   /**
    * Check that there were no watchdog errors or worse.
    */
-  protected function assertNoWatchdogErrors() {
-    $messages = $this->getWatchdogMessages();
+  protected function _assertNoWatchdogErrors() {
+    $messages = $this->_getWatchdogMessages();
     $verbose = array();
 
     foreach ($messages as $message) {
@@ -375,9 +382,6 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
       array_unshift($verbose, '<h2>Watchdog messages</h2>');
       $this->verbose(implode("<br />", $verbose), 'Watchdog messages from test run');
     }
-
-    // Clear the seen watchdog messages since we've failed on any errors.
-    $this->getWatchdogMessages(array(), TRUE);
   }
 
   /**
@@ -617,47 +621,47 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
       'status' => 1,
     );
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $link['status'] = 0;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $link['priority'] = 0.5;
     $link['loc'] = 'new_location';
     $link['status'] = 1;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $link['priority'] = 0.0;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $link['priority'] = 0.1;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $link['priority'] = 1.0;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $link['priority'] = 1;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', FALSE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', FALSE);
 
     $link['priority'] = 0;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $link['priority'] = 0.5;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $link['priority'] = 0.5;
     $link['priority_override'] = 0;
     $link['status'] = 1;
     xmlsitemap_link_save($link);
-    $this->assertFlag('regenerate_needed', FALSE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', FALSE);
   }
 
   /**
@@ -677,12 +681,12 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $this->assertFalse(xmlsitemap_link_load($link1['type'], $link1['id']));
     $this->assertFalse(xmlsitemap_link_load($link2['type'], $link2['id']));
     $this->assertTrue(xmlsitemap_link_load($link3['type'], $link3['id']));
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
 
     $deleted = xmlsitemap_link_delete($link3['type'], $link3['id']);
     $this->assertEqual($deleted, 1);
     $this->assertFalse(xmlsitemap_link_load($link3['type'], $link3['id']));
-    $this->assertFlag('regenerate_needed', FALSE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', FALSE);
   }
 
   /**
@@ -705,7 +709,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
       'status_override' => 0,
     ));
     $this->assertEqual($updated, 2);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
     // Id | type    | subtype | language | status | priority
     // 1  | testing | group1  | ''       | 0      | 0.5
     // 2  | testing | group1  | ''       | 0      | 0.5
@@ -716,7 +720,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
       'priority_override' => 0,
     ));
     $this->assertEqual($updated, 2);
-    $this->assertFlag('regenerate_needed', FALSE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', FALSE);
     // Id | type    | subtype | language | status | priority
     // 1  | testing | group1  | ''       | 0      | 0.0
     // 2  | testing | group1  | ''       | 0      | 0.0
@@ -726,7 +730,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
       'subtype' => 'group1',
     ));
     $this->assertEqual($updated, 2);
-    $this->assertFlag('regenerate_needed', FALSE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', FALSE);
     // Id | type    | subtype | language | status | priority
     // 1  | testing | group2  | ''       | 0      | 0.0
     // 2  | testing | group2  | ''       | 0      | 0.0
@@ -738,7 +742,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
       'status' => 0,
     ));
     $this->assertEqual($updated, 2);
-    $this->assertFlag('regenerate_needed', TRUE);
+    $this->assertFlag('xmlsitemap_regenerate_needed', TRUE);
     // Id | type    | subtype | language | status | priority
     // 1  | testing | group2  | ''       | 1      | 0.0
     // 2  | testing | group2  | ''       | 1      | 0.0
@@ -769,7 +773,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $this->assertResponse(200);
     $this->assertNoRaw('lifetime-test');
 
-    config_set('xmlsitemap', 'generated_last', REQUEST_TIME - 400);
+    state_set('xmlsitemap_generated_last', REQUEST_TIME - 400);
     $this->cronRun();
     $this->backdropGetSitemap();
     $this->assertRaw('lifetime-test');
@@ -798,7 +802,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     file_unmanaged_save_data('Test contents', 'public://xmlsitemap/test/index.xml');
 
     // Set the directory to an empty value.
-    variable_set('xmlsitemap_path', '');
+    config_set('xmlsitemap.settings', 'path', '');
     backdrop_static_reset('xmlsitemap_get_directory');
 
     // Test that nothing was deleted.
@@ -809,7 +813,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     $this->assertFalse($result);
 
     // Reset the value back to the default.
-    variable_set('xmlsitemap_path', 'xmlsitemap');
+    config_set('xmlsitemap.settings', 'path', 'xmlsitemap');
     backdrop_static_reset('xmlsitemap_get_directory');
 
     // Test that only the xmlsitemap directory was deleted.
@@ -828,7 +832,7 @@ class XMLSitemapUnitTest extends XMLSitemapTestHelper {
     file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
 
     // Update the directory path to a different value.
-    variable_set('xmlsitemap_path', 'test');
+    config_set('xmlsitemap.settings', 'path', 'test');
     backdrop_static_reset('xmlsitemap_get_directory');
 
     // Test that running uninstall removes the correct directory (test) and not the default (xmlsitemap)

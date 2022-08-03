@@ -69,7 +69,6 @@ function xmlsitemap_custom_list_links() {
  */
 function xmlsitemap_custom_edit_link_form($form, &$form_state, $link = array()) {
   module_load_include('inc', 'xmlsitemap', 'xmlsitemap.admin');
-  _xmlsitemap_set_breadcrumb('admin/config/search/xmlsitemap/custom');
 
   $link += array(
     'id' => db_query("SELECT MAX(id) FROM {xmlsitemap} WHERE type = 'custom'")->fetchField() + 1,
