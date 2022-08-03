@@ -4,6 +4,9 @@
  * Unit tests for the xmlsitemap_node module.
  */
 
+// Temporarily include the parent class until core provides test autoloading.
+include_once(__DIR__ . '/../../tests/xmlsitemap.test');
+
 /**
  * Node Functional Test.
  */
