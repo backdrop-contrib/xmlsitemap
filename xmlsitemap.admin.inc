@@ -164,7 +164,6 @@ function xmlsitemap_sitemap_list_form_submit($form, &$form_state) {
  * Edit Form.
  */
 function xmlsitemap_sitemap_edit_form(array $form, array &$form_state, stdClass $sitemap = NULL) {
-  _xmlsitemap_set_breadcrumb();
 
   if (!isset($sitemap)) {
     $sitemap = new stdClass();
@@ -244,7 +243,6 @@ function xmlsitemap_sitemap_edit_form_submit($form, &$form_state) {
  * Delete form.
  */
 function xmlsitemap_sitemap_delete_form(array $form, array &$form_state, stdClass $sitemap) {
-  _xmlsitemap_set_breadcrumb();
 
   $count = (int) db_query("SELECT COUNT(smid) FROM {xmlsitemap_sitemap}")->fetchField();
   if ($count === 1 && empty($_POST)) {

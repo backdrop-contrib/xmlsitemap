@@ -26,11 +26,6 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $this->admin_user = $this->backdropCreateUser(array('access content', 'administer xmlsitemap'));
     $this->backdropLogin($this->admin_user);
 
-    // @todo For some reason the test client does not have clean URLs while
-    // the test runner does, so it causes mismatches in watchdog assertions
-    // later.
-    config_set('system.core', 'clean_url', 0);
-
     $this->submit_url = url('ping', array('absolute' => TRUE, 'query' => array('sitemap' => ''))) . '[sitemap]';
   }
 
@@ -80,16 +75,16 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $sitemaps[] = $sitemap;
     xmlsitemap_engines_submit_sitemaps($this->submit_url, $sitemaps);
 
-    $this->assertWatchdogMessage(array(
+    $this->_assertWatchdogMessage(array(
       'type' => 'xmlsitemap',
-      'message' => 'Recieved ping for @sitemap.',
+      'message' => 'Received ping for @sitemap.',
       'variables' => array(
         '@sitemap' => 'http://example.com/sitemap.xml',
       ),
     ));
-    $this->assertWatchdogMessage(array(
+    $this->_assertWatchdogMessage(array(
       'type' => 'xmlsitemap',
-      'message' => 'Recieved ping for @sitemap.',
+      'message' => 'Received ping for @sitemap.',
       'variables' => array(
         '@sitemap' => 'http://example.com/sitemap-2.xml',
       ),
@@ -105,8 +100,23 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $this->assertText(t('The configuration options have been saved.'));
 
     $this->submitEngines();
-    $this->assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'Submitted the sitemap to %url and received response @code.'));
-    $this->assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'Recieved ping for @sitemap.'));
+    $sitemap_url = xmlsitemap_engines_prepare_url($this->submit_url, url('sitemap.xml', array('absolute' => TRUE)));
+
+    $this->_assertWatchdogMessage(array(
+      'type' => 'xmlsitemap',
+      'message' => 'Submitted the sitemap to %url and received response @code.',
+      'variables' => array(
+        '%url' => $sitemap_url,
+        '@code' => '200',
+      )
+    ));
+    $this->_assertWatchdogMessage(array(
+      'type' => 'xmlsitemap',
+      'message' => 'Received ping for @sitemap.',
+      'variables' => array(
+        '@sitemap' => url('sitemap.xml', array('absolute' => TRUE)),
+      )
+    ));
   }
 
   /**
@@ -127,7 +137,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
     $this->assertText(t('The configuration options have been saved.'));
 
     $this->submitEngines();
-    $this->assertWatchdogMessage(array(
+    $this->_assertWatchdogMessage(array(
       'type' => 'xmlsitemap',
       'message' => 'Submitted the sitemap to %url and received response @code.',
       'variables' => array(
@@ -135,8 +145,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
         '@code' => '404',
       ),
     ));
-    $this->assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'No valid sitemap parameter provided.'));
-    $this->assertWatchdogMessage(array('type' => 'page not found', 'message' => 'ping'));
+    $this->_assertWatchdogMessage(array('type' => 'xmlsitemap', 'message' => 'No valid sitemap parameter provided.'));
 
     $edit = array('engines_custom_urls' => $this->submit_url);
     $this->backdropPost('admin/config/search/xmlsitemap/engines', $edit, t('Save configuration'));
@@ -144,7 +153,7 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
 
     $this->submitEngines();
     $url = xmlsitemap_engines_prepare_url($this->submit_url, url('sitemap.xml', array('absolute' => TRUE)));
-    $this->assertWatchdogMessage(array(
+    $this->_assertWatchdogMessage(array(
       'type' => 'xmlsitemap',
       'message' => 'Submitted the sitemap to %url and received response @code.',
       'variables' => array(
@@ -152,9 +161,9 @@ class XMLSitemapEnginesFunctionalTest extends XMLSitemapTestHelper {
         '@code' => '200',
       ),
     ));
-    $this->assertWatchdogMessage(array(
+    $this->_assertWatchdogMessage(array(
       'type' => 'xmlsitemap',
-      'message' => 'Recieved ping for @sitemap.',
+      'message' => 'Received ping for @sitemap.',
       'variables' => array(
         '@sitemap' => url('sitemap.xml', array(
           'absolute' => TRUE,
