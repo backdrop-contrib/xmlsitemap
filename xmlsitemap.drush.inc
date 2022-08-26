@@ -11,6 +11,10 @@
  */
 define('XMLSITEMAP_BATCH_LIMIT', 100);
 
+// Load configuration classes and functions.
+require_once BACKDROP_ROOT . '/core/includes/bootstrap.inc';
+backdrop_bootstrap(BACKDROP_BOOTSTRAP_CONFIGURATION);
+
 /**
  * Implements hook_drush_command().
  */
