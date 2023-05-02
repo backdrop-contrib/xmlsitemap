@@ -218,11 +218,6 @@ function xmlsitemap_engines_xmlsitemap_engine_info() {
     'url' => 'https://www.google.com/ping?sitemap=[sitemap]',
     'help url' => 'https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap',
   );
-  $engines['bing'] = array(
-    'name' => t('Bing'),
-    'url' => 'https://www.bing.com/webmaster/ping.aspx?siteMap=[sitemap]',
-    'help url' => 'https://www.bing.com/webmaster',
-  );
   return $engines;
 }
 
