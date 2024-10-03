@@ -1,0 +1,6 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^$#"
+			count: 1
+			path: ../../xmlsitemap.module
