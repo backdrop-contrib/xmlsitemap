@@ -37,7 +37,7 @@ function xmlsitemap_i18n_xmlsitemap_context_info() {
  * Implements hook_xmlsitemap_context().
  */
 function xmlsitemap_i18n_xmlsitemap_context() {
-  $context['language'] = $GLOBALS['language']->language;
+  $context['language'] = $GLOBALS['language']->langcode;
   return $context;
 }
 
