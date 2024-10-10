@@ -1,10 +1,12 @@
 <?php
-
 /**
  * @file
  * Functional tests for providing xmlsitemap fields to views.
  */
 
+/**
+ * Tests regarding views fields.
+ */
 class XmlsitemapViewsFieldsTest extends BackdropWebTestCase {
 
   /**
