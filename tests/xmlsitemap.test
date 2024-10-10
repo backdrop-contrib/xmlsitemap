@@ -62,17 +62,6 @@ class XMLSitemapTestHelper extends BackdropWebTestCase {
   }
 
   /**
-   * Check the files directory is created (massive fails if not done).
-   *
-   * @todo This can be removed when https://www.drupal.org/node/654752 is fixed.
-   */
-  protected function checkFilesDirectory() {
-    if (!xmlsitemap_check_directory()) {
-      $this->fail(t('Sitemap directory was found and writable for testing.'));
-    }
-  }
-
-  /**
    * Retrieves an XML sitemap.
    *
    * @param array $context
