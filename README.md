@@ -26,6 +26,7 @@ terms, and user profiles.
 
  - [Laryn Kragt Bakker](https://github.com/laryn) - [CEDC.org](https://cedc.org)
  - [Nate Lampton](https://github.com/quicksketch)
+ - [Wilbur Ince](https://github.com/wylbur)
  - Collaboration and co-maintainers welcome!
 
 ## Credits
