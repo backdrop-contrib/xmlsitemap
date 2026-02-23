@@ -363,7 +363,7 @@ function xmlsitemap_sitemap_load_multiple($smids = array(), array $conditions = 
  *
  * @see xmlsitemap_get_current_context()
  */
-function xmlsitemap_sitemap_load_by_context(array $context = NULL) {
+function xmlsitemap_sitemap_load_by_context(?array $context = NULL) {
   if (!isset($context)) {
     $context = xmlsitemap_get_current_context();
   }
@@ -819,7 +819,7 @@ function _xmlsitemap_check_changed_link(array $link, $original_link = NULL, $fla
  *
  * @} End of "defgroup xmlsitemap_api"
  */
-function xmlsitemap_get_directory(stdClass $sitemap = NULL) {
+function xmlsitemap_get_directory(?stdClass $sitemap = NULL) {
   $directory = &backdrop_static(__FUNCTION__);
 
   if (!isset($directory)) {
@@ -840,7 +840,7 @@ function xmlsitemap_get_directory(stdClass $sitemap = NULL) {
 /**
  * Check that the sitemap files directory exists and is writable.
  */
-function xmlsitemap_check_directory(stdClass $sitemap = NULL) {
+function xmlsitemap_check_directory(?stdClass $sitemap = NULL) {
   $directory = xmlsitemap_get_directory($sitemap);
   $result = file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   if (!$result) {
@@ -877,7 +877,7 @@ function xmlsitemap_check_all_directories() {
 /**
  * Clear Directory.
  */
-function xmlsitemap_clear_directory(stdClass $sitemap = NULL, $delete = FALSE) {
+function xmlsitemap_clear_directory(?stdClass $sitemap = NULL, $delete = FALSE) {
   if ($directory = xmlsitemap_get_directory($sitemap)) {
     return _xmlsitemap_delete_recursive($directory, $delete);
   }
