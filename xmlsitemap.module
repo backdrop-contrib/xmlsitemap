@@ -357,7 +357,7 @@ function xmlsitemap_sitemap_load_multiple($smids = array(), array $conditions = 
 /**
  * Load an XML sitemap array from the database based on its context.
  *
- * @param array $context
+ * @param ?array $context
  *   An optional XML sitemap context array to use to find the correct XML
  *   sitemap. If not provided, the current site's context will be used.
  *
