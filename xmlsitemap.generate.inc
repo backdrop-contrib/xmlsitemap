@@ -201,7 +201,12 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
   $links = $query->execute();
 
   while ($link = $links->fetchAssoc()) {
-    $link['language'] = $link['language'] != LANGUAGE_NONE ? xmlsitemap_language_load($link['language']) : $url_options['language'];
+    if ($link['language'] != LANGUAGE_NONE) {
+      $link['language'] = xmlsitemap_language_load($link['language']);
+    }
+    else {
+      $link['language'] =  $url_options['language'];
+    }
     $parsed_url = backdrop_parse_url($link['loc']);
     // Skip nodes which are 301 redirected.
     if (config_get('xmlsitemap.settings', 'redirect')) {
@@ -215,7 +220,11 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
     // Remove query or fragment.
     $link['loc'] = $parsed_url['path'];
     if ($url_options['alias']) {
-      $link['loc'] = xmlsitemap_get_path_alias($link['loc'], $link['language']->langcode);
+      $langcode = LANGUAGE_NONE;
+      if (isset($link['language']) && property_exists($link['language'], 'langcode')) {
+        $langcode = $link['language']->langcode;
+      }
+      $link['loc'] = xmlsitemap_get_path_alias($link['loc'], $langcode);
     }
     $link_options = array(
       'language' => $link['language'],
