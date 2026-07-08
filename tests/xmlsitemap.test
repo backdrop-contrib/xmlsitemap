@@ -924,16 +924,14 @@ class XMLSitemapFunctionalTest extends XMLSitemapTestHelper {
   public function testStatusReport() {
 
     // Test the rebuild flag.
-    // @codingStandardsIgnoreStart
-    // state_set('xmlsitemap_generated_last', REQUEST_TIME);
-    // state_set('xmlsitemap_rebuild_needed', TRUE);
-    // $this->assertXMLSitemapProblems(t('The XML sitemap data is out of sync and needs to be completely rebuilt.'));
-    // $this->clickLink(t('completely rebuilt'));
-    // $this->assertResponse(200);
-    // state_set('xmlsitemap_rebuild_needed', FALSE);
-    // $this->assertNoXMLSitemapProblems();
+    state_set('xmlsitemap_generated_last', REQUEST_TIME);
+    state_set('xmlsitemap_rebuild_needed', TRUE);
+    $this->assertXMLSitemapProblems(t('The XML sitemap data is out of sync and needs to be completely rebuilt.'));
+    $this->clickLink(t('completely rebuilt'));
+    $this->assertResponse(200);
+    state_set('xmlsitemap_rebuild_needed', FALSE);
+    $this->assertNoXMLSitemapProblems();
     // Test the regenerate flag (and cron hasn't run in a while).
-    // @codingStandardsIgnoreEnd
     state_set('xmlsitemap_regenerate_needed', TRUE);
     state_set('xmlsitemap_generated_last', REQUEST_TIME - config_get('system.core', 'cron_threshold_warning') - 100);
     $this->assertXMLSitemapProblems(t('The XML cached files are out of date and need to be regenerated. You can run cron manually to regenerate the sitemap files.'));
