@@ -257,7 +257,22 @@ function xmlsitemap_node_get_timestamps(stdClass $node) {
     }
   }
 
-  return $timestamps[$node->nid];
+  // Backdrop only sets node_revision.timestamp when a new revision is created,
+  // so for content types without "Create new revision" it stays 0 forever.
+  // That resulted in lastmod = 0 and no <lastmod> in the sitemap. Include the
+  // node's own created/changed times and drop empty values.
+  // @see https://github.com/backdrop-contrib/xmlsitemap/issues/140
+  $node_timestamps = $timestamps[$node->nid];
+  if (!empty($node->created)) {
+    $node_timestamps[] = $node->created;
+  }
+  if (!empty($node->changed)) {
+    $node_timestamps[] = $node->changed;
+  }
+  $node_timestamps = array_map('intval', $node_timestamps);
+  $node_timestamps = array_values(array_unique(array_filter($node_timestamps)));
+
+  return $node_timestamps;
 }
 
 /**
