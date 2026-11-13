@@ -162,6 +162,11 @@ function xmlsitemap_generate_chunk(stdClass $sitemap, XMLSitemapWriter $writer, 
   $base_url = !empty($config->get('base_url')) ? $config->get('base_url') : $GLOBALS['base_url'];
   $output_elements = backdrop_map_assoc($config->get('output_elements'));
   $lastmod_format = $config->get('lastmod_format');
+  if (empty($lastmod_format)) {
+    // The shipped default config has an empty format, which would output an
+    // empty <lastmod></lastmod> element.
+    $lastmod_format = XMLSITEMAP_LASTMOD_MEDIUM;
+  }
 
   $url_options = $sitemap->uri['options'];
   $url_options += array(
